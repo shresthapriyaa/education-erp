@@ -160,7 +160,7 @@ export function UserTable({
           <div className="flex-1" />
 
           {/* Add User */}
-          <Button size="sm" className="h-9 gap-1.5 shrink-0" onClick={onAddUser}>
+          <Button size="sm" className="h-9 gap-1.5 shrink-0 border-b-2 border-t-2 hover:bg-gray-600" onClick={onAddUser}>
             <UserPlus className="h-4 w-4" />
             Add User
           </Button>
@@ -182,7 +182,7 @@ export function UserTable({
             )}
           </div>
         ) : (
-          <div className="rounded-xl border bg-card overflow-hidden shadow-sm">
+          <div className="rounded-xl border-t-4 border-b-4 bg-card overflow-hidden shadow-sm">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -234,7 +234,7 @@ export function UserTable({
                         <div className="flex items-center justify-end gap-0.5 opacity-60 group-hover:opacity-100 transition-opacity">
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(user)}>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 bg-white text-black border border-gray-300 hover:bg-gray-100" onClick={() => onEdit(user)}>
                                 <Pencil className="h-3.5 w-3.5" />
                               </Button>
                             </TooltipTrigger>
@@ -245,7 +245,7 @@ export function UserTable({
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                className="h-8 w-8 text-destructive hover:bg-red-600 border border-gray-300"
                                 onClick={() => onDelete(user.id)}
                               >
                                 <Trash2 className="h-3.5 w-3.5" />

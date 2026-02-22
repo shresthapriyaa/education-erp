@@ -6,7 +6,7 @@ import { StudentTable } from "@/features/students/components/StudentTable";
 import { useStudents } from "@/features/students/hooks/useStudents";
 import { useStudentFilters } from "@/features/students/hooks/useStudentFilters";
 import type { Student } from "@/features/students/types/student.types";
-import type { SubmitMode } from "@/features/students/components/StudentForm";
+import { StudentForm, type SubmitMode } from "@/features/students/components/StudentForm";
 
 type StudentPayload = Partial<Student> & { password?: string };
 
@@ -62,6 +62,7 @@ export default function StudentsPage() {
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
+    
     </div>
   );
 }

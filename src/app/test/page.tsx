@@ -4,8 +4,7 @@ import React from 'react'
 const page = () => {
   return (
     <div>
-<Switch defaultChecked size="default" />  // standard
-<Switch defaultChecked size="default" />       // smaller      
+        <img src="/img1.jpeg" alt=""  className='h-10 w-10'/>
     </div>
   )
 }
