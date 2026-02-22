@@ -141,7 +141,7 @@ export function StudentTable({
                 <TableRow key={student.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
-                      <img src={`/${student?.img}`}alt={student.username} className="h-10 w-10 rounded-full object-cover" />
+                      <img src={`/uploads/students/${student?.img}`}alt={student.username} className="h-10 w-10 rounded-full object-cover" />
                       <div>
                         <p className="font-medium leading-none text-black">{student.username}</p>
                         <p className="text-xs text-muted-foreground ">{student.id.slice(0, 8)}...</p>
