@@ -1,3 +1,5 @@
+
+
 // "use client";
 
 // import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,9 +23,9 @@
 //   SelectTrigger,
 //   SelectValue,
 // } from "@/core/components/ui/select";
-// import { Loader2, Save, RefreshCw, GitMerge } from "lucide-react";
+// import { Loader2, Save, RefreshCw, GitMerge, PlusCircle } from "lucide-react";
 // import type { User } from "../types/user.types";
-// import { Switch } from "@radix-ui/react-switch";
+// import { Switch } from "@/core/components/ui/switch"; // ✅ correct import
 
 // const ROLES = ["ADMIN", "TEACHER", "STUDENT", "PARENT", "ACCOUNTANT"] as const;
 
@@ -166,13 +168,16 @@
 //           name="isVerified"
 //           render={({ field }) => (
 //             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-//               <FormLabel className="text-base">Is Verified</FormLabel>
+//               <div>
+//                 <FormLabel className="text-base">Is Verified</FormLabel>
+//                 <FormDescription>Mark this user as verified.</FormDescription>
+//               </div>
 //               <FormControl>
 //                 <Switch
-//   checked={field.value}
-//   onChange={(e) => field.onChange(e.target.checked)}
-//   aria-label="Is Verified"
-// />
+//                   checked={field.value}
+//                   onCheckedChange={field.onChange}
+//                   aria-label="Is Verified"
+//                 />
 //               </FormControl>
 //               <FormMessage />
 //             </FormItem>
@@ -202,7 +207,7 @@
 //         />
 
 //         {/* Actions */}
-//         <div className="flex gap-2">
+//         <div className="flex gap-2 justify-end">
 //           {onCancel && (
 //             <Button type="button" variant="outline" onClick={onCancel}>
 //               Cancel
@@ -220,9 +225,10 @@
 //               </Button>
 //             </>
 //           ) : (
+            
 //             <Button type="button" onClick={handlePut} disabled={loading}>
-//               {loading ? <Loader2 className="animate-spin" /> : <RefreshCw />}
 //               Submit
+//               <PlusCircle className="ml-2" />
 //             </Button>
 //           )}
 //         </div>
@@ -230,6 +236,8 @@
 //     </Form>
 //   );
 // }
+
+
 
 "use client";
 
@@ -254,11 +262,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/core/components/ui/select";
-import { Loader2, Save, RefreshCw, GitMerge } from "lucide-react";
+import { Loader2, Save, GitMerge, PlusCircle } from "lucide-react";
 import type { User } from "../types/user.types";
-import { Switch } from "@/core/components/ui/switch"; // ✅ correct import
+import { Switch } from "@/core/components/ui/switch";
 
 const ROLES = ["ADMIN", "TEACHER", "STUDENT", "PARENT", "ACCOUNTANT"] as const;
+const SEX_OPTIONS = ["MALE", "FEMALE"] as const;
 
 const schema = z.object({
   username: z.string().min(3, "Minimum 3 characters"),
@@ -266,13 +275,14 @@ const schema = z.object({
   password: z.string().optional().or(z.literal("")),
   role: z.enum(ROLES),
   isVerified: z.boolean(),
+  sex: z.enum(SEX_OPTIONS).optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
 
 export type SubmitMode = "create" | "put" | "patch";
 
-type UserPayload = Partial<User> & { password?: string };
+type UserPayload = Partial<User> & { password?: string; sex?: string };
 
 interface UserFormProps {
   initialValues?: Partial<User>;
@@ -295,22 +305,22 @@ export function UserForm({
       username: initialValues?.username ?? "",
       email: initialValues?.email ?? "",
       password: "",
-      role: (initialValues?.role as (typeof ROLES)[number]) ?? "STUDENT",
+      role: (initialValues?.role as (typeof ROLES)[number]) ?? "ADMIN",
       isVerified: initialValues?.isVerified ?? false,
+      sex: undefined,
     },
   });
 
+  const selectedRole = form.watch("role");
+
   const getChangedFields = (values: FormValues): UserPayload => {
     const changed: UserPayload = {};
-    if (values.username !== (initialValues?.username ?? ""))
-      changed.username = values.username;
-    if (values.email !== (initialValues?.email ?? ""))
-      changed.email = values.email;
-    if (values.role !== (initialValues?.role ?? "STUDENT"))
-      changed.role = values.role;
-    if (values.isVerified !== (initialValues?.isVerified ?? false))
-      changed.isVerified = values.isVerified;
+    if (values.username !== (initialValues?.username ?? "")) changed.username = values.username;
+    if (values.email !== (initialValues?.email ?? "")) changed.email = values.email;
+    if (values.role !== (initialValues?.role ?? "ADMIN")) changed.role = values.role;
+    if (values.isVerified !== (initialValues?.isVerified ?? false)) changed.isVerified = values.isVerified;
     if (values.password?.trim()) changed.password = values.password;
+    if (values.sex) changed.sex = values.sex;
     return changed;
   };
 
@@ -319,10 +329,18 @@ export function UserForm({
       form.setError("password", { message: "Password is required" });
       return;
     }
+
+    // Require sex when creating a student
+    if (!isEdit && values.role === "STUDENT" && !values.sex) {
+      form.setError("sex", { message: "Sex is required for students" });
+      return;
+    }
+
     const payload: UserPayload =
       isEdit && !values.password?.trim()
         ? (({ password, ...rest }) => rest)(values)
         : values;
+
     onSubmit(payload, isEdit ? "put" : "create");
   });
 
@@ -333,6 +351,7 @@ export function UserForm({
   return (
     <Form {...form}>
       <form className="space-y-6">
+
         {/* Username */}
         <FormField
           control={form.control}
@@ -343,9 +362,7 @@ export function UserForm({
               <FormControl>
                 <Input placeholder="Username" {...field} />
               </FormControl>
-              <FormDescription>
-                This is your public display name.
-              </FormDescription>
+              <FormDescription>This is your public display name.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -393,6 +410,37 @@ export function UserForm({
           )}
         />
 
+        {/* Sex — only shown when role is STUDENT */}
+        {selectedRole === "STUDENT" && (
+          <FormField
+            control={form.control}
+            name="sex"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>
+                  Sex <span className="text-red-500">*</span>
+                </FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select sex" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {SEX_OPTIONS.map((s) => (
+                      <SelectItem key={s} value={s}>
+                        {s.charAt(0) + s.slice(1).toLowerCase()}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormDescription>Required for student profiles.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
         {/* Is Verified */}
         <FormField
           control={form.control}
@@ -428,9 +476,7 @@ export function UserForm({
                 <Input type="password" placeholder="Password" {...field} />
               </FormControl>
               <FormDescription>
-                {isEdit
-                  ? "Only fill to change password."
-                  : "This is your password."}
+                {isEdit ? "Only fill to change password." : "This is your password."}
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -438,7 +484,7 @@ export function UserForm({
         />
 
         {/* Actions */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 justify-end">
           {onCancel && (
             <Button type="button" variant="outline" onClick={onCancel}>
               Cancel
@@ -457,8 +503,8 @@ export function UserForm({
             </>
           ) : (
             <Button type="button" onClick={handlePut} disabled={loading}>
-              {loading ? <Loader2 className="animate-spin" /> : <RefreshCw />}
               Submit
+              <PlusCircle className="ml-2" />
             </Button>
           )}
         </div>

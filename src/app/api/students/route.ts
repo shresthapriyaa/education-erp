@@ -74,7 +74,8 @@ export async function POST(req: NextRequest) {
 
     if (error.code === "P2002") {
       return NextResponse.json(
-        { error: `Already exists: ${error.meta?.target}` },
+        { error: `Already exists: 
+          ${error.meta?.target}` },
         { status: 409 }
       );
     }

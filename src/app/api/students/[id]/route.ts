@@ -20,12 +20,20 @@ export async function GET(
     });
 
     if (!student) {
-      return NextResponse.json({ error: "Student not found" }, { status: 404 });
+      return NextResponse.json
+      (
+        { 
+          error: "Student not found"
+         }, 
+        { 
+          status: 404
+         }
+      );
     }
 
     return NextResponse.json(student);
-  } catch (error) {
-    console.error("[STUDENT_GET_ID]", error);
+  } catch (error: any) {
+    console.error("[STUDENT_GET_ID]", error.message);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
@@ -39,9 +47,18 @@ export async function PUT(
     const body = await req.json();
     const { username, email, password, phone, address, img, bloodGroup, sex, dateOfBirth, parentId } = body;
 
-    const existingStudent = await prisma.student.findUnique({ where: { id } });
+    const existingStudent = await prisma.student.findUnique(
+      { where: { id } 
+    }
+  );
     if (!existingStudent) {
-      return NextResponse.json({ error: "Student not found" }, { status: 404 });
+      return NextResponse.json(
+        {
+         error: "Student not found" },
+          { 
+            status: 404 
+          }
+        );
     }
 
     if (email && email !== existingStudent.email) {
@@ -65,7 +82,6 @@ export async function PUT(
         bloodGroup: bloodGroup?.trim() || null,
         sex,
         dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
-        // ✅ Use relation syntax instead of parentId directly
         parent: cleanParentId
           ? { connect: { id: cleanParentId } }
           : { disconnect: true },
@@ -124,9 +140,7 @@ export async function PATCH(
     if (body.bloodGroup !== undefined) studentData.bloodGroup = body.bloodGroup?.trim() || null;
     if (body.sex !== undefined) studentData.sex = body.sex;
     if (body.dateOfBirth !== undefined) studentData.dateOfBirth = body.dateOfBirth ? new Date(body.dateOfBirth) : null;
-    if (hashedPassword) studentData.password = hashedPassword;
-
-    // ✅ Fix parentId → relation syntax
+    
     if (body.parentId !== undefined) {
       const cleanParentId = body.parentId?.trim() || null;
       studentData.parent = cleanParentId
@@ -134,7 +148,6 @@ export async function PATCH(
         : { disconnect: true };
     }
 
-    // Sync user record for changed fields
     const userUpdate: any = {};
     if (body.username !== undefined) userUpdate.username = body.username;
     if (body.email !== undefined) userUpdate.email = body.email;
@@ -175,9 +188,8 @@ export async function DELETE(
       return NextResponse.json({ error: "Student not found" }, { status: 404 });
     }
 
-    // ✅ Delete student first (removes FK constraint), then orphaned user
     await prisma.student.delete({ where: { id } });
-    
+
     if (student.userId) {
       await prisma.user.delete({ where: { id: student.userId } });
     }
@@ -188,3 +200,7 @@ export async function DELETE(
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+
+
+
+

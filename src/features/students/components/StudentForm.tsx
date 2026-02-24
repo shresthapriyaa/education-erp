@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/core/components/ui/select";
-import { Loader2, Save, RefreshCw, GitMerge } from "lucide-react";
+import { Loader2, Save, RefreshCw, GitMerge, PlusCircle } from "lucide-react";
 import { Student } from "../types/student.types";
 
 const SEX_OPTIONS = ["MALE", "FEMALE"] as const;
@@ -355,7 +355,7 @@ export function StudentForm({
         />
 
         {/* Actions */}
-        <div className="flex gap-2 pt-2">
+        <div className="flex gap-2 pt-2 justify-end">
           {onCancel && (
             <Button type="button" variant="outline" onClick={onCancel}>
               Cancel
@@ -373,9 +373,11 @@ export function StudentForm({
               </Button>
             </>
           ) : (
+            
+
             <Button type="button" onClick={handlePut} disabled={loading}>
-              {loading ? <Loader2 className="animate-spin" /> : <RefreshCw />}
               Submit
+              {<PlusCircle className="ml-2" />}
             </Button>
           )}
         </div>

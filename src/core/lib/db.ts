@@ -11,3 +11,8 @@ export const db = globalForPrisma.prisma ?? new PrismaClient({
 if (process.env.NODE_ENV !== 'production') {
   globalForPrisma.prisma = db;
 }
+
+
+
+// // src/core/lib/db.ts
+// export { default as db, default } from "./prisma";

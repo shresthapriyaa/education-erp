@@ -1,136 +1,3 @@
-
-
-// import { NextRequest, NextResponse } from "next/server";
-// import { getToken } from "next-auth/jwt";
-
-// export async function middleware(request: NextRequest) {
-//   const { pathname } = request.nextUrl;
-//   const token = await getToken({
-//     req: request,
-//     secret: process.env.NEXTAUTH_SECRET,
-//   });
-
-//   const isValidToken = token && token.userId && token.email;
-  
-
-//   console.log(token)
-
-//   // Redirect unauthenticated users away from protected routes
-//   if (
-//     !isValidToken &&
-//     (pathname.startsWith("/accountant") ||
-//       pathname.startsWith("/admin") ||
-//       pathname.startsWith("/student") ||
-//       pathname.startsWith("/verification")||
-//       pathname.startsWith("/parent") ||
-//       pathname.startsWith("/teacher")
-
-//     )
-//   ) {
-//     return NextResponse.redirect(new URL("/", request.url));
-//   }
-
-//   // Redirect authenticated users away from auth pages or home
-//   if (
-//     isValidToken &&
-//     (pathname === "/" || pathname.startsWith("/auth")) &&
-//     !pathname.startsWith("/accountant") &&
-//     !pathname.startsWith("/admin") &&
-//     !pathname.startsWith("/student") &&
-//     !pathname.startsWith("/parent") &&
-//     !pathname.startsWith("/teacher") &&
-//     !pathname.startsWith("/verification")
-//   ) {
-//     const redirectUrl = token.isVerified
-//       ? token.role === "ADMIN"
-//         ? "/admin"
-//         : token.role === "STUDENT"
-//         ? "/student":
-//         token.role === "TEACHER"
-//         ? "/teacher"
-//         : token.role === "PARENT"
-//         ? "/parent"
-//         : token.role === "ACCOUNTANT"
-//         ? "/accountant"
-//         : "/student"
-//       : "/verification";
-//     return NextResponse.redirect(new URL(redirectUrl, request.url));
-//   }
-
-//   // Prevent verified users from accessing verification page
-//   if (token?.isVerified && pathname.startsWith("/verification")) {
-//     const redirectUrl =
-//       token.role === "ADMIN"
-//         ? "/admin"
-//         : token.role === "PARENT"
-//         ? "/parent":
-//         token.role === "ACCOUNTANT"?
-//         "/staff":
-//         token.role === "TEACHER"?
-//         "/teacher":
-//         "/student";
-//     return NextResponse.redirect(new URL(redirectUrl, request.url));
-//   }
-
-//   // Prevent unverified users from accessing app and admin routes
-//   if (
-//     isValidToken &&
-//     !token.isVerified &&
-//     (pathname.startsWith("/admin") ||
-//       pathname.startsWith("/teacher") ||
-//       pathname.startsWith("/student") ||
-//       pathname.startsWith("/parent") ||
-//       pathname.startsWith("/accountant"))
-//   ) {
-//     return NextResponse.redirect(new URL("/verification", request.url));
-//   }
-
-//   // Role-based access control for verified users
-//   if (isValidToken && token?.isVerified) {
-    
-//     if (
-//       token.role === "ADMIN" &&
-//       ( pathname.startsWith("/teacher") || pathname.startsWith("/student") || pathname.startsWith("/parent") || pathname.startsWith("/accountant"))
-//     ) {
-//       return NextResponse.redirect(new URL("/admin", request.url));
-//     }
-    
-//     if (
-//       token.role === "TEACHER" &&
-//       (pathname.startsWith("/admin") || pathname.startsWith("/student") || pathname.startsWith("/parent") || pathname.startsWith("/accountant"))
-//     ) {
-//       return NextResponse.redirect(new URL("/teacher", request.url));
-//     }
-
-//     if (
-//       token.role === "PARENT" &&
-//       (pathname.startsWith("/admin") || pathname.startsWith("/teacher") || pathname.startsWith("/student") || pathname.startsWith("/parent") || pathname.startsWith("/accountant"))
-//     ) {
-//       return NextResponse.redirect(new URL("/parent", request.url));
-//     }
-
-//     if (
-//       token.role === "STUDENT" &&
-//       (pathname.startsWith("/admin") || pathname.startsWith("/teacher") || pathname.startsWith("/student") || pathname.startsWith("/parent") || pathname.startsWith("/accountant"))
-//     ) {
-//       return NextResponse.redirect(new URL("/student", request.url));
-//     }
-
-//     if (
-//       token.role === "ACCOUNTANT" &&
-//       (pathname.startsWith("/admin") || pathname.startsWith("/teacher") || pathname.startsWith("/student") || pathname.startsWith("/parent") || pathname.startsWith("/accountant"))
-//     ) {
-//       return NextResponse.redirect(new URL("/accountant", request.url));
-//     }
-
-//   }
-
-
-// }
-
-
-
-
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 
@@ -155,7 +22,7 @@ export async function middleware(request: NextRequest) {
   const isAuthenticated = !!(token && token.userId && token.email);
 
   // --------------------------
-  // 1️⃣ Unauthenticated users
+  // Unauthenticated users
   // --------------------------
   if (
     !isAuthenticated &&
@@ -167,7 +34,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // --------------------------
-  // 2️⃣ Authenticated users visiting auth or home page
+  // 2 Authenticated users visiting auth or home page
   // --------------------------
   if (
     isAuthenticated &&
@@ -181,7 +48,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // --------------------------
-  // 3️⃣ Verified users on verification page
+  // 3️ Verified users on verification page
   // --------------------------
   if (token?.isVerified && pathname.startsWith("/verification")) {
     const redirectUrl = ROLE_DASHBOARD[token.role as string] ?? "/student";
@@ -189,7 +56,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // --------------------------
-  // 4️⃣ Unverified users trying to access dashboards
+  // 4️ Unverified users trying to access dashboards
   // --------------------------
   if (
     isAuthenticated &&
@@ -198,11 +65,14 @@ export async function middleware(request: NextRequest) {
       pathname.startsWith(path)
     )
   ) {
-    return NextResponse.redirect(new URL("/verification", request.url));
+    return NextResponse.redirect(new URL
+      ("/verification", 
+        request.url
+      ));
   }
 
   // --------------------------
-  // 5️⃣ Role-based access control
+  // 5️ Role-based access control
   // --------------------------
   if (isAuthenticated && token.isVerified) {
     const allowedPath = ROLE_DASHBOARD[token.role as string];
@@ -220,5 +90,10 @@ export async function middleware(request: NextRequest) {
   // --------------------------
   return NextResponse.next();
 }
+
+
+
+
+
 
 
