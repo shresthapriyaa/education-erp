@@ -3,14 +3,15 @@
 
 // // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
-}
 
+generator client {
+  provider        = "prisma-client"
+  output          = "../src/generated/prisma"
+  
+}
 datasource db {
   provider = "postgresql"
-  // url      = env("DATABASE_URL")
+  url      = env("DATABASE_URL")
 }
 
 enum Role {
@@ -70,7 +71,7 @@ model Student {
   userId    String   @unique
   user      User     @relation(fields: [userId], references: [id])
   email     String   @unique
-  password  String?
+ isProfileComplete Boolean   @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   phone     String?
