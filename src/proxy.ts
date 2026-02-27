@@ -105,7 +105,7 @@ const ROLE_DASHBOARD: Record<string, string> = {
   ACCOUNTANT: "/accountant",
 };
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const token = await getToken({
@@ -195,6 +195,7 @@ export async function middleware(request: NextRequest) {
   return NextResponse.next();
 }
 
+
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|api|uploads).*)"],
 };

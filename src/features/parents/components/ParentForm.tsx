@@ -11,7 +11,7 @@ import {
 } from "@/core/components/ui/form";
 import { Input } from "@/core/components/ui/input";
 import { Loader2, Save, PlusCircle } from "lucide-react";
-import { Teacher } from "../types/teacher.types";
+import { Parent } from "../types/parent.types";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
@@ -26,23 +26,23 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export type SubmitMode = "create" | "put" | "patch";
-type TeacherPayload = Partial<Teacher>;
+type ParentPayload = Partial<Parent>;
 
-interface TeacherFormProps {
-  initialValues?: Partial<Teacher>;
-  onSubmit: (values: TeacherPayload, mode: SubmitMode) => void;
+interface ParentFormProps {
+  initialValues?: Partial<Parent>;
+  onSubmit: (values: ParentPayload, mode: SubmitMode) => void;
   loading?: boolean;
   isEdit?: boolean;
   onCancel?: () => void;
 }
 
-export function TeacherForm({
+export function ParentForm({
   initialValues,
   onSubmit,
   loading = false,
   isEdit = false,
   onCancel,
-}: TeacherFormProps) {
+}: ParentFormProps) {
   const [imgTimestamp, setImgTimestamp] = useState<number>(Date.now());
 
   const form = useForm<FormValues>({
@@ -56,8 +56,8 @@ export function TeacherForm({
     },
   });
 
-  const getChangedFields = (values: FormValues): TeacherPayload => {
-    const changed: TeacherPayload = {};
+  const getChangedFields = (values: FormValues): ParentPayload => {
+    const changed: ParentPayload = {};
     if (values.username !== (initialValues?.username ?? "")) changed.username = values.username;
     if (values.email !== (initialValues?.email ?? "")) changed.email = values.email;
     if (values.phone !== (initialValues?.phone ?? "")) changed.phone = values.phone;
@@ -68,6 +68,10 @@ export function TeacherForm({
 
   const handlePut = form.handleSubmit((values) => {
     onSubmit(values, isEdit ? "put" : "create");
+  });
+
+  const handlePatch = form.handleSubmit((values) => {
+    onSubmit(getChangedFields(values), "patch");
   });
 
   return (

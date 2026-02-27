@@ -12,20 +12,24 @@ interface ConfirmDeleteDialogProps {
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
   loading?: boolean;
-  teacherName?: string;
+  parentName?: string;
 }
 
 export function ConfirmDeleteDialog({
-  open, onOpenChange, onConfirm, loading = false, teacherName,
+  open,
+  onOpenChange,
+  onConfirm,
+  loading = false,
+  parentName,
 }: ConfirmDeleteDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete Teacher</AlertDialogTitle>
+          <AlertDialogTitle>Delete Parent</AlertDialogTitle>
           <AlertDialogDescription>
             Are you sure you want to delete{" "}
-            <span className="font-semibold">{teacherName ?? "this teacher"}</span>?
+            <span className="font-semibold">{parentName ?? "this parent"}</span>?
             This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>

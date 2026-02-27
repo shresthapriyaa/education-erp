@@ -3,30 +3,35 @@
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/core/components/ui/dialog";
-import { TeacherForm, SubmitMode } from "./TeacherForm";
-import { Teacher } from "../types/teacher.types";
+import { ParentForm, SubmitMode } from "./ParentForm";
+import { Parent } from "../types/parent.types";
 
-type TeacherPayload = Partial<Teacher>;
+type ParentPayload = Partial<Parent>;
 
-interface TeacherDialogProps {
+interface ParentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  initialValues?: Partial<Teacher>;
-  onSubmit: (values: TeacherPayload, mode: SubmitMode) => void;
+  initialValues?: Partial<Parent>;
+  onSubmit: (values: ParentPayload, mode: SubmitMode) => void;
   loading?: boolean;
   isEdit?: boolean;
 }
 
-export function TeacherDialog({
-  open, onOpenChange, initialValues, onSubmit, loading = false, isEdit = false,
-}: TeacherDialogProps) {
+export function ParentDialog({
+  open,
+  onOpenChange,
+  initialValues,
+  onSubmit,
+  loading = false,
+  isEdit = false,
+}: ParentDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit Teacher" : "Add Teacher"}</DialogTitle>
+          <DialogTitle>{isEdit ? "Edit Parent" : "Add Parent"}</DialogTitle>
         </DialogHeader>
-        <TeacherForm
+        <ParentForm
           initialValues={initialValues}
           onSubmit={onSubmit}
           loading={loading}
