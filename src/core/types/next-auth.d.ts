@@ -9,6 +9,7 @@ declare module "next-auth" {
       username: string | null
       role: string
       isVerified: boolean
+      onboarded: boolean
     } & DefaultSession["user"]
   }
 
@@ -16,6 +17,7 @@ declare module "next-auth" {
     username?: string | null
     role?: string
     isVerified?: boolean
+    onboarded?: boolean
   }
 }
 
@@ -25,5 +27,6 @@ declare module "next-auth/jwt" {
     username: string | null
     role: string
     isVerified: boolean
+    onboarded: boolean
   }
 }

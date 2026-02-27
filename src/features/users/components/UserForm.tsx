@@ -492,10 +492,7 @@ export function UserForm({
           )}
           {isEdit ? (
             <>
-              <Button type="button" onClick={handlePatch} disabled={loading}>
-                {loading ? <Loader2 className="animate-spin" /> : <GitMerge />}
-                Save Changes
-              </Button>
+              
               <Button type="button" onClick={handlePut} disabled={loading}>
                 {loading ? <Loader2 className="animate-spin" /> : <Save />}
                 Save All

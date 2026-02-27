@@ -1,11 +1,5 @@
-import React from 'react'
+import { OnboardingForm } from "@/features/onboarding/components/OnboardingFrom";
 
-const page = () => {
-  return (
-    <div>
-      onboarding page
-    </div>
-  )
+export default function OnboardingPage() {
+  return <OnboardingForm/>;
 }
-
-export default page

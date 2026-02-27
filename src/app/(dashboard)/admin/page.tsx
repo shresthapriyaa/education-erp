@@ -1,5 +1,5 @@
 import React from 'react'
-import Admin from '@/features/admin/components/admin'
+import Admin from '@/features/admin/components/dashboard/admin'
 const page = () => {
   return (
     <div>
