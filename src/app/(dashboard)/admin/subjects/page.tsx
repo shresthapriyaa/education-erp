@@ -1,10 +1,10 @@
-import AccountantsPage from '@/features/accountants/components/Accountant'
+import SubjectsPage from '@/features/subjects/components/Subject'
 import React from 'react'
 
 const page = () => {
   return (
     <div>
-      <AccountantsPage/>
+      <SubjectsPage/>
     </div>
   )
 }
