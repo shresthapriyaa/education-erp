@@ -440,7 +440,7 @@ const menu: MenuItem[] = [
   },
   {
     label: "Exams",
-    href: "/exams",
+    href: "/admin/exams",
     icon: <ClipboardList className="w-5 h-5" />,
   },
   {
