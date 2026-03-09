@@ -1,16 +1,48 @@
 // "use client";
-
 // import { ReactNode, useEffect, useState, useMemo } from "react";
 // import { useSession, signOut } from "next-auth/react";
 // import { usePathname, useRouter } from "next/navigation";
 // import {
-//   LayoutDashboard,Users, Settings,LogOut,Shield,Menu,GraduationCap,UserCircle,BookOpen, FileText,ClipboardList,BookMarked,Trophy,UserCheck,
-//   Briefcase,School,CalendarDays,MessageSquare,Bell,MoreHorizontal,Search,UsersRound} from "lucide-react";
+//   LayoutDashboard,
+//   Users,
+//   Settings,
+//   LogOut,
+//   Shield,
+//   Menu,
+//   GraduationCap,
+//   UserCircle,
+//   BookOpen,
+//   FileText,
+//   ClipboardList,
+//   BookMarked,
+//   Trophy,
+//   UserCheck,
+//   Briefcase,
+//   School,
+//   CalendarDays,
+//   MessageSquare,
+//   Bell,
+//   MoreHorizontal,
+//   Search,
+//   UsersRound,
+//   ChevronDown,
+// } from "lucide-react";
 // import { Button } from "@/core/components/ui/button";
 // import { ScrollArea } from "@/core/components/ui/scroll-area";
 // import { Input } from "@/core/components/ui/input";
-// import {DropdownMenu,DropdownMenuContent,DropdownMenuItem,DropdownMenuLabel,DropdownMenuSeparator,DropdownMenuTrigger,} from "@/core/components/ui/dropdown-menu";
-// import { Collapsible,CollapsibleContent,CollapsibleTrigger,} from "@/core/components/ui/collapsible";
+// import {
+//   DropdownMenu,
+//   DropdownMenuContent,
+//   DropdownMenuItem,
+//   DropdownMenuLabel,
+//   DropdownMenuSeparator,
+//   DropdownMenuTrigger,
+// } from "@/core/components/ui/dropdown-menu";
+// import {
+//   Collapsible,
+//   CollapsibleContent,
+//   CollapsibleTrigger,
+// } from "@/core/components/ui/collapsible";
 // import { cn } from "@/core/lib/utils";
 // import { Avatar, AvatarFallback } from "@/core/components/ui/avatar";
 
@@ -76,7 +108,7 @@
 //   },
 //   {
 //     label: "Exams",
-//     href: "/exams",
+//     href: "/admin/exams",
 //     icon: <ClipboardList className="w-5 h-5" />,
 //   },
 //   {
@@ -124,28 +156,30 @@
 //     if (!searchQuery.trim()) return menu;
 
 //     const query = searchQuery.toLowerCase();
-    
-//     return menu.filter((item) => {
-//       if (item.label.toLowerCase().includes(query)) return true;
-      
-//       if (item.submenu) {
-//         return item.submenu.some((subItem) =>
-//           subItem.label.toLowerCase().includes(query)
-//         );
-//       }
-      
-//       return false;
-//     }).map((item) => {
-//       if (item.submenu) {
-//         return {
-//           ...item,
-//           submenu: item.submenu.filter((subItem) =>
-//             subItem.label.toLowerCase().includes(query)
-//           ),
-//         };
-//       }
-//       return item;
-//     });
+
+//     return menu
+//       .filter((item) => {
+//         if (item.label.toLowerCase().includes(query)) return true;
+
+//         if (item.submenu) {
+//           return item.submenu.some((subItem) =>
+//             subItem.label.toLowerCase().includes(query),
+//           );
+//         }
+
+//         return false;
+//       })
+//       .map((item) => {
+//         if (item.submenu) {
+//           return {
+//             ...item,
+//             submenu: item.submenu.filter((subItem) =>
+//               subItem.label.toLowerCase().includes(query),
+//             ),
+//           };
+//         }
+//         return item;
+//       });
 //   }, [searchQuery]);
 
 //   const userInitials = useMemo(() => {
@@ -170,7 +204,7 @@
 
 //   const toggleMenu = (label: string) => {
 //     setOpenMenus((prev) =>
-//       prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]
+//       prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label],
 //     );
 //   };
 
@@ -193,11 +227,21 @@
 //               className={cn(
 //                 "w-full justify-start gap-3 h-10 px-3",
 //                 isActive &&
-//                   "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground"
+//                   "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
 //               )}
 //             >
 //               {item.icon}
-//               {!collapsed && <span className="flex-1 text-left">{item.label}</span>}
+//               {!collapsed && (
+//                 <>
+//                   <span className="flex-1 text-left">{item.label}</span>
+//                   <ChevronDown
+//                     className={cn(
+//                       "w-4 h-4 transition-transform duration-200",
+//                       (isOpen || searchQuery.length > 0) && "rotate-180",
+//                     )}
+//                   />
+//                 </>
+//               )}
 //             </Button>
 //           </CollapsibleTrigger>
 //           <CollapsibleContent className="ml-6 pl-3 border-l-2 border-muted mt-1">
@@ -210,11 +254,13 @@
 //                   className={cn(
 //                     "w-full justify-start gap-2 h-9 pl-3 rounded-none",
 //                     pathname === subItem.href &&
-//                       "bg-muted text-foreground hover:bg-muted hover:text-foreground"
+//                       "bg-muted text-foreground hover:bg-muted hover:text-foreground",
 //                   )}
 //                 >
 //                   {subItem.icon}
-//                   <span className="flex-1 text-left text-sm">{subItem.label}</span>
+//                   <span className="flex-1 text-left text-sm">
+//                     {subItem.label}
+//                   </span>
 //                 </Button>
 //               ))}
 //             </div>
@@ -231,7 +277,7 @@
 //         className={cn(
 //           "w-full justify-start gap-3 h-10 px-3",
 //           isActive &&
-//             "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground"
+//             "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
 //         )}
 //       >
 //         {item.icon}
@@ -246,7 +292,7 @@
 //       <aside
 //         className={cn(
 //           "border-r bg-card flex flex-col transition-all duration-300",
-//           collapsed ? "w-20" : "w-64"
+//           collapsed ? "w-20" : "w-64",
 //         )}
 //       >
 //         {/* HEADER */}
@@ -271,7 +317,6 @@
 //             )}
 //           </nav>
 //         </ScrollArea>
-        
 
 //         {/* USER MENU */}
 //         <div className="border-t p-3">
@@ -363,18 +408,32 @@
 // }
 
 
+
+
+
+
+
 "use client";
 import { ReactNode, useEffect, useState, useMemo } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  LayoutDashboard,Users, Settings,LogOut,Shield,Menu,GraduationCap,UserCircle,BookOpen, FileText,ClipboardList,BookMarked,Trophy,UserCheck,
-  Briefcase,School,CalendarDays,MessageSquare,Bell,MoreHorizontal,Search,UsersRound,ChevronDown} from "lucide-react";
+  LayoutDashboard, Users, Settings, LogOut, Shield, Menu,
+  GraduationCap, UserCircle, BookOpen, FileText, ClipboardList,
+  BookMarked, Trophy, UserCheck, Briefcase, School, CalendarDays,
+  MessageSquare, Bell, MoreHorizontal, Search, UsersRound, ChevronDown,
+  DollarSign, Library, StickyNote,
+} from "lucide-react";
 import { Button } from "@/core/components/ui/button";
 import { ScrollArea } from "@/core/components/ui/scroll-area";
 import { Input } from "@/core/components/ui/input";
-import {DropdownMenu,DropdownMenuContent,DropdownMenuItem,DropdownMenuLabel,DropdownMenuSeparator,DropdownMenuTrigger,} from "@/core/components/ui/dropdown-menu";
-import { Collapsible,CollapsibleContent,CollapsibleTrigger,} from "@/core/components/ui/collapsible";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/core/components/ui/dropdown-menu";
+import {
+  Collapsible, CollapsibleContent, CollapsibleTrigger,
+} from "@/core/components/ui/collapsible";
 import { cn } from "@/core/lib/utils";
 import { Avatar, AvatarFallback } from "@/core/components/ui/avatar";
 
@@ -396,83 +455,27 @@ const menu: MenuItem[] = [
     href: "/admin/users",
     icon: <Users className="w-5 h-5" />,
     submenu: [
-      {
-        label: "All Users",
-        href: "/admin/users",
-        icon: <UsersRound className="w-4 h-4" />,
-      },
-      {
-        label: "Students",
-        href: "/admin/students",
-        icon: <GraduationCap className="w-4 h-4" />,
-      },
-      {
-        label: "Teachers",
-        href: "/admin/teachers",
-        icon: <UserCircle className="w-4 h-4" />,
-      },
-      {
-        label: "Parents",
-        href: "/admin/parents",
-        icon: <UserCheck className="w-4 h-4" />,
-      },
-      {
-        label: "Accountants",
-        href: "/admin/accountants",
-        icon: <Briefcase className="w-4 h-4" />,
-      },
+      { label: "All Users", href: "/admin/users", icon: <UsersRound className="w-4 h-4" /> },
+      { label: "Students", href: "/admin/students", icon: <GraduationCap className="w-4 h-4" /> },
+      { label: "Teachers", href: "/admin/teachers", icon: <UserCircle className="w-4 h-4" /> },
+      { label: "Parents", href: "/admin/parents", icon: <UserCheck className="w-4 h-4" /> },
+      { label: "Accountants", href: "/admin/accountants", icon: <Briefcase className="w-4 h-4" /> },
     ],
   },
-  {
-    label: "Subjects",
-    href: "/admin/subjects",
-    icon: <BookMarked className="w-5 h-5" />,
-  },
-  {
-    label: "Classes",
-    href: "/admin/classes",
-    icon: <School className="w-5 h-5" />,
-  },
-  {
-    label: "Lessons",
-    href: "/admin/lessons",
-    icon: <BookOpen className="w-5 h-5" />,
-  },
-  {
-    label: "Exams",
-    href: "/admin/exams",
-    icon: <ClipboardList className="w-5 h-5" />,
-  },
-  {
-    label: "Assignments",
-    href: "/admin/assignments",
-    icon: <FileText className="w-5 h-5" />,
-  },
-  {
-    label: "Results",
-    href: "/admin/results",
-    icon: <Trophy className="w-5 h-5" />,
-  },
-  {
-    label: "Attendance",
-    href: "/admin/attendance",
-    icon: <UserCheck className="w-5 h-5" />,
-  },
-  {
-    label: "Events",
-    href: "/admin/events",
-    icon: <CalendarDays className="w-5 h-5" />,
-  },
-  {
-    label: "Messages",
-    href: "/admin/messages",
-    icon: <MessageSquare className="w-5 h-5" />,
-  },
-  {
-    label: "Announcements",
-    href: "/admin/announcements",
-    icon: <Bell className="w-5 h-5" />,
-  },
+  { label: "Subjects", href: "/admin/subjects", icon: <BookMarked className="w-5 h-5" /> },
+  { label: "Classes", href: "/admin/classes", icon: <School className="w-5 h-5" /> },
+  { label: "Lessons", href: "/admin/lessons", icon: <BookOpen className="w-5 h-5" /> },
+  { label: "Exams", href: "/admin/exams", icon: <ClipboardList className="w-5 h-5" /> },
+  { label: "Assignments", href: "/admin/assignments", icon: <FileText className="w-5 h-5" /> },
+  { label: "Results", href: "/admin/results", icon: <Trophy className="w-5 h-5" /> },
+  { label: "Attendance", href: "/admin/attendance", icon: <UserCheck className="w-5 h-5" /> },
+  { label: "Schedule", href: "/admin/schedules", icon: <CalendarDays className="w-5 h-5" /> },
+  { label: "Fees", href: "/admin/fees", icon: <DollarSign className="w-5 h-5" /> },
+  { label: "Events", href: "/admin/events", icon: <CalendarDays className="w-5 h-5" /> },
+  { label: "Notices", href: "/admin/notices", icon: <StickyNote className="w-5 h-5" /> },
+  { label: "Messages", href: "/admin/messages", icon: <MessageSquare className="w-5 h-5" /> },
+  { label: "Announcements", href: "/admin/announcements", icon: <Bell className="w-5 h-5" /> },
+  { label: "Library", href: "/admin/library", icon: <Library className="w-5 h-5" /> },
 ];
 
 export default function SideBar({ children }: { children: ReactNode }) {
@@ -483,33 +486,28 @@ export default function SideBar({ children }: { children: ReactNode }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [openMenus, setOpenMenus] = useState<string[]>([]);
 
-  // Filter menu items based on search
   const filteredMenu = useMemo(() => {
     if (!searchQuery.trim()) return menu;
-
     const query = searchQuery.toLowerCase();
-    
-    return menu.filter((item) => {
-      if (item.label.toLowerCase().includes(query)) return true;
-      
-      if (item.submenu) {
-        return item.submenu.some((subItem) =>
-          subItem.label.toLowerCase().includes(query)
-        );
-      }
-      
-      return false;
-    }).map((item) => {
-      if (item.submenu) {
-        return {
-          ...item,
-          submenu: item.submenu.filter((subItem) =>
-            subItem.label.toLowerCase().includes(query)
-          ),
-        };
-      }
-      return item;
-    });
+    return menu
+      .filter((item) => {
+        if (item.label.toLowerCase().includes(query)) return true;
+        if (item.submenu) {
+          return item.submenu.some((sub) => sub.label.toLowerCase().includes(query));
+        }
+        return false;
+      })
+      .map((item) => {
+        if (item.submenu) {
+          return {
+            ...item,
+            submenu: item.submenu.filter((sub) =>
+              sub.label.toLowerCase().includes(query)
+            ),
+          };
+        }
+        return item;
+      });
   }, [searchQuery]);
 
   const userInitials = useMemo(() => {
@@ -538,7 +536,7 @@ export default function SideBar({ children }: { children: ReactNode }) {
     );
   };
 
-  const renderMenuItem = (item: MenuItem, isSubmenu = false) => {
+  const renderMenuItem = (item: MenuItem) => {
     const isActive = pathname === item.href;
     const hasSubmenu = item.submenu && item.submenu.length > 0;
     const isOpen = openMenus.includes(item.label);
@@ -556,8 +554,7 @@ export default function SideBar({ children }: { children: ReactNode }) {
               variant="ghost"
               className={cn(
                 "w-full justify-start gap-3 h-10 px-3",
-                isActive &&
-                  "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground"
+                isActive && "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground"
               )}
             >
               {item.icon}
@@ -604,8 +601,7 @@ export default function SideBar({ children }: { children: ReactNode }) {
         onClick={() => router.push(item.href)}
         className={cn(
           "w-full justify-start gap-3 h-10 px-3",
-          isActive &&
-            "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground"
+          isActive && "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground"
         )}
       >
         {item.icon}
@@ -619,12 +615,12 @@ export default function SideBar({ children }: { children: ReactNode }) {
       {/* SIDEBAR */}
       <aside
         className={cn(
-          "border-r bg-card flex flex-col transition-all duration-300",
+          "border-r bg-card flex flex-col h-screen sticky top-0 transition-all duration-300",
           collapsed ? "w-20" : "w-64"
         )}
       >
         {/* HEADER */}
-        <div className="px-4 py-4 border-b flex items-center justify-between">
+        <div className="px-4 py-4 border-b flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <Shield className="w-6 h-6 text-primary" />
             {!collapsed && (
@@ -633,8 +629,8 @@ export default function SideBar({ children }: { children: ReactNode }) {
           </div>
         </div>
 
-        {/* NAV */}
-        <ScrollArea className="flex-1 px-2 py-4">
+        {/* NAV - scrollable */}
+        <ScrollArea className="flex-1 overflow-hidden px-2 py-4">
           <nav className="space-y-1">
             {filteredMenu.length > 0 ? (
               filteredMenu.map((item) => renderMenuItem(item))
@@ -645,16 +641,12 @@ export default function SideBar({ children }: { children: ReactNode }) {
             )}
           </nav>
         </ScrollArea>
-        
 
         {/* USER MENU */}
-        <div className="border-t p-3">
+        <div className="border-t p-3 shrink-0">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="w-full justify-start gap-3 h-auto py-2"
-              >
+              <Button variant="ghost" className="w-full justify-start gap-3 h-auto py-2">
                 <Avatar className="h-8 w-8">
                   <AvatarFallback>{userInitials}</AvatarFallback>
                 </Avatar>
@@ -695,18 +687,13 @@ export default function SideBar({ children }: { children: ReactNode }) {
       </aside>
 
       {/* CONTENT */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-screen">
         {/* TOP BAR */}
-        <header className="border-b bg-card px-6 py-4 flex items-center gap-4">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setCollapsed(!collapsed)}
-          >
+        <header className="border-b bg-card px-6 py-4 flex items-center gap-4 sticky top-0 z-10">
+          <Button variant="outline" size="icon" onClick={() => setCollapsed(!collapsed)}>
             <Menu className="w-5 h-5" />
           </Button>
 
-          {/* SEARCH BAR */}
           <div className="flex-1 max-w-md">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
