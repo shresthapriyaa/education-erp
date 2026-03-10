@@ -45,6 +45,7 @@ enum Day {
   SUNDAY
 }
 
+
 model User {
   id        String      @id @default(cuid())
   username  String
@@ -173,15 +174,7 @@ model Grade {
   updatedAt    DateTime @updatedAt
 }
 
-model Attendance {
-  id        String   @id @default(cuid())
-  studentId String
-  date      DateTime
-  status    AttendanceStatus
-  student   Student  @relation(fields: [studentId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
+
 
 model Event {
   id          String   @id @default(cuid())
@@ -229,7 +222,7 @@ model Class {
   teacherId String
   teacher   Teacher @relation(fields: [teacherId], references: [id])
   schedules Schedule[]
-
+sessions  Session[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -296,6 +289,82 @@ model Message {
   receiver   User @relation("ReceivedMessages", fields: [receiverId], references: [id])
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+}
+
+
+
+
+model School {
+  id           String       @id @default(cuid())
+  name         String
+  address      String?
+  latitude     Float
+  longitude    Float
+  radiusMeters Float        @default(200)
+  zones        SchoolZone[]
+  sessions     Session[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model SchoolZone {
+  id           String       @id @default(cuid())
+  schoolId     String
+  school       School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  name         String
+  description  String?
+  latitude     Float
+  longitude    Float
+  radiusMeters Float        @default(100)
+  color        String?
+  isActive     Boolean      @default(true)
+  attendances  Attendance[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model Session {
+  id         String       @id @default(cuid())
+  classId    String
+  class      Class        @relation(fields: [classId], references: [id])
+  schoolId   String
+  school     School       @relation(fields: [schoolId], references: [id])
+  date       DateTime
+  startTime  DateTime
+  endTime    DateTime?
+  isOpen     Boolean      @default(false)
+  attendance Attendance[]
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+}
+
+model Attendance {
+  id        String           @id @default(cuid())
+  studentId String
+  student   Student          @relation(fields: [studentId], references: [id])
+  date      DateTime
+  status    AttendanceStatus
+
+  sessionId          String?
+  session            Session?    @relation(fields: [sessionId], references: [id])
+
+  markedLatitude     Float?
+  markedLongitude    Float?
+  distanceFromCenter Float?
+  distanceFromZone   Float?
+
+  detectedZoneId     String?
+  detectedZone       SchoolZone? @relation(fields: [detectedZoneId], references: [id])
+
+  withinSchool       Boolean     @default(false)
+  gpsAccuracy        Float?
+  deviceInfo         String?
+  ipAddress          String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, sessionId])
 }
 
 
