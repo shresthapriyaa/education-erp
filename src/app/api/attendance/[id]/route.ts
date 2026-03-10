@@ -1,10 +1,4 @@
-/**
- * src/app/api/attendance/[id]/route.ts
- *
- * GET    /api/attendance/:id  — fetch single record (own or admin)
- * PATCH  /api/attendance/:id  — admin: update status
- * DELETE /api/attendance/:id  — admin: delete record
- */
+
 
 import { PrismaClient } from "@/generated/prisma/client";
 import { NextRequest, NextResponse } from "next/server";
