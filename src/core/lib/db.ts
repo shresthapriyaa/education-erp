@@ -14,5 +14,3 @@ if (process.env.NODE_ENV !== 'production') {
 
 
 
-// // src/core/lib/db.ts
-// export { default as db, default } from "./prisma";

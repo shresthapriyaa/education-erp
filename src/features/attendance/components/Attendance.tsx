@@ -30,7 +30,6 @@ import type {
   AttendanceStatus,
 } from "@/features/attendance/types/attendance.types";
 
-// TODO: replace with real auth session
 const ADMIN_USER_ID = "admin-user-id";
 
 const STATUS_OPTIONS: { value: AttendanceStatus | ""; label: string }[] = [
@@ -88,14 +87,14 @@ export default function AdminAttendancePage() {
     loadList(filters);
   };
 
-  // ── Pagination ────────────────────────────────────────────────────────────
+  
   const totalPages  = Math.ceil(totalRecords / filters.pageSize);
   const currentPage = filters.page;
 
   return (
     <div className="container max-w-7xl mx-auto py-8 px-4 space-y-6">
 
-      {/* Header */}
+ 
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Attendance</h1>
@@ -188,11 +187,11 @@ export default function AdminAttendancePage() {
             />
 
             {/* Date to */}
-            <Input
+            {/* <Input
               type="date"
               value={filters.dateTo}
               onChange={e => setDateTo(e.target.value)}
-            />
+            /> */}
           </div>
 
           {hasActiveFilters && (
