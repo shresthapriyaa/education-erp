@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/core/lib/prisma";
 
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const classId  = searchParams.get("classId")  || "";
     const schoolId = searchParams.get("schoolId") || "";
-    const open     = searchParams.get("open");      // "true" | "false" | null
+    const open     = searchParams.get("open");
 
     const sessions = await prisma.session.findMany({
       where: {
@@ -20,12 +21,10 @@ export async function GET(req: NextRequest) {
         startTime: true,
         endTime:   true,
         isOpen:    true,
-        class: {
-          select: { id: true, name: true },
-        },
-        school: {
-          select: { id: true, name: true },
-        },
+        createdAt: true,
+        class:  { select: { id: true, name: true } },
+        school: { select: { id: true, name: true } },
+        _count: { select: { attendance: true } },
       },
       orderBy: { date: "desc" },
     });
@@ -37,12 +36,13 @@ export async function GET(req: NextRequest) {
   }
 }
 
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    if (!body.classId || !body.schoolId || !body.date || !body.startTime) {
-      const missing = ["classId", "schoolId", "date", "startTime"].filter(f => !body[f]);
+    const missing = ["classId", "schoolId", "date", "startTime"].filter(f => !body[f]);
+    if (missing.length) {
       return NextResponse.json({ error: `Missing: ${missing.join(", ")}` }, { status: 400 });
     }
 
@@ -61,12 +61,10 @@ export async function POST(req: NextRequest) {
         startTime: true,
         endTime:   true,
         isOpen:    true,
-        class: {
-          select: { id: true, name: true },
-        },
-        school: {
-          select: { id: true, name: true },
-        },
+        createdAt: true,
+        class:  { select: { id: true, name: true } },
+        school: { select: { id: true, name: true } },
+        _count: { select: { attendance: true } },
       },
     });
 

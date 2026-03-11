@@ -22,7 +22,7 @@ import {
 import { fmtDist } from "@/core/lib/haversine";
 import type { AttendanceDTO, AttendanceStatus } from "../types/attendance.types";
 
-// ─── Config ───────────────────────────────────────────────────────────────────
+
 
 const STATUS_BADGE: Record<
   AttendanceStatus,
@@ -34,7 +34,7 @@ const STATUS_BADGE: Record<
   EXCUSED: { variant: "outline",     label: "Excused" },
 };
 
-// ─── Props ────────────────────────────────────────────────────────────────────
+
 
 interface AttendanceTableProps {
   records:   AttendanceDTO[];
@@ -45,7 +45,7 @@ interface AttendanceTableProps {
   onDelete?: (record: AttendanceDTO) => void;
 }
 
-// ─── Skeleton ─────────────────────────────────────────────────────────────────
+
 
 function SkeletonRows({ count = 5 }: { count?: number }) {
   return (
@@ -63,7 +63,7 @@ function SkeletonRows({ count = 5 }: { count?: number }) {
   );
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
+
 
 export function AttendanceTable({
   records, loading, isAdmin, onView, onEdit, onDelete,
@@ -165,7 +165,7 @@ export function AttendanceTable({
                     ) : "—"}
                   </TableCell>
 
-                  {/* On campus */}
+                
                   <TableCell>
                     {rec.withinSchool ? (
                       <div className="flex items-center gap-1 text-emerald-600 text-xs font-medium">
@@ -178,7 +178,7 @@ export function AttendanceTable({
                     )}
                   </TableCell>
 
-                  {/* Admin actions */}
+                 
                   {isAdmin && (
                     <TableCell onClick={e => e.stopPropagation()}>
                       <DropdownMenu>
