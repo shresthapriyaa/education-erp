@@ -558,6 +558,12 @@ const menu: MenuItem[] = [
     icon: <BookOpen className="w-5 h-5" />,
   },
   {
+    label: "Grades",
+    href: "/admin/grades",
+   icon: <ClipboardList className="w-5 h-5" />,
+
+  },
+  {
     label: "Exams",
     href: "/admin/exams",
     icon: <ClipboardList className="w-5 h-5" />,
@@ -633,7 +639,7 @@ function useBreadcrumbs(pathname: string): BreadcrumbSegment[] {
 
     if (pathname === "/admin") return crumbs;
 
-    // Find parent menu item that contains current path as submenu
+    
     for (const item of menu) {
       if (item.submenu) {
         const sub = item.submenu.find((s) => s.href === pathname);

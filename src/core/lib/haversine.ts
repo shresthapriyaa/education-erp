@@ -50,7 +50,7 @@ export interface ZoneDetection {
   directionToCenter:  string;
 }
 
-// ─── Math ─────────────────────────────────────────────────────────────────────
+
 
 function toRad(d: number) { return d * Math.PI / 180; }
 
