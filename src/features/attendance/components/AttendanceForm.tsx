@@ -187,10 +187,7 @@
 
 "use client";
 
-/**
- * src/features/attendance/components/AttendanceForm.tsx
- * Admin: manually create or edit an attendance record.
- */
+
 
 import { useState, useEffect } from "react";
 import { Button }   from "@/core/components/ui/button";

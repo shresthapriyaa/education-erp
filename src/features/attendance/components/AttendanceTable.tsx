@@ -1,9 +1,4 @@
 "use client";
-
-/**
- * src/features/attendance/components/AttendanceTable.tsx
- */
-
 import {
   Table, TableBody, TableCell, TableHead,
   TableHeader, TableRow,
@@ -21,9 +16,6 @@ import {
 } from "lucide-react";
 import { fmtDist } from "@/core/lib/haversine";
 import type { AttendanceDTO, AttendanceStatus } from "../types/attendance.types";
-
-
-
 const STATUS_BADGE: Record<
   AttendanceStatus,
   { variant: "default" | "secondary" | "destructive" | "outline"; label: string }
@@ -33,9 +25,6 @@ const STATUS_BADGE: Record<
   ABSENT:  { variant: "destructive", label: "Absent"  },
   EXCUSED: { variant: "outline",     label: "Excused" },
 };
-
-
-
 interface AttendanceTableProps {
   records:   AttendanceDTO[];
   loading?:  boolean;
@@ -44,9 +33,6 @@ interface AttendanceTableProps {
   onEdit?:   (record: AttendanceDTO) => void;
   onDelete?: (record: AttendanceDTO) => void;
 }
-
-
-
 function SkeletonRows({ count = 5 }: { count?: number }) {
   return (
     <>
@@ -62,9 +48,6 @@ function SkeletonRows({ count = 5 }: { count?: number }) {
     </>
   );
 }
-
-
-
 export function AttendanceTable({
   records, loading, isAdmin, onView, onEdit, onDelete,
 }: AttendanceTableProps) {

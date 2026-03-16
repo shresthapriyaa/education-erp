@@ -472,6 +472,7 @@ import {
   StickyNote,
   ChevronRight,
   Home,
+  MapPin,
 } from "lucide-react";
 import { Button } from "@/core/components/ui/button";
 import { ScrollArea } from "@/core/components/ui/scroll-area";
@@ -552,6 +553,11 @@ const menu: MenuItem[] = [
     href: "/admin/schools",
     icon: <School className="w-5 h-5" />,
   },
+  {
+  label: "School Zones",
+  href: "/admin/schoolzones",
+  icon: <MapPin className="w-5 h-5" />,
+},
   {
     label: "Lessons",
     href: "/admin/lessons",
