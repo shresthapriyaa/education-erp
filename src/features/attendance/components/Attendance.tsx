@@ -1,8 +1,6 @@
 "use client";
 
-/**
- * src/app/(dashboard)/admin/attendance/page.tsx
- */
+
 
 import { useEffect, useState }         from "react";
 import { Button }                      from "@/core/components/ui/button";

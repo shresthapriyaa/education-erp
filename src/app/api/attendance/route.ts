@@ -1,7 +1,4 @@
-
-
 import { NextRequest, NextResponse } from "next/server";
-
 import {
   detectSchoolZone,
   isValidCoords,
@@ -13,14 +10,12 @@ import { PrismaClient } from "@/generated/prisma/client";
 
 const prisma = new PrismaClient();
 
-// ─── Shared student select ────────────────────────────────────────────────────
 const STUDENT_SELECT = {
   id:       true,
   username: true,
   email:    true,
 } as const;
 
-// ─── Shared attendance include ────────────────────────────────────────────────
 const ATTENDANCE_INCLUDE = {
   student: { select: STUDENT_SELECT },
   session: {
@@ -39,7 +34,6 @@ const ATTENDANCE_INCLUDE = {
   detectedZone: { select: { id: true, name: true, color: true } },
 } as const;
 
-// ─── Shape a prisma record into the DTO ──────────────────────────────────────
 function toDTO(r: any) {
   return {
     id:                 r.id,
@@ -76,7 +70,6 @@ function toDTO(r: any) {
   };
 }
 
-// ─── GET ──────────────────────────────────────────────────────────────────────
 export async function GET(req: NextRequest) {
   try {
     const userId = req.headers.get("x-user-id");
@@ -89,7 +82,6 @@ export async function GET(req: NextRequest) {
       searchParams.has("dateFrom") ||
       searchParams.has("pageSize");
 
-    // ── Admin: paginated list ─────────────────────────────────────────────────
     if (isAdminView) {
       const status   = searchParams.get("status")   || undefined;
       const classId  = searchParams.get("classId")  || undefined;
@@ -123,7 +115,6 @@ export async function GET(req: NextRequest) {
         }),
       ]);
 
-      // Summary counts
       const stats = await prisma.attendance.groupBy({
         by: ["status"],
         where,
@@ -147,12 +138,10 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // ── Student: today's open sessions ────────────────────────────────────────
     const now        = new Date();
     const todayStart = new Date(new Date(now).setHours(0,  0,  0,  0));
     const todayEnd   = new Date(new Date(now).setHours(23, 59, 59, 999));
 
-    // Find the student profile
     const student = await prisma.student.findUnique({
       where:  { userId },
       select: { id: true },
@@ -213,7 +202,6 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// ─── POST ─────────────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   try {
     const userId = req.headers.get("x-user-id");
@@ -222,11 +210,15 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { sessionId, latitude, longitude, accuracy, isManualOverride } = body;
 
-    // ── Admin manual override ─────────────────────────────────────────────────
+    // ── Manual override (admin) 
     if (isManualOverride) {
       const { studentId, status } = body;
+
       if (!studentId || !sessionId || !status)
-        return NextResponse.json({ success: false, error: "studentId, sessionId, status required." }, { status: 400 });
+        return NextResponse.json(
+          { success: false, error: "studentId, sessionId, status required." },
+          { status: 400 }
+        );
 
       const session = await prisma.session.findUnique({
         where:  { id: sessionId },
@@ -235,14 +227,28 @@ export async function POST(req: NextRequest) {
       if (!session)
         return NextResponse.json({ success: false, error: "Session not found." }, { status: 404 });
 
+      // If record already exists → update instead of create
+      const existing = await prisma.attendance.findUnique({
+        where: { studentId_sessionId: { studentId, sessionId } },
+      });
+
+      if (existing) {
+        const updated = await prisma.attendance.update({
+          where:   { studentId_sessionId: { studentId, sessionId } },
+          data:    { status, deviceInfo: `admin-override:${userId}` },
+          include: ATTENDANCE_INCLUDE,
+        });
+        return NextResponse.json({ success: true, attendance: toDTO(updated) });
+      }
+
       const record = await prisma.attendance.create({
         data: {
           studentId,
           sessionId,
-          date:       session.date,
+          date:         session.date,
           status,
           withinSchool: false,
-          deviceInfo: `admin-override:${userId}`,
+          deviceInfo:   `admin-override:${userId}`,
         },
         include: ATTENDANCE_INCLUDE,
       });
@@ -250,14 +256,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, attendance: toDTO(record) }, { status: 201 });
     }
 
-    // ── Student GPS mark ──────────────────────────────────────────────────────
+    // ── GPS-based attendance 
     if (!sessionId || latitude == null || longitude == null)
-      return NextResponse.json({ success: false, error: "sessionId, latitude, longitude required." }, { status: 400 });
+      return NextResponse.json(
+        { success: false, error: "sessionId, latitude, longitude required." },
+        { status: 400 }
+      );
 
     if (!isValidCoords({ latitude, longitude }))
       return NextResponse.json({ success: false, error: "Invalid coordinates." }, { status: 400 });
 
-    // Resolve studentId from userId
     const student = await prisma.student.findUnique({
       where:  { userId },
       select: { id: true },
@@ -288,9 +296,11 @@ export async function POST(req: NextRequest) {
       where: { studentId_sessionId: { studentId, sessionId } },
     });
     if (exists)
-      return NextResponse.json({ success: false, error: "Already marked for this session." }, { status: 409 });
+      return NextResponse.json(
+        { success: false, error: "Already marked for this session." },
+        { status: 409 }
+      );
 
-    // ── Haversine detection ───────────────────────────────────────────────────
     const school = session.school;
     const boundary: SchoolBoundaryInput = {
       id:           school.id,
@@ -306,13 +316,12 @@ export async function POST(req: NextRequest) {
       })),
     };
 
-    const detection = detectSchoolZone({ latitude, longitude }, boundary, accuracy ?? 0);
-
+    const detection  = detectSchoolZone({ latitude, longitude }, boundary, accuracy ?? 0);
     const minutesLate = (Date.now() - session.startTime.getTime()) / 60_000;
     const status =
-      !detection.withinSchool          ? "ABSENT"
-      : minutesLate > LATE_THRESHOLD_MIN ? "LATE"
-      :                                    "PRESENT";
+      !detection.withinSchool             ? "ABSENT"
+      : minutesLate > LATE_THRESHOLD_MIN  ? "LATE"
+      :                                     "PRESENT";
 
     const record = await prisma.attendance.create({
       data: {
