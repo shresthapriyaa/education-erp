@@ -1,79 +1,149 @@
-import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/core/lib/prisma";
+// import { NextRequest, NextResponse } from "next/server";
+// import prisma from "@/core/lib/prisma";
 
+
+// export async function GET(req: NextRequest) {
+//   try {
+//     const { searchParams } = new URL(req.url);
+//     const classId  = searchParams.get("classId")  || "";
+//     const schoolId = searchParams.get("schoolId") || "";
+//     const open     = searchParams.get("open");
+
+//     const sessions = await prisma.session.findMany({
+//       where: {
+//         ...(classId  && { classId }),
+//         ...(schoolId && { schoolId }),
+//         ...(open !== null && { isOpen: open === "true" }),
+//       },
+//       select: {
+//         id:        true,
+//         date:      true,
+//         startTime: true,
+//         endTime:   true,
+//         isOpen:    true,
+//         createdAt: true,
+//         class:  { select: { id: true, name: true } },
+//         school: { select: { id: true, name: true } },
+//         _count: { select: { attendance: true } },
+//       },
+//       orderBy: { date: "desc" },
+//     });
+
+//     return NextResponse.json(sessions);
+//   } catch (error: any) {
+//     console.error("[SESSIONS_GET]", error.message);
+//     return NextResponse.json({ error: "Failed to fetch sessions" }, { status: 500 });
+//   }
+// }
+
+
+// export async function POST(req: NextRequest) {
+//   try {
+//     const body = await req.json();
+
+//     const missing = ["classId", "schoolId", "date", "startTime"].filter(f => !body[f]);
+//     if (missing.length) {
+//       return NextResponse.json({ error: `Missing: ${missing.join(", ")}` }, { status: 400 });
+//     }
+
+//     const session = await prisma.session.create({
+//       data: {
+//         classId:   body.classId,
+//         schoolId:  body.schoolId,
+//         date:      new Date(body.date),
+//         startTime: new Date(body.startTime),
+//         endTime:   body.endTime ? new Date(body.endTime) : null,
+//         isOpen:    body.isOpen ?? false,
+//       },
+//       select: {
+//         id:        true,
+//         date:      true,
+//         startTime: true,
+//         endTime:   true,
+//         isOpen:    true,
+//         createdAt: true,
+//         class:  { select: { id: true, name: true } },
+//         school: { select: { id: true, name: true } },
+//         _count: { select: { attendance: true } },
+//       },
+//     });
+
+//     return NextResponse.json(session, { status: 201 });
+//   } catch (error: any) {
+//     console.error("[SESSIONS_POST]", error.message);
+//     if (error.code === "P2003") {
+//       return NextResponse.json({ error: "Invalid classId or schoolId" }, { status: 400 });
+//     }
+//     return NextResponse.json({ error: error.message }, { status: 500 });
+//   }
+// }
+
+
+
+
+import { NextRequest, NextResponse } from "next/server";
+import  prisma  from "@/core/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/core/lib/auth";
 
 export async function GET(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session || !["ADMIN", "TEACHER"].includes(session.user.role)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   try {
-    const { searchParams } = new URL(req.url);
-    const classId  = searchParams.get("classId")  || "";
-    const schoolId = searchParams.get("schoolId") || "";
-    const open     = searchParams.get("open");
-
+    const where: any = {};
+    if (session.user.role === "TEACHER") {
+      const teacher = await prisma.teacher.findUnique({
+        where:  { userId: session.user.id },
+        select: { id: true },
+      });
+      if (!teacher) return NextResponse.json({ error: "Teacher not found" }, { status: 404 });
+      where.class = { teacherId: teacher.id };
+    }
     const sessions = await prisma.session.findMany({
-      where: {
-        ...(classId  && { classId }),
-        ...(schoolId && { schoolId }),
-        ...(open !== null && { isOpen: open === "true" }),
-      },
+      where,
+      orderBy: { startTime: "desc" },
       select: {
-        id:        true,
-        date:      true,
-        startTime: true,
-        endTime:   true,
-        isOpen:    true,
-        createdAt: true,
+        id: true, date: true, startTime: true,
+        endTime: true, isOpen: true, createdAt: true,
         class:  { select: { id: true, name: true } },
         school: { select: { id: true, name: true } },
         _count: { select: { attendance: true } },
       },
-      orderBy: { date: "desc" },
     });
-
-    return NextResponse.json(sessions);
+    return NextResponse.json({ sessions, total: sessions.length });
   } catch (error: any) {
     console.error("[SESSIONS_GET]", error.message);
     return NextResponse.json({ error: "Failed to fetch sessions" }, { status: 500 });
   }
 }
 
-
 export async function POST(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session || !["ADMIN", "TEACHER"].includes(session.user.role)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   try {
-    const body = await req.json();
-
-    const missing = ["classId", "schoolId", "date", "startTime"].filter(f => !body[f]);
-    if (missing.length) {
-      return NextResponse.json({ error: `Missing: ${missing.join(", ")}` }, { status: 400 });
+    const { classId, schoolId, date, startTime, endTime, isOpen } = await req.json();
+    if (!classId || !schoolId || !date || !startTime) {
+      return NextResponse.json(
+        { error: "classId, schoolId, date, startTime required" },
+        { status: 400 }
+      );
     }
-
-    const session = await prisma.session.create({
+    const record = await prisma.session.create({
       data: {
-        classId:   body.classId,
-        schoolId:  body.schoolId,
-        date:      new Date(body.date),
-        startTime: new Date(body.startTime),
-        endTime:   body.endTime ? new Date(body.endTime) : null,
-        isOpen:    body.isOpen ?? false,
-      },
-      select: {
-        id:        true,
-        date:      true,
-        startTime: true,
-        endTime:   true,
-        isOpen:    true,
-        createdAt: true,
-        class:  { select: { id: true, name: true } },
-        school: { select: { id: true, name: true } },
-        _count: { select: { attendance: true } },
+        classId, schoolId,
+        date:      new Date(date),
+        startTime: new Date(startTime),
+        endTime:   endTime ? new Date(endTime) : null,
+        isOpen:    isOpen ?? false,
       },
     });
-
-    return NextResponse.json(session, { status: 201 });
+    return NextResponse.json(record, { status: 201 });
   } catch (error: any) {
     console.error("[SESSIONS_POST]", error.message);
-    if (error.code === "P2003") {
-      return NextResponse.json({ error: "Invalid classId or schoolId" }, { status: 400 });
-    }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
