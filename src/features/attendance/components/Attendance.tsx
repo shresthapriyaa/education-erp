@@ -1,380 +1,500 @@
+// // "use client";
+
+// // export default function AdminAttendancePage() {
+// //   return (
+// //     <div>
+// //       <h1>Admin Attendance</h1>
+// //     </div>
+// //   );
+// // }
+
+
+
+
+// "use client";
+
+// import { useState, useEffect, useCallback } from "react";
+// import { AttendanceTable }        from "./AttendanceTable";
+// import { AttendanceSummaryCards } from "./AttendanceSummary";
+// import { AttendanceDialog }       from "./AttendanceDialog";
+// import { ConfirmDelete }          from "./ConfirmDelete";
+// import { Button }                 from "@/core/components/ui/button";
+// import { Plus, RefreshCw, Search, Filter } from "lucide-react";
+// import type {
+//   AttendanceRecord,
+//   AttendanceSummary,
+//   AttendanceDTO,
+//   AttendanceFormValues,
+//   AttendanceStatus,
+// } from "../types/attendance.types";
+
+// // ─── helpers ──────────────────────────────────────────────────────
+
+// function toRecord(dto: AttendanceDTO): AttendanceRecord {
+//   return {
+//     id:          dto.id,
+//     studentId:   dto.student?.id    ?? "",
+//     studentName: dto.student?.username ?? "Unknown",
+//     rollNo:      dto.student?.id    ?? "",
+//     date:        dto.date?.slice(0, 10) ?? "",
+//     time:        dto.markedAt
+//       ? new Date(dto.markedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+//       : "—",
+//     status:  (dto.status as AttendanceStatus) ?? "Absent",
+//     method:  dto.withinSchool != null ? "Geofence" : "Manual",
+//     latitude:  dto.markedLatitude  ?? undefined,
+//     longitude: dto.markedLongitude ?? undefined,
+//     distanceFromSchool: dto.distanceFromCenter ?? undefined,
+//   };
+// }
+
+// function calcSummary(records: AttendanceRecord[]): AttendanceSummary {
+//   const total   = records.length;
+//   const present = records.filter(r => r.status === "Present").length;
+//   const absent  = records.filter(r => r.status === "Absent").length;
+//   const late    = records.filter(r => r.status === "Late").length;
+//   return {
+//     total,
+//     present,
+//     absent,
+//     late,
+//     percentage: total > 0 ? Math.round(((present + late) / total) * 100) : 0,
+//   };
+// }
+
+// // ─── Component ────────────────────────────────────────────────────
+
+// export default function AdminAttendancePage() {
+//   const [records,  setRecords]  = useState<AttendanceRecord[]>([]);
+//   const [dtoMap,   setDtoMap]   = useState<Record<string, AttendanceDTO>>({});
+//   const [loading,  setLoading]  = useState(true);
+//   const [search,   setSearch]   = useState("");
+//   const [dateFrom, setDateFrom] = useState("");
+//   const [dateTo,   setDateTo]   = useState("");
+
+//   // dialog state
+//   const [dialogOpen,   setDialogOpen]   = useState(false);
+//   const [dialogMode,   setDialogMode]   = useState<"create" | "edit">("create");
+//   const [editRecord,   setEditRecord]   = useState<AttendanceDTO | undefined>();
+//   const [saving,       setSaving]       = useState(false);
+
+//   // delete state
+//   const [deleteOpen,   setDeleteOpen]   = useState(false);
+//   const [deleteId,     setDeleteId]     = useState<string | null>(null);
+//   const [deleting,     setDeleting]     = useState(false);
+
+//   // ── fetch ────────────────────────────────────────────────────────
+//   const fetchRecords = useCallback(async () => {
+//     setLoading(true);
+//     try {
+//       const params = new URLSearchParams({ pageSize: "100" });
+//       if (search)   params.set("search",   search);
+//       if (dateFrom) params.set("dateFrom", dateFrom);
+//       if (dateTo)   params.set("dateTo",   dateTo);
+
+//       const res  = await fetch(`/api/attendance?${params}`);
+//       const data = await res.json();
+
+//       const dtos: AttendanceDTO[] = data.records ?? [];
+//       const map: Record<string, AttendanceDTO> = {};
+//       dtos.forEach(d => { map[d.id] = d; });
+
+//       setDtoMap(map);
+//       setRecords(dtos.map(toRecord));
+//     } catch (err) {
+//       console.error("Failed to fetch attendance", err);
+//     } finally {
+//       setLoading(false);
+//     }
+//   }, [search, dateFrom, dateTo]);
+
+//   useEffect(() => { fetchRecords(); }, [fetchRecords]);
+
+//   // ── create / edit ────────────────────────────────────────────────
+//   function openCreate() {
+//     setEditRecord(undefined);
+//     setDialogMode("create");
+//     setDialogOpen(true);
+//   }
+
+//   function openEdit(record: AttendanceRecord) {
+//     setEditRecord(dtoMap[record.id]);
+//     setDialogMode("edit");
+//     setDialogOpen(true);
+//   }
+
+//   async function handleSave(values: AttendanceFormValues) {
+//     setSaving(true);
+//     try {
+//       const isEdit = dialogMode === "edit" && editRecord;
+//       const url    = isEdit
+//         ? `/api/attendance/${editRecord!.id}`
+//         : "/api/attendance";
+
+//       await fetch(url, {
+//         method:  isEdit ? "PATCH" : "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body:    JSON.stringify({ ...values, isManualOverride: true }),
+//       });
+
+//       setDialogOpen(false);
+//       fetchRecords();
+//     } finally {
+//       setSaving(false);
+//     }
+//   }
+
+//   // ── delete ───────────────────────────────────────────────────────
+//   function openDelete(record: AttendanceRecord) {
+//     setDeleteId(record.id);
+//     setDeleteOpen(true);
+//   }
+
+//   async function handleDelete() {
+//     if (!deleteId) return;
+//     setDeleting(true);
+//     try {
+//       await fetch(`/api/attendance/${deleteId}`, { method: "DELETE" });
+//       setDeleteOpen(false);
+//       setDeleteId(null);
+//       fetchRecords();
+//     } finally {
+//       setDeleting(false);
+//     }
+//   }
+
+//   const summary = calcSummary(records);
+
+//   return (
+//     <div className="p-6 space-y-6 max-w-6xl mx-auto">
+
+//       {/* Header */}
+//       <div className="flex items-center justify-between">
+//         <div>
+//           <h1 className="text-2xl font-bold text-gray-900">Attendance</h1>
+//           <p className="text-sm text-gray-500 mt-0.5">Manage and review student attendance records</p>
+//         </div>
+//         <div className="flex gap-2">
+//           <Button variant="outline" size="sm" onClick={fetchRecords}>
+//             <RefreshCw size={14} className="mr-2" /> Refresh
+//           </Button>
+//           <Button size="sm" onClick={openCreate}>
+//             <Plus size={14} className="mr-2" /> Add Record
+//           </Button>
+//         </div>
+//       </div>
+
+//       {/* Summary Cards */}
+//       <AttendanceSummaryCards summary={summary} loading={loading} showWarning={false} />
+
+//       {/* Filters */}
+//       <div className="flex flex-wrap gap-3 items-center">
+//         <div className="relative flex-1 min-w-[200px]">
+//           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+//           <input
+//             type="text"
+//             placeholder="Search student..."
+//             value={search}
+//             onChange={e => setSearch(e.target.value)}
+//             className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+//           />
+//         </div>
+//         <div className="flex items-center gap-2">
+//           <Filter size={14} className="text-gray-400" />
+//           <input
+//             type="date"
+//             value={dateFrom}
+//             onChange={e => setDateFrom(e.target.value)}
+//             className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+//           />
+//           <span className="text-gray-400 text-sm">to</span>
+//           <input
+//             type="date"
+//             value={dateTo}
+//             onChange={e => setDateTo(e.target.value)}
+//             className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+//           />
+//         </div>
+//         {(search || dateFrom || dateTo) && (
+//           <Button
+//             variant="ghost"
+//             size="sm"
+//             onClick={() => { setSearch(""); setDateFrom(""); setDateTo(""); }}
+//           >
+//             Clear
+//           </Button>
+//         )}
+//       </div>
+
+//       {/* Table */}
+//       <AttendanceTable
+//         records={records}
+//         loading={loading}
+//         showStudent
+//         showMethod
+//       />
+
+//       {/* Create / Edit Dialog */}
+//       <AttendanceDialog
+//         open={dialogOpen}
+//         onOpenChange={setDialogOpen}
+//         mode={dialogMode}
+//         record={editRecord}
+//         saving={saving}
+//         onSave={handleSave}
+//       />
+
+//       {/* Delete Dialog */}
+//       <ConfirmDelete
+//         open={deleteOpen}
+//         onOpenChange={setDeleteOpen}
+//         onConfirm={handleDelete}
+//         loading={deleting}
+//       />
+//     </div>
+//   );
+// }
+
+
 "use client";
 
-import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react"; //  real session
-import { Button } from "@/core/components/ui/button";
-import { Input } from "@/core/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/core/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/core/components/ui/select";
-import { Badge } from "@/core/components/ui/badge";
-import {
-  Plus,
-  Search,
-  X,
-  Filter,
-  ChevronLeft,
-  ChevronRight,
-  BarChart3,
-} from "lucide-react";
-import {
-  AttendanceTable,
-  AttendanceDialog,
-  ConfirmDelete,
-} from "@/features/attendance/components";
-import { useAttendance } from "@/features/attendance/hooks/useAttendance";
-import { useAttendanceFilters } from "@/features/attendance/hooks/useAttendanceFilters";
+import { useState, useEffect, useCallback } from "react";
+import { AttendanceTable }        from "./AttendanceTable";
+import { AttendanceSummaryCards } from "./AttendanceSummary";
+import { AttendanceDialog }       from "./AttendanceDialog";
+import { ConfirmDelete }          from "./ConfirmDelete";
+import { Button }                 from "@/core/components/ui/button";
+import { Plus, RefreshCw, Search, Filter } from "lucide-react";
 import type {
+  AttendanceRecord,
+  AttendanceSummary,
   AttendanceDTO,
   AttendanceFormValues,
   AttendanceStatus,
-} from "@/features/attendance/types/attendance.types";
+} from "../types/attendance.types";
 
-const STATUS_OPTIONS: { value: AttendanceStatus | ""; label: string }[] = [
-  { value: "", label: "All Statuses" },
-  { value: "PRESENT", label: "Present" },
-  { value: "LATE", label: "Late" },
-  { value: "ABSENT", label: "Absent" },
-  { value: "EXCUSED", label: "Excused" },
-];
+// ─── helpers ──────────────────────────────────────────────────────
 
-type DialogMode = "create" | "edit" | null;
+function toRecord(dto: AttendanceDTO): AttendanceRecord {
+  return {
+    id:          dto.id,
+    studentId:   dto.student?.id    ?? "",
+    studentName: dto.student?.username ?? "Unknown",
+    rollNo:      dto.student?.id    ?? "",
+    date:        dto.date?.slice(0, 10) ?? "",
+    time:        dto.markedAt
+      ? new Date(dto.markedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      : "—",
+    status:  (dto.status as AttendanceStatus) ?? "Absent",
+    method:  dto.withinSchool != null ? "Geofence" : "Manual",
+    latitude:  dto.markedLatitude  ?? undefined,
+    longitude: dto.markedLongitude ?? undefined,
+    distanceFromSchool: dto.distanceFromCenter ?? undefined,
+  };
+}
+
+function calcSummary(records: AttendanceRecord[]): AttendanceSummary {
+  const total   = records.length;
+  const present = records.filter(r => r.status === "Present").length;
+  const absent  = records.filter(r => r.status === "Absent").length;
+  const late    = records.filter(r => r.status === "Late").length;
+  return {
+    total,
+    present,
+    absent,
+    late,
+    percentage: total > 0 ? Math.round(((present + late) / total) * 100) : 0,
+  };
+}
+
+// ─── Component ────────────────────────────────────────────────────
 
 export default function AdminAttendancePage() {
-  const { data: session, status: authStatus } = useSession(); // ✅ real auth
+  const [records,  setRecords]  = useState<AttendanceRecord[]>([]);
+  const [dtoMap,   setDtoMap]   = useState<Record<string, AttendanceDTO>>({});
+  const [loading,  setLoading]  = useState(true);
+  const [search,   setSearch]   = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo,   setDateTo]   = useState("");
 
-  const {
-    records,
-    summary,
-    totalRecords,
-    listLoading,
-    listError,
-    saving,
-    deleting,
-    loadList,
-    create,
-    update,
-    remove,
-  } = useAttendance(); // ✅ no userId needed — backend uses getServerSession
+  // dialog state
+  const [dialogOpen,   setDialogOpen]   = useState(false);
+  const [dialogMode,   setDialogMode]   = useState<"create" | "edit">("create");
+  const [editRecord,   setEditRecord]   = useState<AttendanceDTO | undefined>();
+  const [saving,       setSaving]       = useState(false);
 
-  const {
-    filters,
-    setStatus,
-    setDateFrom,
-    setDateTo,
-    setPage,
-    setPageSize,
-    resetFilters,
-    localSearch,
-    setLocalSearch,
-    commitSearch,
-    handleSearchKeyDown,
-    hasActiveFilters,
-    activeFilterCount,
-    pageSizeOptions,
-  } = useAttendanceFilters();
+  // delete state
+  const [deleteOpen,   setDeleteOpen]   = useState(false);
+  const [deleteId,     setDeleteId]     = useState<string | null>(null);
+  const [deleting,     setDeleting]     = useState(false);
 
-  // ✅ stable dep — individual filter values instead of JSON.stringify
-  useEffect(() => {
-    if (authStatus === "authenticated") {
-      loadList(filters);
+  // ── fetch ────────────────────────────────────────────────────────
+  const fetchRecords = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({ pageSize: "100" });
+      if (search)   params.set("search",   search);
+      if (dateFrom) params.set("dateFrom", dateFrom);
+      if (dateTo)   params.set("dateTo",   dateTo);
+
+      const res  = await fetch(`/api/attendance?${params}`);
+      const data = await res.json();
+
+      const dtos: AttendanceDTO[] = data.records ?? [];
+      const map: Record<string, AttendanceDTO> = {};
+      dtos.forEach(d => { map[d.id] = d; });
+
+      setDtoMap(map);
+      setRecords(dtos.map(toRecord));
+    } catch (err) {
+      console.error("Failed to fetch attendance", err);
+    } finally {
+      setLoading(false);
     }
-  }, [
-    authStatus,
-    filters.status,
-    filters.dateFrom,
-    filters.dateTo,
-    filters.search,
-    filters.page,
-    filters.pageSize,
-  ]);
+  }, [search, dateFrom, dateTo]);
 
-  const [dialogMode, setDialogMode] = useState<DialogMode>(null);
-  const [editRecord, setEditRecord] = useState<AttendanceDTO | null>(null);
-  const [deleteRecord, setDeleteRecord] = useState<AttendanceDTO | null>(null);
-  const [deleteOpen, setDeleteOpen] = useState(false);
+  useEffect(() => { fetchRecords(); }, [fetchRecords]);
 
-  const openCreate = () => {
-    setEditRecord(null);
+  // ── create / edit ────────────────────────────────────────────────
+  function openCreate() {
+    setEditRecord(undefined);
     setDialogMode("create");
-  };
-  const openEdit = (r: AttendanceDTO) => {
-    setEditRecord(r);
+    setDialogOpen(true);
+  }
+
+  function openEdit(record: AttendanceRecord) {
+    setEditRecord(dtoMap[record.id]);
     setDialogMode("edit");
-  };
-  const openDelete = (r: AttendanceDTO) => {
-    setDeleteRecord(r);
-    setDeleteOpen(true);
-  };
+    setDialogOpen(true);
+  }
 
-  const handleSave = async (values: AttendanceFormValues) => {
-    if (dialogMode === "create") {
-      await create(values);
-    } else if (dialogMode === "edit" && editRecord) {
-      await update(editRecord.id, values);
+  async function handleSave(values: AttendanceFormValues) {
+    setSaving(true);
+    try {
+      const isEdit = dialogMode === "edit" && editRecord;
+      const url    = isEdit
+        ? `/api/attendance/${editRecord!.id}`
+        : "/api/attendance";
+
+      await fetch(url, {
+        method:  isEdit ? "PATCH" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ ...values, isManualOverride: true }),
+      });
+
+      setDialogOpen(false);
+      fetchRecords();
+    } finally {
+      setSaving(false);
     }
-    setDialogMode(null);
-    loadList(filters);
-  };
-
-  const handleDelete = async (id: string) => {
-    await remove(id);
-    loadList(filters);
-  };
-
-  const totalPages = Math.ceil(totalRecords / filters.pageSize);
-  const currentPage = filters.page;
-
-  // ✅ Show loading state while session is loading
-  if (authStatus === "loading") {
-    return (
-      <div className="h-screen flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-t-transparent border-primary" />
-      </div>
-    );
   }
 
-  // ✅ Guard — only ADMIN and TEACHER can see this page
-  if (!session || !["ADMIN", "TEACHER"].includes(session.user.role)) {
-    return (
-      <div className="container max-w-7xl mx-auto py-8 px-4">
-        <p className="text-destructive">
-          You do not have permission to view this page.
-        </p>
-      </div>
-    );
+  // ── delete ───────────────────────────────────────────────────────
+  function openDelete(record: AttendanceRecord) {
+    setDeleteId(record.id);
+    setDeleteOpen(true);
   }
+
+  async function handleDelete() {
+    if (!deleteId) return;
+    setDeleting(true);
+    try {
+      await fetch(`/api/attendance/${deleteId}`, { method: "DELETE" });
+      setDeleteOpen(false);
+      setDeleteId(null);
+      fetchRecords();
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  const summary = calcSummary(records);
 
   return (
-    <div className="container max-w-7xl mx-auto py-8 px-4 space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
+    <div className="p-6 space-y-6 max-w-6xl mx-auto">
+
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Attendance</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Manage and review all attendance records
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900">Attendance</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Manage and review student attendance records</p>
         </div>
-        <Button onClick={openCreate}>
-          <Plus size={15} className="mr-2" /> Add Record
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={fetchRecords}>
+            <RefreshCw size={14} className="mr-2" /> Refresh
+          </Button>
+          <Button size="sm" onClick={openCreate}>
+            <Plus size={14} className="mr-2" /> Add Record
+          </Button>
+        </div>
       </div>
 
-      {/* Summary cards */}
-      {summary && (
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-          {(["PRESENT", "LATE", "ABSENT", "EXCUSED"] as const).map((s) => (
-            <Card key={s} className="text-center">
-              <CardContent className="pt-4 pb-3">
-                <p className="text-2xl font-bold">{summary[s]}</p>
-                <p className="text-xs text-muted-foreground mt-0.5 uppercase tracking-wide">
-                  {s.toLowerCase()}
-                </p>
-              </CardContent>
-            </Card>
-          ))}
-          <Card className="text-center bg-primary/5 border-primary/20">
-            <CardContent className="pt-4 pb-3">
-              <p
-                className={`text-2xl font-bold ${
-                  summary.attendanceRate >= 75
-                    ? "text-emerald-600"
-                    : summary.attendanceRate >= 50
-                      ? "text-amber-500"
-                      : "text-destructive"
-                }`}
-              >
-                {summary.attendanceRate}%
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5 flex items-center justify-center gap-1">
-                <BarChart3 size={10} /> Rate
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      {/* Summary Cards */}
+      <AttendanceSummaryCards summary={summary} loading={loading} showWarning={false} />
 
       {/* Filters */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm flex items-center gap-2">
-            <Filter size={14} />
-            Filters
-            {hasActiveFilters && (
-              <Badge variant="secondary" className="ml-1">
-                {activeFilterCount}
-              </Badge>
-            )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <div className="relative sm:col-span-2 lg:col-span-1">
-              <Search
-                size={14}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-              />
-              <Input
-                placeholder="Search student…"
-                className="pl-9"
-                value={localSearch}
-                onChange={(e) => setLocalSearch(e.target.value)}
-                onKeyDown={handleSearchKeyDown}
-                onBlur={commitSearch}
-              />
-            </div>
-
-            <Select
-              value={filters.status || "__all__"}
-              onValueChange={(v) =>
-                setStatus(v === "__all__" ? "" : (v as AttendanceStatus))
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                {STATUS_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value || "__all__"}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Input
-              type="date"
-              value={filters.dateFrom}
-              onChange={(e) => setDateFrom(e.target.value)}
-            />
-
-            <Input
-              type="date"
-              value={filters.dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
-            />
-          </div>
-
-          {hasActiveFilters && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={resetFilters}
-              className="mt-3 h-7 text-muted-foreground"
-            >
-              <X size={12} className="mr-1.5" /> Clear filters
-            </Button>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Table */}
-      <div className="space-y-3">
-        {listError && (
-          <div className="rounded-xl bg-destructive/10 border border-destructive/20 px-4 py-3 text-sm text-destructive">
-            {listError}
-          </div>
-        )}
-
-        <AttendanceTable
-          records={records}
-          loading={listLoading}
-          isAdmin
-          onEdit={openEdit}
-          onDelete={openDelete}
-        />
-
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between pt-2 flex-wrap gap-3">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>
-                {(currentPage - 1) * filters.pageSize + 1}–
-                {Math.min(currentPage * filters.pageSize, totalRecords)} of{" "}
-                {totalRecords}
-              </span>
-              <Select
-                value={String(filters.pageSize)}
-                onValueChange={(v) => setPageSize(Number(v))}
-              >
-                <SelectTrigger className="h-7 w-[90px] text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {pageSizeOptions.map((n) => (
-                    <SelectItem key={n} value={String(n)}>
-                      {n} / page
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setPage(currentPage - 1)}
-                disabled={currentPage <= 1}
-              >
-                <ChevronLeft size={14} />
-              </Button>
-
-              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                const pg = i + Math.max(1, currentPage - 2);
-                if (pg > totalPages) return null;
-                return (
-                  <Button
-                    key={pg}
-                    variant={pg === currentPage ? "default" : "outline"}
-                    size="icon"
-                    className="h-8 w-8 text-xs"
-                    onClick={() => setPage(pg)}
-                  >
-                    {pg}
-                  </Button>
-                );
-              })}
-
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => setPage(currentPage + 1)}
-                disabled={currentPage >= totalPages}
-              >
-                <ChevronRight size={14} />
-              </Button>
-            </div>
-          </div>
+      <div className="flex flex-wrap gap-3 items-center">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search student..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <Filter size={14} className="text-gray-400" />
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={e => setDateFrom(e.target.value)}
+            className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <span className="text-gray-400 text-sm">to</span>
+          <input
+            type="date"
+            value={dateTo}
+            onChange={e => setDateTo(e.target.value)}
+            className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        {(search || dateFrom || dateTo) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => { setSearch(""); setDateFrom(""); setDateTo(""); }}
+          >
+            Clear
+          </Button>
         )}
       </div>
 
+      {/* Table */}
+      <AttendanceTable
+        records={records}
+        loading={loading}
+        showStudent
+        showMethod
+      />
+
+      {/* Create / Edit Dialog */}
       <AttendanceDialog
-        open={dialogMode !== null}
-        onOpenChange={(open) => {
-          if (!open) setDialogMode(null);
-        }}
-        mode={dialogMode ?? "create"}
-        record={editRecord ?? undefined}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        mode={dialogMode}
+        record={editRecord}
         saving={saving}
         onSave={handleSave}
       />
 
+      {/* Delete Dialog */}
       <ConfirmDelete
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
-        record={deleteRecord}
         onConfirm={handleDelete}
+        loading={deleting}
       />
     </div>
   );

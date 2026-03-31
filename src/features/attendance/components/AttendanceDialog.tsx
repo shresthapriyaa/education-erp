@@ -19,17 +19,19 @@ import {
   Loader2, Shield, AlertTriangle, RefreshCw,
 } from "lucide-react";
 import {
-  checkZone, detectSchoolZone, fmtDist,
+  detectSchoolZone, fmtDist,
   type SchoolBoundaryInput,
-} from "@/core/lib/haversine";
+} from "@/core/lib/haversineDistance";
 import { useGeolocationState }  from "../hooks/useAttendance";
 import { AttendanceForm }        from "./AttendanceForm";
-import type {
-  AttendanceDTO,
-  AttendanceFormValues,
-  MarkAttendanceResponse,
-  SessionDTO,
-} from "../types/attendance.types";
+// import type {
+//   AttendanceRecord,
+//   AttendanceDTO,
+//   AttendanceFormValues,
+//   MarkAttendanceResponse,
+// } from "../types/attendance.types";
+import { SessionDTO } from "@/features/sessions";
+import { AttendanceDTO, AttendanceFormValues, MarkAttendanceResponse } from "../types/attendance.types";
 
 // ─── Mark mode ────────────────────────────────────────────────────────────────
 
@@ -39,7 +41,7 @@ function MarkContent({
   session:    SessionDTO;
   markResult: MarkAttendanceResponse | null;
   marking:    boolean;
-  onMark:     (lat: number, lng: number, accuracy?: number) => Promise<MarkAttendanceResponse>;
+  onMark:     (lat: number, lng: number, accuracy?: number) => Promise<MarkAttendanceResponse>; // ✅ fixed typo
   onClose:    () => void;
 }) {
   const { loc, request, isSupported } = useGeolocationState();
@@ -48,12 +50,12 @@ function MarkContent({
     id:           session.school.id,
     name:         session.school.name,
     center:       { latitude: session.school.latitude, longitude: session.school.longitude },
-    radiusMeters: session.school.radiusMeters,
-    zones: session.school.zones.map(z => ({
+    radiusMeters: session.school.radiusMeters ?? 0,           // ✅ fallback
+    zones: (session.school.zones ?? []).map(z => ({           // ✅ safe fallback
       id:           z.id,
       name:         z.name,
       center:       { latitude: z.latitude, longitude: z.longitude },
-      radiusMeters: z.radiusMeters,
+      radiusMeters: z.radiusMeters ?? 0,                      // ✅ fallback
       color:        z.color ?? undefined,
     })),
   };
@@ -83,11 +85,11 @@ function MarkContent({
         </div>
         <div className="flex justify-between">
           <span className="text-muted-foreground">Boundary</span>
-          <span className="font-mono">{session.school.radiusMeters}m radius</span>
+          <span className="font-mono">{session.school.radiusMeters ?? 0}m radius</span>
         </div>
         <div className="flex justify-between">
           <span className="text-muted-foreground">Zones</span>
-          <span>{session.school.zones.length} zones</span>
+          <span>{(session.school.zones ?? []).length} zones</span> {/* ✅ safe fallback */}
         </div>
       </div>
 

@@ -372,7 +372,7 @@ import {
   clampRadius,
   LATE_THRESHOLD_MIN,
   type SchoolBoundaryInput,
-} from "@/core/lib/haversine";
+} from "@/core/lib/haversineDistance";
 import prisma  from "@/core/lib/prisma";           
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/core/lib/auth";
