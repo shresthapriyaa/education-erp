@@ -2,10 +2,10 @@
 // export { AttendanceForm }   from "./AttendanceForm";
 // export { AttendanceDialog } from "./AttendanceDialog";
 // export { ConfirmDelete }    from "./ConfirmDelete";
-export * from './Attendance';
-export * from './AttendanceDialog';
+export * from './admin/Attendance';
+export * from './admin/AttendanceDialog';
 export * from './AttendanceForm';
 export * from './AttendanceTable';
-export * from './AttendanceSummary';
-export * from './ConfirmDelete';
+export * from './admin/AttendanceSummary';
+export * from './admin/ConfirmDelete';
 export * from './Geofencecheckin';

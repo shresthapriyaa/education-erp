@@ -89,6 +89,8 @@ model Student {
   attendance Attendance[]
   fees      Fee[]
   results   Result[]
+  classId  String?
+  class    Class?  @relation(fields: [classId], references: [id])
 }
 
 model Parent {
@@ -116,8 +118,9 @@ model Teacher {
   phone     String?
   address   String?
   img       String?
-
   classes   Class[]
+  sessions  Session[]
+
 }
 
 model Accountant {
@@ -222,7 +225,8 @@ model Class {
   teacherId String
   teacher   Teacher @relation(fields: [teacherId], references: [id])
   schedules Schedule[]
-sessions  Session[]
+  sessions  Session[]
+  students  Student[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -303,6 +307,9 @@ model School {
   radiusMeters Float        @default(200)
   zones        SchoolZone[]
   sessions     Session[]
+  minRadiusMeters  Float    @default(50)   
+  maxRadiusMeters  Float    @default(500)  
+  lateThresholdMin Int      @default(10)   
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 }
@@ -332,6 +339,10 @@ model Session {
   date       DateTime
   startTime  DateTime
   endTime    DateTime?
+  radiusMeters     Float   @default(100)  
+  lateThresholdMin Int     @default(10)   
+  teacherId        String?                
+  teacher          Teacher? @relation(fields: [teacherId], references: [id]) 
   isOpen     Boolean      @default(false)
   attendance Attendance[]
   createdAt  DateTime     @default(now())

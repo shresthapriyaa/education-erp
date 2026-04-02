@@ -29,6 +29,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-, "src/features/attendance/components/GeofenceRadiusSlider.tsx"  ],
+, "src/features/attendance/components/teacher/GeofenceRadiusSlider.tsx"  ],
   "exclude": ["node_modules"]
 }

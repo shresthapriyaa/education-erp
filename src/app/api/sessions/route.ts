@@ -81,69 +81,113 @@
 
 
 
+// import { NextRequest, NextResponse } from "next/server";
+// import  prisma  from "@/core/lib/prisma";
+// import { getServerSession } from "next-auth";
+// import { authOptions } from "@/core/lib/auth";
+
+// export async function GET(req: NextRequest) {
+//   const session = await getServerSession(authOptions);
+//   if (!session || !["ADMIN", "TEACHER"].includes(session.user.role)) {
+//     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+//   }
+//   try {
+//     const where: any = {};
+//     if (session.user.role === "TEACHER") {
+//       const teacher = await prisma.teacher.findUnique({
+//         where:  { userId: session.user.id },
+//         select: { id: true },
+//       });
+//       if (!teacher) return NextResponse.json({ error: "Teacher not found" }, { status: 404 });
+//       where.class = { teacherId: teacher.id };
+//     }
+//     const sessions = await prisma.session.findMany({
+//       where,
+//       orderBy: { startTime: "desc" },
+//       select: {
+//         id: true, date: true, startTime: true,
+//         endTime: true, isOpen: true, createdAt: true,
+//         class:  { select: { id: true, name: true } },
+//         school: { select: { id: true, name: true } },
+//         _count: { select: { attendance: true } },
+//       },
+//     });
+//     return NextResponse.json({ sessions, total: sessions.length });
+//   } catch (error: any) {
+//     console.error("[SESSIONS_GET]", error.message);
+//     return NextResponse.json({ error: "Failed to fetch sessions" }, { status: 500 });
+//   }
+// }
+
+// export async function POST(req: NextRequest) {
+//   const session = await getServerSession(authOptions);
+//   if (!session || !["ADMIN", "TEACHER"].includes(session.user.role)) {
+//     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+//   }
+//   try {
+//     const { classId, schoolId, date, startTime, endTime, isOpen } = await req.json();
+//     if (!classId || !schoolId || !date || !startTime) {
+//       return NextResponse.json(
+//         { error: "classId, schoolId, date, startTime required" },
+//         { status: 400 }
+//       );
+//     }
+//     const record = await prisma.session.create({
+//       data: {
+//         classId, schoolId,
+//         date:      new Date(date),
+//         startTime: new Date(startTime),
+//         endTime:   endTime ? new Date(endTime) : null,
+//         isOpen:    isOpen ?? false,
+//       },
+//     });
+//     return NextResponse.json(record, { status: 201 });
+//   } catch (error: any) {
+//     console.error("[SESSIONS_POST]", error.message);
+//     return NextResponse.json({ error: error.message }, { status: 500 });
+//   }
+// }
+
+
+
+
+// src/app/api/admin/attendance/[id]/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
-import  prisma  from "@/core/lib/prisma";
+import prisma from "@/core/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/core/lib/auth";
 
-export async function GET(req: NextRequest) {
+export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
-  if (!session || !["ADMIN", "TEACHER"].includes(session.user.role)) {
+  if (!session || session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   try {
-    const where: any = {};
-    if (session.user.role === "TEACHER") {
-      const teacher = await prisma.teacher.findUnique({
-        where:  { userId: session.user.id },
-        select: { id: true },
-      });
-      if (!teacher) return NextResponse.json({ error: "Teacher not found" }, { status: 404 });
-      where.class = { teacherId: teacher.id };
+    const { status } = await req.json();
+    const valid = ["PRESENT", "ABSENT", "LATE", "EXCUSED"];
+    if (!valid.includes(status)) {
+      return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
-    const sessions = await prisma.session.findMany({
-      where,
-      orderBy: { startTime: "desc" },
-      select: {
-        id: true, date: true, startTime: true,
-        endTime: true, isOpen: true, createdAt: true,
-        class:  { select: { id: true, name: true } },
-        school: { select: { id: true, name: true } },
-        _count: { select: { attendance: true } },
-      },
+    const updated = await prisma.attendance.update({
+      where: { id: params.id },
+      data:  { status },
     });
-    return NextResponse.json({ sessions, total: sessions.length });
+    return NextResponse.json(updated);
   } catch (error: any) {
-    console.error("[SESSIONS_GET]", error.message);
-    return NextResponse.json({ error: "Failed to fetch sessions" }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
-export async function POST(req: NextRequest) {
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
-  if (!session || !["ADMIN", "TEACHER"].includes(session.user.role)) {
+  if (!session || session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   try {
-    const { classId, schoolId, date, startTime, endTime, isOpen } = await req.json();
-    if (!classId || !schoolId || !date || !startTime) {
-      return NextResponse.json(
-        { error: "classId, schoolId, date, startTime required" },
-        { status: 400 }
-      );
-    }
-    const record = await prisma.session.create({
-      data: {
-        classId, schoolId,
-        date:      new Date(date),
-        startTime: new Date(startTime),
-        endTime:   endTime ? new Date(endTime) : null,
-        isOpen:    isOpen ?? false,
-      },
-    });
-    return NextResponse.json(record, { status: 201 });
+    await prisma.attendance.delete({ where: { id: params.id } });
+    return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error("[SESSIONS_POST]", error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

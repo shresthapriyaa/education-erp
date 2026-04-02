@@ -1,220 +1,68 @@
-// "use client";
-
-// import { useState, useEffect, useCallback } from "react";
-// import {
-//   getAttendanceRecords,
-//   getAttendanceSummary,
-//   markStudentAttendance,
-//   bulkMarkAttendance,
-// } from "../services/attendance.api";
-// import type {
-//   AttendanceRecord,
-//   AttendanceSummary,
-//   AttendanceFilters,
-//   MarkAttendancePayload,
-//   BulkMarkAttendancePayload,
-// } from "../types/attendance.types";
-
-// // ─── Hook: fetch + filter attendance records ─────────────────────────────────
-// export function useAttendance(filters: AttendanceFilters) {
-//   const [records, setRecords] = useState<AttendanceRecord[]>([]);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState<string | null>(null);
-
-//   const fetch = useCallback(async () => {
-//     setLoading(true);
-//     setError(null);
-//     try {
-//       const data = await getAttendanceRecords(filters);
-//       setRecords(data);
-//     } catch (err: any) {
-//       setError(err.message || "Failed to load attendance");
-//     } finally {
-//       setLoading(false);
-//     }
-//   }, [JSON.stringify(filters)]);
-
-//   useEffect(() => {
-//     fetch();
-//   }, [fetch]);
-
-//   return { records, loading, error, refetch: fetch };
-// }
-
-// // ─── Hook: attendance summary for a student ──────────────────────────────────
-// export function useAttendanceSummary(studentId: string, month?: string) {
-//   const [summary, setSummary] = useState<AttendanceSummary | null>(null);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState<string | null>(null);
-
-//   useEffect(() => {
-//     if (!studentId) return;
-//     setLoading(true);
-//     getAttendanceSummary(studentId, month)
-//       .then(setSummary)
-//       .catch((err) => setError(err.message))
-//       .finally(() => setLoading(false));
-//   }, [studentId, month]);
-
-//   return { summary, loading, error };
-// }
-
-// // ─── Hook: mark own attendance (student) ─────────────────────────────────────
-// export function useMarkAttendance() {
-//   const [loading, setLoading] = useState(false);
-//   const [error, setError] = useState<string | null>(null);
-//   const [success, setSuccess] = useState(false);
-
-//   const mark = async (payload: MarkAttendancePayload) => {
-//     setLoading(true);
-//     setError(null);
-//     setSuccess(false);
-//     try {
-//       await markStudentAttendance(payload);
-//       setSuccess(true);
-//     } catch (err: any) {
-//       setError(err.message || "Failed to mark attendance");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   return { mark, loading, error, success };
-// }
-
-// // ─── Hook: bulk mark attendance (teacher) ────────────────────────────────────
-// export function useBulkMarkAttendance() {
-//   const [loading, setLoading] = useState(false);
-//   const [error, setError] = useState<string | null>(null);
-//   const [success, setSuccess] = useState(false);
-
-//   const bulkMark = async (payload: BulkMarkAttendancePayload) => {
-//     setLoading(true);
-//     setError(null);
-//     setSuccess(false);
-//     try {
-//       await bulkMarkAttendance(payload);
-//       setSuccess(true);
-//     } catch (err: any) {
-//       setError(err.message || "Failed to submit attendance");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   return { bulkMark, loading, error, success };
-// }
-
-
-
 "use client";
-
 import { useState, useEffect, useCallback } from "react";
-import {
-  getAttendanceRecords,
-  getAttendanceSummary,
-  markStudentAttendance,
-  bulkMarkAttendance,
-} from "../services/attendance.api";
 import type {
   AttendanceRecord,
-  AttendanceSummary,
+  AttendanceStats,
   AttendanceFilters,
-  MarkAttendancePayload,
-  BulkMarkAttendancePayload,
+  AttendanceStatus,
 } from "../types/attendance.types";
+import { attendanceService } from "../services/attendance.services";
 
-// ─── Hook: fetch + filter attendance records ─────────────────────────────────
-export function useAttendance(filters: AttendanceFilters) {
+export function useAttendance(filters: AttendanceFilters = {}) {
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
+  const [stats,   setStats]   = useState<AttendanceStats>({
+    total: 0, present: 0, absent: 0, late: 0, excused: 0,
+  });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error,   setError]   = useState<string | null>(null);
 
-  const fetch = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getAttendanceRecords(filters);
-      setRecords(data);
+      const res = await attendanceService.getAll(filters);
+      setRecords(res.records);
+      setStats(res.stats);
     } catch (err: any) {
-      setError(err.message || "Failed to load attendance");
+      setError(err.message);
     } finally {
       setLoading(false);
     }
-  }, [JSON.stringify(filters)]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.status, filters.dateFrom, filters.dateTo, filters.classId, filters.search]);
 
-  useEffect(() => {
-    fetch();
-  }, [fetch]);
+  useEffect(() => { fetchData(); }, [fetchData]);
 
-  return { records, loading, error, refetch: fetch };
-}
-
-// ─── Hook: attendance summary for a student ──────────────────────────────────
-export function useAttendanceSummary(studentId: string, month?: string) {
-  const [summary, setSummary] = useState<AttendanceSummary | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!studentId) return;
-    setLoading(true);
-    getAttendanceSummary(studentId, month)
-      .then(setSummary)
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [studentId, month]);
-
-  return { summary, loading, error };
-}
-
-// ─── Hook: mark own attendance (student) ─────────────────────────────────────
-export function useMarkAttendance() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-
-  const mark = async (payload: MarkAttendancePayload) => {
-    setLoading(true);
-    setError(null);
-    setSuccess(false);
+  async function editRecord(id: string, status: AttendanceStatus) {
     try {
-      await markStudentAttendance(payload);
-      setSuccess(true);
+      await attendanceService.update(id, { status });
+      setRecords(prev => prev.map(r => r.id === id ? { ...r, status } : r));
     } catch (err: any) {
-      setError(err.message || "Failed to mark attendance");
-    } finally {
-      setLoading(false);
+      setError(err.message);
     }
+  }
+
+  async function deleteRecord(id: string) {
+    try {
+      await attendanceService.delete(id);
+      setRecords(prev => prev.filter(r => r.id !== id));
+      setStats(prev => ({ ...prev, total: prev.total - 1 }));
+    } catch (err: any) {
+      setError(err.message);
+    }
+  }
+
+  return {
+    records, stats, loading, error,
+    refresh: fetchData,
+    refetch: fetchData,
+    editRecord,
+    deleteRecord,
   };
-
-  return { mark, loading, error, success };
 }
 
-// ─── Hook: bulk mark attendance (teacher) ────────────────────────────────────
-export function useBulkMarkAttendance() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
+// ─── useGeolocationState — device GPS ────────────────────────────────────────
 
-  const bulkMark = async (payload: BulkMarkAttendancePayload) => {
-    setLoading(true);
-    setError(null);
-    setSuccess(false);
-    try {
-      await bulkMarkAttendance(payload);
-      setSuccess(true);
-    } catch (err: any) {
-      setError(err.message || "Failed to submit attendance");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return { bulkMark, loading, error, success };
-}
-
-// ─── Hook: geolocation state ─────────────────────────────────────────────────
 interface GeolocationState {
   latitude:  number | null;
   longitude: number | null;
@@ -225,11 +73,8 @@ interface GeolocationState {
 
 export function useGeolocationState() {
   const [loc, setLoc] = useState<GeolocationState>({
-    latitude:  null,
-    longitude: null,
-    accuracy:  null,
-    loading:   false,
-    error:     null,
+    latitude: null, longitude: null, accuracy: null,
+    loading: false, error: null,
   });
 
   const isSupported =
@@ -237,29 +82,23 @@ export function useGeolocationState() {
 
   const request = useCallback(() => {
     if (!isSupported) {
-      setLoc(s => ({ ...s, error: "Geolocation is not supported by this browser." }));
+      setLoc(s => ({ ...s, error: "Geolocation not supported." }));
       return;
     }
     setLoc(s => ({ ...s, loading: true, error: null }));
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setLoc({
-          latitude:  pos.coords.latitude,
-          longitude: pos.coords.longitude,
-          accuracy:  pos.coords.accuracy,
-          loading:   false,
-          error:     null,
-        });
-      },
+      (pos) => setLoc({
+        latitude:  pos.coords.latitude,
+        longitude: pos.coords.longitude,
+        accuracy:  pos.coords.accuracy,
+        loading:   false,
+        error:     null,
+      }),
       (err) => {
         const message =
-          err.code === 1
-            ? "Location permission denied. Please allow access in your browser settings."
-            : err.code === 2
-            ? "Location unavailable. Please try again."
-            : err.code === 3
-            ? "Location request timed out. Please try again."
-            : "Failed to get location.";
+          err.code === 1 ? "Location permission denied." :
+          err.code === 2 ? "Location unavailable." :
+          err.code === 3 ? "Location timed out." : "Failed to get location.";
         setLoc(s => ({ ...s, loading: false, error: message }));
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
