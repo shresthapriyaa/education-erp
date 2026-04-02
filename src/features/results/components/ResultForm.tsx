@@ -142,7 +142,7 @@ export function ResultForm({
           </FormItem>
         )} />
 
-        <div className="flex gap-2 pt-2 justify-end">
+        <div className="flex gap-2 pt-2 justify-end ">
           {onCancel && (
             <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
           )}

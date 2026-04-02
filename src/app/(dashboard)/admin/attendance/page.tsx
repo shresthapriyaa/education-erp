@@ -1,13 +1,13 @@
-import AdminAttendancePage from '@/features/attendance/components/Attendance'
+import AdminAttendancePage from '@/features/attendance/components/admin/AdminAttendance'
 import React from 'react'
 
 const page = () => {
   return (
     <div>
-    
-    <AdminAttendancePage/>
+      <AdminAttendancePage/>
     </div>
   )
 }
 
 export default page
+

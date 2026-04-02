@@ -1,160 +1,367 @@
-/**
- * src/features/attendance/types/attendance.types.ts
- */
+// // export type AttendanceStatus = "Present" | "Absent" | "Late";
+
+// // export type AttendanceMethod = "Geofence" | "Manual" | "QR";
+
+// // export interface AttendanceRecord {
+// //   id: string;
+// //   studentId: string;
+// //   studentName: string;
+// //   rollNo: string;
+// //   date: string; // ISO date string e.g. "2026-03-30"
+// //   time: string; // e.g. "08:02 AM"
+// //   status: AttendanceStatus;
+// //   method: AttendanceMethod;
+// //   latitude?: number;
+// //   longitude?: number;
+// //   distanceFromSchool?: number; // in meters
+// // }
+
+// // export interface AttendanceSummary {
+// //   total: number;
+// //   present: number;
+// //   absent: number;
+// //   late: number;
+// //   percentage: number;
+// // }
+
+// // export interface GeofenceConfig {
+// //   id: string;
+// //   name: string;
+// //   latitude: number;
+// //   longitude: number;
+// //   radiusMeters: number;
+// //   active: boolean;
+// // }
+
+// // export interface MarkAttendancePayload {
+// //   studentId: string;
+// //   date: string;
+// //   status: AttendanceStatus;
+// //   method: AttendanceMethod;
+// //   latitude?: number;
+// //   longitude?: number;
+// //   distanceFromSchool?: number;
+// // }
+
+// // export interface BulkMarkAttendancePayload {
+// //   classId: string;
+// //   date: string;
+// //   teacherId: string;
+// //   records: {
+// //     studentId: string;
+// //     status: AttendanceStatus;
+// //   }[];
+// // }
+
+// // export interface AttendanceFilters {
+// //   studentId?: string;
+// //   classId?: string;
+// //   startDate?: string;
+// //   endDate?: string;
+// //   status?: AttendanceStatus;
+// // }
+
+
+
+
+
+
+// export type AttendanceStatus = "Present" | "Absent" | "Late";
+
+// export type AttendanceMethod = "Geofence" | "Manual" | "QR";
+
+// export interface AttendanceRecord {
+//   id: string;
+//   studentId: string;
+//   studentName: string;
+//   rollNo: string;
+//   date: string;
+//   time: string;
+//   status: AttendanceStatus;
+//   method: AttendanceMethod;
+//   latitude?: number;
+//   longitude?: number;
+//   distanceFromSchool?: number;
+// }
+
+// export interface AttendanceSummary {
+//   total: number;
+//   present: number;
+//   absent: number;
+//   late: number;
+//   percentage: number;
+// }
+
+// export interface GeofenceConfig {
+//   id: string;
+//   name: string;
+//   latitude: number;
+//   longitude: number;
+//   radiusMeters: number;
+//   active: boolean;
+// }
+
+// export interface MarkAttendancePayload {
+//   studentId: string;
+//   date: string;
+//   status: AttendanceStatus;
+//   method: AttendanceMethod;
+//   latitude?: number;
+//   longitude?: number;
+//   distanceFromSchool?: number;
+// }
+
+// export interface BulkMarkAttendancePayload {
+//   classId: string;
+//   date: string;
+//   teacherId: string;
+//   records: {
+//     studentId: string;
+//     status: AttendanceStatus;
+//   }[];
+// }
+
+// export interface AttendanceFilters {
+//   studentId?: string;
+//   classId?: string;
+//   startDate?: string;
+//   endDate?: string;
+//   status?: AttendanceStatus;
+// }
+
+// // ─── Missing types used by AttendanceDialog ───────────────────────────────────
+
+// /** The attendance record shape returned from the API */
+// export interface AttendanceDTO {
+//   id: string;
+//   status: AttendanceStatus;
+//   date: string;
+//   markedAt: string;
+//   markedLatitude?: number | null;
+//   markedLongitude?: number | null;
+//   distanceFromCenter?: number | null;
+//   withinSchool?: boolean;
+//   gpsAccuracy?: number | null;
+//   student?: {
+//     id: string;
+//     username: string;
+//     email: string;
+//   };
+//   session?: {
+//     id: string;
+//     date: string;
+//     startTime: string;
+//     class: { id: string; name: string };
+//     school: {
+//       id: string;
+//       name: string;
+//       latitude: number;
+//       longitude: number;
+//       radiusMeters: number;
+//       zones: ZoneDTO[];
+//     };
+//   } | null;
+//   detectedZone?: { id: string; name: string; color?: string } | null;
+// }
+
+// /** Zone shape inside a session's school */
+// export interface ZoneDTO {
+//   id: string;
+//   name: string;
+//   latitude: number;
+//   longitude: number;
+//   radiusMeters: number;
+//   color?: string | null;
+//   isActive?: boolean;
+//   description?: string | null;
+// }
+
+// /** Form values for create / edit attendance (admin) */
+// export interface AttendanceFormValues {
+//   studentId: string;
+//   sessionId: string;
+//   status: AttendanceStatus;
+//   date?: string;
+// }
+
+// /** Response returned after a student marks attendance via GPS */
+// export interface MarkAttendanceResponse {
+//   success: boolean;
+//   error?: string;
+//   status?: AttendanceStatus;
+//   attendance?: AttendanceDTO;
+//   detection?: {
+//     withinSchool: boolean;
+//     distanceFromCenter: number;
+//     distanceToBoundary: number;
+//     directionToCenter: string;
+//     currentZone?: { id: string; name: string } | null;
+//   };
+// }
+
+
+
+
+
+// src/features/attendance/types/attendance.types.ts
 
 // ─── Enums ────────────────────────────────────────────────────────────────────
 
-export type AttendanceStatus = "PRESENT" | "LATE" | "ABSENT" | "EXCUSED";
+export type AttendanceStatus = "PRESENT" | "ABSENT" | "LATE" | "EXCUSED";
 
-// ─── School / Zone DTOs ───────────────────────────────────────────────────────
+export type SessionStatus = "active" | "ended";
 
-export interface SchoolZoneDTO {
-  id:           string;
-  name:         string;
-  description:  string | null;
-  color:        string | null;
-  latitude:     number;
-  longitude:    number;
-  radiusMeters: number;
-  isActive:     boolean;
-}
+// ─── Base Models ──────────────────────────────────────────────────────────────
 
-export interface SchoolDTO {
-  id:           string;
-  name:         string;
-  address:      string | null;
-  latitude:     number;
-  longitude:    number;
-  radiusMeters: number;
-  zones:        SchoolZoneDTO[];
-}
+export type StudentBasic = {
+  id:       string;
+  username: string;
+  email:    string;
+  class?:   ClassBasic | null;
+};
+
+export type ClassBasic = {
+  id:   string;
+  name: string;
+};
+
+export type TeacherBasic = {
+  id:       string;
+  username: string;
+  email:    string;
+};
+
+export type SchoolBasic = {
+  id:   string;
+  name: string;
+};
+
+// ─── Attendance Record ────────────────────────────────────────────────────────
+
+export type AttendanceRecord = {
+  id:                 string;
+  studentId:          string;
+  student:            StudentBasic;
+  date:               string;
+  status:             AttendanceStatus;
+  sessionId?:         string | null;
+  session?:           SessionBasic | null;
+  markedLatitude?:    number | null;
+  markedLongitude?:   number | null;
+  distanceFromCenter?: number | null;
+  withinSchool:       boolean;
+  gpsAccuracy?:       number | null;
+  deviceInfo?:        string | null;
+  createdAt:          string;
+  updatedAt:          string;
+};
 
 // ─── Session ──────────────────────────────────────────────────────────────────
 
-export interface SessionDTO {
-  id:          string;
-  date:        string;
-  startTime:   string;
-  endTime:     string | null;
-  isOpen:      boolean;
-  class: {
-    id:      string;
-    name:    string;
-  };
-  school:        SchoolDTO;
-  alreadyMarked: boolean;
-  existingRecord: AttendanceDTO | null;
-}
+export type SessionBasic = {
+  id:    string;
+  class: ClassBasic;
+};
 
-// ─── Attendance ───────────────────────────────────────────────────────────────
+export type SessionRecord = {
+  id:               string;
+  classId:          string;
+  class:            ClassBasic;
+  schoolId:         string;
+  school:           SchoolBasic;
+  date:             string;
+  startTime:        string;
+  endTime?:         string | null;
+  isOpen:           boolean;
+  radiusMeters:     number;
+  lateThresholdMin: number;
+  teacher?:         TeacherBasic | null;
+  _count:           { attendance: number };
+  createdAt:        string;
+};
 
-export interface AttendanceDTO {
-  id:                 string;
-  status:             AttendanceStatus;
-  date:               string;
-  markedAt:           string;
-  markedLatitude:     number | null;
-  markedLongitude:    number | null;
-  distanceFromCenter: number | null;
-  distanceFromZone:   number | null;
-  withinSchool:       boolean;
-  gpsAccuracy:        number | null;
-  deviceInfo:         string | null;
-  ipAddress:          string | null;
-  detectedZone: {
-    id:    string;
-    name:  string;
-    color: string | null;
-  } | null;
-  session: {
-    id:        string;
-    date:      string;
-    startTime: string;
-    class: {
-      id:   string;
-      name: string;
-    };
-    school: SchoolDTO;
-  } | null;
-  student: {
-    id:       string;
-    username: string;
-    email:    string;
-  };
-}
+// ─── Stats ────────────────────────────────────────────────────────────────────
 
-export interface AttendanceSummary {
-  PRESENT:        number;
-  LATE:           number;
-  ABSENT:         number;
-  EXCUSED:        number;
-  total:          number;
-  attendanceRate: number;
-}
-
-// ─── API payloads ─────────────────────────────────────────────────────────────
-
-export interface MarkAttendanceBody {
-  sessionId: string;
-  latitude:  number;
-  longitude: number;
-  accuracy?: number;
-}
-
-export interface MarkAttendanceResponse {
-  success:    boolean;
-  status?:    AttendanceStatus;
-  attendance?: AttendanceDTO;
-  detection?: {
-    withinSchool:       boolean;
-    distanceFromCenter: number;
-    distanceToBoundary: number;
-    currentZone:        { id: string; name: string } | null;
-    directionToCenter:  string;
-  };
-  error?: string;
-}
-
-export interface ListAttendanceResponse {
-  records: AttendanceDTO[];
-  summary: AttendanceSummary;
+export type AttendanceStats = {
   total:   number;
-}
+  present: number;
+  absent:  number;
+  late:    number;
+  excused: number;
+};
 
-// ─── Filters ──────────────────────────────────────────────────────────────────
+export type WeeklyTrend = {
+  day:     string;
+  present: number;
+  absent:  number;
+  late:    number;
+};
 
-export interface AttendanceFilters {
-  status?:   AttendanceStatus | "";
-  classId?:  string;
+// ─── Geofence / School Settings ───────────────────────────────────────────────
+
+export type GeofenceSettings = {
+  id:               string;
+  name:             string;
+  latitude:         number;
+  longitude:        number;
+  radiusMeters:     number;
+  minRadiusMeters:  number;
+  maxRadiusMeters:  number;
+  lateThresholdMin: number;
+};
+
+// ─── API Payloads ─────────────────────────────────────────────────────────────
+
+export type CreateSessionPayload = {
+  classId:          string;
+  schoolId:         string;
+  date:             string;
+  startTime:        string;
+  radiusMeters:     number;
+  lateThresholdMin: number;
+};
+
+export type UpdateAttendancePayload = {
+  status: AttendanceStatus;
+};
+
+export type UpdateGeofencePayload = {
+  latitude?:         number;
+  longitude?:        number;
+  radiusMeters?:     number;
+  minRadiusMeters?:  number;
+  maxRadiusMeters?:  number;
+  lateThresholdMin?: number;
+};
+
+// ─── Filter Types ─────────────────────────────────────────────────────────────
+
+export type AttendanceFilters = {
+  status?:   AttendanceStatus | "ALL";
   dateFrom?: string;
   dateTo?:   string;
+  classId?:  string;
   search?:   string;
-  page:      number;
-  pageSize:  number;
-}
+  pageSize?: number;
+};
 
-// ─── Form ─────────────────────────────────────────────────────────────────────
+export type SessionFilters = {
+  classId?:   string;
+  teacherId?: string;
+  dateFrom?:  string;
+  dateTo?:    string;
+  isOpen?:    boolean;
+};
 
-export interface AttendanceFormValues {
-  studentId: string;
-  sessionId: string;
-  status:    AttendanceStatus;
-  note?:     string;
-}
+// ─── Status Config (UI helper) ────────────────────────────────────────────────
 
-export interface AttendanceFormErrors {
-  studentId?: string;
-  sessionId?: string;
-  status?:    string;
-}
-
-// ─── Geolocation ─────────────────────────────────────────────────────────────
-
-export interface LocationState {
-  latitude:  number | null;
-  longitude: number | null;
-  accuracy:  number | null;
-  error:     string | null;
-  loading:   boolean;
-  timestamp: number | null;
-}
+export const STATUS_CONFIG: Record<AttendanceStatus, {
+  label: string;
+  color: string;
+  bg:    string;
+}> = {
+  PRESENT: { label: "Present", color: "#16a34a", bg: "#dcfce7" },
+  ABSENT:  { label: "Absent",  color: "#dc2626", bg: "#fee2e2" },
+  LATE:    { label: "Late",    color: "#ca8a04", bg: "#fef9c3" },
+  EXCUSED: { label: "Excused", color: "#6366f1", bg: "#ede9fe" },
+};
