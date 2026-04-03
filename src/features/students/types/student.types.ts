@@ -1,29 +1,66 @@
+// export type Usersex = "MALE" | "FEMALE";
+
+// export interface Student {
+//   id: string;
+//   username: string;
+//   userId: string;
+//   email: string;
+//   phone?: string | null;
+//   address?: string | null;
+//   img?: string | null;
+//   bloodGroup?: string | null;
+//   sex: Usersex;
+//   dateOfBirth?: string | null;
+//   parentId?: string | null;
+//   createdAt: string;
+//   updatedAt: string;
+//   parent?: {
+//     id: string;
+//     username: string;
+//     email: string;
+//   } | null;
+//   user?: {
+//     id: string;
+//     username: string;
+//     email: string;
+//     role: string;
+//     isVerified: boolean;
+//   } | null;
+// }
+
+
+
 export type Usersex = "MALE" | "FEMALE";
 
 export interface Student {
-  id: string;
-  username: string;
-  userId: string;
-  email: string;
-  phone?: string | null;
-  address?: string | null;
-  img?: string | null;
+  id:          string;
+  username:    string;
+  userId:      string;
+  email:       string;
+  phone?:      string | null;
+  address?:    string | null;
+  img?:        string | null;
   bloodGroup?: string | null;
-  sex: Usersex;
+  sex:         Usersex;
   dateOfBirth?: string | null;
-  parentId?: string | null;
-  createdAt: string;
-  updatedAt: string;
+  parentId?:   string | null;
+  classId?:    string | null;
+  createdAt:   string;
+  updatedAt:   string;
+  class?: {
+    id:   string;
+    name: string;
+  } | null;
   parent?: {
-    id: string;
+    id:       string;
     username: string;
-    email: string;
+    email:    string;
   } | null;
   user?: {
-    id: string;
-    username: string;
-    email: string;
-    role: string;
+    id:         string;
+    username:   string;
+    email:      string;
+    role:       string;
     isVerified: boolean;
   } | null;
 }

@@ -1013,3 +1013,40 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+export async function POST(req: NextRequest) {
+  try {
+    const { sessionId, records } = await req.json();
+
+    if (!sessionId || !Array.isArray(records)) {
+      return NextResponse.json({ error: "sessionId and records are required" }, { status: 400 });
+    }
+
+    const session = await prisma.session.findUnique({
+      where:  { id: sessionId },
+      select: { id: true, date: true, isOpen: true },
+    });
+    if (!session) {
+      return NextResponse.json({ error: "Session not found" }, { status: 404 });
+    }
+
+    const results = await Promise.all(
+      records.map(({ studentId, status }: { studentId: string; status: string }) =>
+        prisma.attendance.upsert({
+          where:  { studentId_sessionId: { studentId, sessionId } },
+          update: { status: status as any },
+          create: {
+            studentId,
+            sessionId,
+            status: status as any,
+            date:   session.date,
+          },
+        })
+      )
+    );
+
+    return NextResponse.json({ success: true, count: results.length });
+  } catch (err: any) {
+    console.error("[POST /api/attendance]", err.message);
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}

@@ -1,3 +1,293 @@
+// "use client";
+
+// import { zodResolver } from "@hookform/resolvers/zod";
+// import { useForm } from "react-hook-form";
+// import { useState } from "react";
+// import * as z from "zod";
+// import { Button } from "@/core/components/ui/button";
+// import {
+//   Form,
+//   FormControl,
+//   FormField,
+//   FormItem,
+//   FormLabel,
+//   FormMessage,
+//   FormDescription,
+// } from "@/core/components/ui/form";
+// import { Input } from "@/core/components/ui/input";
+// import {
+//   Select,
+//   SelectContent,
+//   SelectItem,
+//   SelectTrigger,
+//   SelectValue,
+// } from "@/core/components/ui/select";
+// import { Loader2, Save, PlusCircle } from "lucide-react";
+// import { Student } from "../types/student.types";
+
+// const SEX_OPTIONS = ["MALE", "FEMALE"] as const;
+// const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] as const;
+// const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+// const schema = z.object({
+//   username: z.string().min(3, "Minimum 3 characters"),
+//   email: z.string().email("Invalid email"),
+//   phone: z.string().optional().or(z.literal("")),
+//   address: z.string().optional().or(z.literal("")),
+//   img: z.string().optional().or(z.literal("")),
+//   bloodGroup: z.string().optional().or(z.literal("")),
+//   sex: z.enum(SEX_OPTIONS),
+//   dateOfBirth: z.string().optional().or(z.literal("")),
+//   parentId: z.string().optional().or(z.literal("")),
+// });
+
+// type FormValues = z.infer<typeof schema>;
+
+// export type SubmitMode = "create" | "put" | "patch";
+// type StudentPayload = Partial<Student> & { parentId?: string | null };
+
+// interface ParentOption {
+//   id: string;
+//   username: string;
+//   email: string;
+// }
+
+// interface StudentFormProps {
+//   initialValues?: Partial<Student>;
+//   onSubmit: (values: StudentPayload, mode: SubmitMode) => void;
+//   loading?: boolean;
+//   isEdit?: boolean;
+//   onCancel?: () => void;
+//   parents?: ParentOption[]; // ✅ received from StudentDialog
+// }
+
+// export function StudentForm({
+//   initialValues,
+//   onSubmit,
+//   loading = false,
+//   isEdit = false,
+//   onCancel,
+//   parents = [], // ✅ no more internal fetch
+// }: StudentFormProps) {
+//   const [imgTimestamp, setImgTimestamp] = useState<number>(Date.now());
+
+//   const form = useForm<FormValues>({
+//     resolver: zodResolver(schema),
+//     defaultValues: {
+//       username: initialValues?.username ?? "",
+//       email: initialValues?.email ?? "",
+//       phone: initialValues?.phone ?? "",
+//       address: initialValues?.address ?? "",
+//       img: initialValues?.img ?? "",
+//       bloodGroup: initialValues?.bloodGroup ?? "",
+//       sex: (initialValues?.sex as (typeof SEX_OPTIONS)[number]) ?? "MALE",
+//       dateOfBirth: initialValues?.dateOfBirth
+//         ? new Date(initialValues.dateOfBirth).toISOString().split("T")[0]
+//         : "",
+//       parentId: initialValues?.parentId ?? "",
+//     },
+//   });
+
+//   const getChangedFields = (values: FormValues): StudentPayload => {
+//     const changed: StudentPayload = {};
+//     if (values.username !== (initialValues?.username ?? "")) changed.username = values.username;
+//     if (values.email !== (initialValues?.email ?? "")) changed.email = values.email;
+//     if (values.phone !== (initialValues?.phone ?? "")) changed.phone = values.phone;
+//     if (values.address !== (initialValues?.address ?? "")) changed.address = values.address;
+//     if (values.img !== (initialValues?.img ?? "")) changed.img = values.img;
+//     if (values.bloodGroup !== (initialValues?.bloodGroup ?? "")) changed.bloodGroup = values.bloodGroup;
+//     if (values.sex !== (initialValues?.sex ?? "MALE")) changed.sex = values.sex;
+//     if (values.dateOfBirth !== (initialValues?.dateOfBirth ?? "")) changed.dateOfBirth = values.dateOfBirth ?? null;
+//     if (values.parentId !== (initialValues?.parentId ?? "")) changed.parentId = values.parentId || null;
+//     return changed;
+//   };
+
+//   const handlePut = form.handleSubmit((values) => {
+//     onSubmit({ ...values, parentId: values.parentId || null }, isEdit ? "put" : "create");
+//   });
+
+//   const handlePatch = form.handleSubmit((values) => {
+//     onSubmit(getChangedFields(values), "patch");
+//   });
+
+//   return (
+//     <Form {...form}>
+//       <form className="space-y-4">
+//         {/* Username + Email */}
+//         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+//           <FormField control={form.control} name="username" render={({ field }) => (
+//             <FormItem>
+//               <FormLabel>Username</FormLabel>
+//               <FormControl><Input placeholder="john_doe" {...field} /></FormControl>
+//               <FormMessage />
+//             </FormItem>
+//           )} />
+//           <FormField control={form.control} name="email" render={({ field }) => (
+//             <FormItem>
+//               <FormLabel>Email</FormLabel>
+//               <FormControl><Input placeholder="example@gmail.com" {...field} /></FormControl>
+//               <FormMessage />
+//             </FormItem>
+//           )} />
+//         </div>
+
+//         {/* Phone + Address */}
+//         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+//           <FormField control={form.control} name="phone" render={({ field }) => (
+//             <FormItem>
+//               <FormLabel>Phone</FormLabel>
+//               <FormControl><Input placeholder="+977 234 567 890" {...field} /></FormControl>
+//               <FormMessage />
+//             </FormItem>
+//           )} />
+//           <FormField control={form.control} name="address" render={({ field }) => (
+//             <FormItem>
+//               <FormLabel>Address</FormLabel>
+//               <FormControl><Input placeholder="123 Main St" {...field} /></FormControl>
+//               <FormMessage />
+//             </FormItem>
+//           )} />
+//         </div>
+
+//         {/* Sex + Blood Group */}
+//         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+//           <FormField control={form.control} name="sex" render={({ field }) => (
+//             <FormItem>
+//               <FormLabel>Sex</FormLabel>
+//               <Select onValueChange={field.onChange} value={field.value || undefined}>
+//                 <FormControl>
+//                   <SelectTrigger><SelectValue placeholder="Select sex" /></SelectTrigger>
+//                 </FormControl>
+//                 <SelectContent>
+//                   {SEX_OPTIONS.map((s) => (
+//                     <SelectItem key={s} value={s}>{s.charAt(0) + s.slice(1).toLowerCase()}</SelectItem>
+//                   ))}
+//                 </SelectContent>
+//               </Select>
+//               <FormMessage />
+//             </FormItem>
+//           )} />
+//           <FormField control={form.control} name="bloodGroup" render={({ field }) => (
+//             <FormItem>
+//               <FormLabel>Blood Group</FormLabel>
+//               <Select onValueChange={field.onChange} value={field.value || undefined}>
+//                 <FormControl>
+//                   <SelectTrigger><SelectValue placeholder="Select blood group" /></SelectTrigger>
+//                 </FormControl>
+//                 <SelectContent>
+//                   {BLOOD_GROUPS.map((b) => (
+//                     <SelectItem key={b} value={b}>{b}</SelectItem>
+//                   ))}
+//                 </SelectContent>
+//               </Select>
+//               <FormMessage />
+//             </FormItem>
+//           )} />
+//         </div>
+
+//         {/* Date of Birth */}
+//         <FormField control={form.control} name="dateOfBirth" render={({ field }) => (
+//           <FormItem>
+//             <FormLabel>Date of Birth</FormLabel>
+//             <FormControl><Input type="date" {...field} /></FormControl>
+//             <FormMessage />
+//           </FormItem>
+//         )} />
+
+//         {/* Parent */}
+//         <FormField control={form.control} name="parentId" render={({ field }) => (
+//           <FormItem>
+//             <FormLabel>Parent</FormLabel>
+//             <Select
+//               onValueChange={v => field.onChange(v === "none" ? "" : v)}
+//               value={field.value || undefined}
+//             >
+//               <FormControl>
+//                 <SelectTrigger><SelectValue placeholder="Select parent (optional)" /></SelectTrigger>
+//               </FormControl>
+//               <SelectContent>
+//                 <SelectItem value="none">No parent</SelectItem>
+//                 {parents.map((p) => (
+//                   <SelectItem key={p.id} value={p.id}>
+//                     {p.username} — {p.email}
+//                   </SelectItem>
+//                 ))}
+//               </SelectContent>
+//             </Select>
+//             <FormMessage />
+//           </FormItem>
+//         )} />
+
+//         {/* Image Upload */}
+//         <FormField control={form.control} name="img" render={({ field }) => (
+//           <FormItem>
+//             <FormLabel>Profile Image</FormLabel>
+//             <FormControl>
+//               <div className="flex flex-col gap-3">
+//                 {field.value && (
+//                   <img
+//                     src={`${field.value}?t=${imgTimestamp}`}
+//                     alt="Preview"
+//                     className="h-20 w-20 rounded-full object-cover border border-border"
+//                   />
+//                 )}
+//                 <Input
+//                   type="file"
+//                   accept="image/*"
+//                   className="cursor-pointer"
+//                   onChange={async (e) => {
+//                     const file = e.target.files?.[0];
+//                     if (!file) return;
+//                     if (file.size > MAX_FILE_SIZE) {
+//                       form.setError("img", { message: "Image must be 5MB or less" });
+//                       e.target.value = "";
+//                       return;
+//                     }
+//                     form.clearErrors("img");
+//                     const data = new FormData();
+//                     data.append("file", file);
+//                     const res = await fetch("/api/upload", { method: "POST", body: data });
+//                     const json = await res.json();
+//                     if (!res.ok) {
+//                       form.setError("img", { message: json.error ?? "Upload failed" });
+//                       return;
+//                     }
+//                     field.onChange(json.url);
+//                     setImgTimestamp(Date.now());
+//                   }}
+//                 />
+//               </div>
+//             </FormControl>
+//             <FormDescription>Upload a profile photo. Max size: 5MB.</FormDescription>
+//             <FormMessage />
+//           </FormItem>
+//         )} />
+
+//         {/* Actions */}
+//         <div className="flex gap-2 pt-2 justify-end">
+//           {onCancel && (
+//             <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
+//           )}
+//           {isEdit ? (
+//             <Button type="button" onClick={handlePut} disabled={loading}>
+//               {loading ? <Loader2 className="animate-spin" /> : <Save />}
+//               Save All
+//             </Button>
+//           ) : (
+//             <Button type="button" onClick={handlePut} disabled={loading}>
+//               Submit
+//               <PlusCircle className="ml-2" />
+//             </Button>
+//           )}
+//         </div>
+//       </form>
+//     </Form>
+//   );
+// }
+
+
+
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -6,104 +296,102 @@ import { useState } from "react";
 import * as z from "zod";
 import { Button } from "@/core/components/ui/button";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-  FormDescription,
+  Form, FormControl, FormField, FormItem,
+  FormLabel, FormMessage, FormDescription,
 } from "@/core/components/ui/form";
 import { Input } from "@/core/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  Select, SelectContent, SelectItem,
+  SelectTrigger, SelectValue,
 } from "@/core/components/ui/select";
 import { Loader2, Save, PlusCircle } from "lucide-react";
 import { Student } from "../types/student.types";
 
-const SEX_OPTIONS = ["MALE", "FEMALE"] as const;
-const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] as const;
+const SEX_OPTIONS   = ["MALE", "FEMALE"] as const;
+const BLOOD_GROUPS  = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] as const;
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 const schema = z.object({
-  username: z.string().min(3, "Minimum 3 characters"),
-  email: z.string().email("Invalid email"),
-  phone: z.string().optional().or(z.literal("")),
-  address: z.string().optional().or(z.literal("")),
-  img: z.string().optional().or(z.literal("")),
-  bloodGroup: z.string().optional().or(z.literal("")),
-  sex: z.enum(SEX_OPTIONS),
+  username:    z.string().min(3, "Minimum 3 characters"),
+  email:       z.string().email("Invalid email"),
+  phone:       z.string().optional().or(z.literal("")),
+  address:     z.string().optional().or(z.literal("")),
+  img:         z.string().optional().or(z.literal("")),
+  bloodGroup:  z.string().optional().or(z.literal("")),
+  sex:         z.enum(SEX_OPTIONS),
   dateOfBirth: z.string().optional().or(z.literal("")),
-  parentId: z.string().optional().or(z.literal("")),
+  parentId:    z.string().optional().or(z.literal("")),
+  classId:     z.string().optional().or(z.literal("")),
 });
 
 type FormValues = z.infer<typeof schema>;
 
 export type SubmitMode = "create" | "put" | "patch";
-type StudentPayload = Partial<Student> & { parentId?: string | null };
+type StudentPayload = Partial<Student> & { parentId?: string | null; classId?: string | null };
 
-interface ParentOption {
-  id: string;
-  username: string;
-  email: string;
-}
+interface ParentOption { id: string; username: string; email: string; }
+interface ClassOption  { id: string; name: string; }
 
 interface StudentFormProps {
   initialValues?: Partial<Student>;
-  onSubmit: (values: StudentPayload, mode: SubmitMode) => void;
-  loading?: boolean;
-  isEdit?: boolean;
-  onCancel?: () => void;
-  parents?: ParentOption[]; // ✅ received from StudentDialog
+  onSubmit:       (values: StudentPayload, mode: SubmitMode) => void;
+  loading?:       boolean;
+  isEdit?:        boolean;
+  onCancel?:      () => void;
+  parents?:       ParentOption[];
+  classes?:       ClassOption[];
 }
 
 export function StudentForm({
   initialValues,
   onSubmit,
-  loading = false,
-  isEdit = false,
+  loading  = false,
+  isEdit   = false,
   onCancel,
-  parents = [], // ✅ no more internal fetch
+  parents  = [],
+  classes  = [],
 }: StudentFormProps) {
   const [imgTimestamp, setImgTimestamp] = useState<number>(Date.now());
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      username: initialValues?.username ?? "",
-      email: initialValues?.email ?? "",
-      phone: initialValues?.phone ?? "",
-      address: initialValues?.address ?? "",
-      img: initialValues?.img ?? "",
-      bloodGroup: initialValues?.bloodGroup ?? "",
-      sex: (initialValues?.sex as (typeof SEX_OPTIONS)[number]) ?? "MALE",
+      username:    initialValues?.username    ?? "",
+      email:       initialValues?.email       ?? "",
+      phone:       initialValues?.phone       ?? "",
+      address:     initialValues?.address     ?? "",
+      img:         initialValues?.img         ?? "",
+      bloodGroup:  initialValues?.bloodGroup  ?? "",
+      sex:         (initialValues?.sex as (typeof SEX_OPTIONS)[number]) ?? "MALE",
       dateOfBirth: initialValues?.dateOfBirth
         ? new Date(initialValues.dateOfBirth).toISOString().split("T")[0]
         : "",
       parentId: initialValues?.parentId ?? "",
+      classId:  initialValues?.classId  ?? "",
     },
   });
 
   const getChangedFields = (values: FormValues): StudentPayload => {
     const changed: StudentPayload = {};
-    if (values.username !== (initialValues?.username ?? "")) changed.username = values.username;
-    if (values.email !== (initialValues?.email ?? "")) changed.email = values.email;
-    if (values.phone !== (initialValues?.phone ?? "")) changed.phone = values.phone;
-    if (values.address !== (initialValues?.address ?? "")) changed.address = values.address;
-    if (values.img !== (initialValues?.img ?? "")) changed.img = values.img;
-    if (values.bloodGroup !== (initialValues?.bloodGroup ?? "")) changed.bloodGroup = values.bloodGroup;
-    if (values.sex !== (initialValues?.sex ?? "MALE")) changed.sex = values.sex;
+    if (values.username    !== (initialValues?.username    ?? "")) changed.username    = values.username;
+    if (values.email       !== (initialValues?.email       ?? "")) changed.email       = values.email;
+    if (values.phone       !== (initialValues?.phone       ?? "")) changed.phone       = values.phone;
+    if (values.address     !== (initialValues?.address     ?? "")) changed.address     = values.address;
+    if (values.img         !== (initialValues?.img         ?? "")) changed.img         = values.img;
+    if (values.bloodGroup  !== (initialValues?.bloodGroup  ?? "")) changed.bloodGroup  = values.bloodGroup;
+    if (values.sex         !== (initialValues?.sex         ?? "MALE")) changed.sex     = values.sex;
     if (values.dateOfBirth !== (initialValues?.dateOfBirth ?? "")) changed.dateOfBirth = values.dateOfBirth ?? null;
-    if (values.parentId !== (initialValues?.parentId ?? "")) changed.parentId = values.parentId || null;
+    if (values.parentId    !== (initialValues?.parentId    ?? "")) changed.parentId    = values.parentId || null;
+    if (values.classId     !== (initialValues?.classId     ?? "")) changed.classId     = values.classId  || null;
     return changed;
   };
 
   const handlePut = form.handleSubmit((values) => {
-    onSubmit({ ...values, parentId: values.parentId || null }, isEdit ? "put" : "create");
+    onSubmit({
+      ...values,
+      parentId: values.parentId || null,
+      classId:  values.classId  || null,
+    }, isEdit ? "put" : "create");
   });
 
   const handlePatch = form.handleSubmit((values) => {
@@ -194,6 +482,28 @@ export function StudentForm({
           </FormItem>
         )} />
 
+        {/* Class */}
+        <FormField control={form.control} name="classId" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Class</FormLabel>
+            <Select
+              onValueChange={v => field.onChange(v === "none" ? "" : v)}
+              value={field.value || undefined}
+            >
+              <FormControl>
+                <SelectTrigger><SelectValue placeholder="Assign to class (optional)" /></SelectTrigger>
+              </FormControl>
+              <SelectContent>
+                <SelectItem value="none">No class</SelectItem>
+                {classes.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )} />
+
         {/* Parent */}
         <FormField control={form.control} name="parentId" render={({ field }) => (
           <FormItem>
@@ -246,7 +556,7 @@ export function StudentForm({
                     form.clearErrors("img");
                     const data = new FormData();
                     data.append("file", file);
-                    const res = await fetch("/api/upload", { method: "POST", body: data });
+                    const res  = await fetch("/api/upload", { method: "POST", body: data });
                     const json = await res.json();
                     if (!res.ok) {
                       form.setError("img", { message: json.error ?? "Upload failed" });
@@ -284,3 +594,4 @@ export function StudentForm({
     </Form>
   );
 }
+

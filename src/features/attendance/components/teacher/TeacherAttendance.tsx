@@ -1,19 +1,124 @@
+// "use client";
+
+// import { useState } from "react";
+// import { RefreshCw, Plus } from "lucide-react";
+// import { useSession } from "@/features/attendance/hooks/usesession";
+// import TeacherSessionList   from "./TeacherSessionList";
+// import TeacherSessionDetail from "./TeacherSessionDetail";
+// import CreateSessionModal   from "./CreateSessionModal";
+// import type { SessionRecord } from "../../types/attendance.types";
+
+// export default function TeacherAttendance() {
+//   const { sessions, loading, error, refresh, createSession, endSession, deleteSession } =
+//     useSession();
+
+//   const [activeSession, setActiveSession] = useState<SessionRecord | null>(null);
+//   const [showCreate,    setShowCreate]    = useState(false);
+
+//   return (
+//     <div style={{ padding: "28px 32px", maxWidth: 1200, fontFamily: "'DM Sans','Segoe UI',sans-serif" }}>
+
+//       {/* Header */}
+//       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 24 }}>
+//         <div>
+//           <p style={{ margin: 0, fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#9ca3af" }}>
+//             Teacher · Attendance
+//           </p>
+//           <h1 style={{ margin: "4px 0 0", fontSize: 22, fontWeight: 900, color: "#111827" }}>
+//             {activeSession ? `Session: ${activeSession.class.name}` : "My Sessions"}
+//           </h1>
+//         </div>
+//         <div style={{ display: "flex", gap: 8 }}>
+//           {activeSession ? (
+//             <button onClick={() => setActiveSession(null)} style={outlineBtnSt}>
+//               ← Back to Sessions
+//             </button>
+//           ) : (
+//             <>
+//               <button onClick={refresh} style={outlineBtnSt}>
+//                 <RefreshCw size={14} /> Refresh
+//               </button>
+//               <button onClick={() => setShowCreate(true)} style={primaryBtnSt}>
+//                 <Plus size={14} /> New Session
+//               </button>
+//             </>
+//           )}
+//         </div>
+//       </div>
+
+//       {/* Error */}
+//       {error && (
+//         <div style={{ background: "#fee2e2", border: "1px solid #fca5a5", borderRadius: 8, padding: "10px 14px", marginBottom: 16, fontSize: 13, color: "#dc2626" }}>
+//           ⚠ {error}
+//         </div>
+//       )}
+
+//       {/* Content */}
+//       {activeSession ? (
+//         <TeacherSessionDetail
+//           session={activeSession}
+//           onEnd={async () => { await endSession(activeSession.id); setActiveSession(null); }}
+//           onRefresh={refresh}
+//         />
+//       ) : (
+//         <TeacherSessionList
+//           sessions={sessions}
+//           loading={loading}
+//           onOpen={setActiveSession}
+//           onEnd={endSession}
+//           onDelete={deleteSession}
+//         />
+//       )}
+
+//       {/* Create Session Modal */}
+//       {showCreate && (
+//         <CreateSessionModal
+//           onClose={() => setShowCreate(false)}
+//           onCreate={async (payload) => {
+//             const s = await createSession(payload);
+//             if (s) { setShowCreate(false); setActiveSession(s); }
+//           }}
+//         />
+//       )}
+//     </div>
+//   );
+// }
+
+// const outlineBtnSt: React.CSSProperties = {
+//   display: "flex", alignItems: "center", gap: 6,
+//   padding: "8px 16px", borderRadius: 8,
+//   border: "1.5px solid #e5e7eb", background: "#fff",
+//   fontSize: 13, fontWeight: 600, cursor: "pointer", color: "#374151",
+// };
+// const primaryBtnSt: React.CSSProperties = {
+//   display: "flex", alignItems: "center", gap: 6,
+//   padding: "8px 16px", borderRadius: 8,
+//   border: "none", background: "#111827",
+//   fontSize: 13, fontWeight: 600, cursor: "pointer", color: "#fff",
+// };
+
+
+
+
+
+
+
+
 "use client";
 
-import { useState } from "react";
-import { RefreshCw, Plus } from "lucide-react";
-import { useSession } from "@/features/attendance/hooks/usesession";
-import TeacherSessionList   from "./TeacherSessionList";
-import TeacherSessionDetail from "./TeacherSessionDetail";
-import CreateSessionModal   from "./CreateSessionModal";
-import type { SessionRecord } from "../../types/attendance.types";
+import { RefreshCw } from "lucide-react";
+import { useTeacherAttendance } from "@/features/attendance/hooks/useTeacherAttendance";
+import ClassCard       from "./ClassCard";
+import AttendanceSheet from "./AttendanceSheet";
 
 export default function TeacherAttendance() {
-  const { sessions, loading, error, refresh, createSession, endSession, deleteSession } =
-    useSession();
-
-  const [activeSession, setActiveSession] = useState<SessionRecord | null>(null);
-  const [showCreate,    setShowCreate]    = useState(false);
+  const {
+    classes, classesLoading, classesError,
+    activeClass, setActiveClass,
+    students, studentsLoading, studentsError,
+    saving, saved, saveError,
+    selectClass, setStatus, markAll, saveAttendance,
+  } = useTeacherAttendance();
 
   return (
     <div style={{ padding: "28px 32px", maxWidth: 1200, fontFamily: "'DM Sans','Segoe UI',sans-serif" }}>
@@ -25,74 +130,65 @@ export default function TeacherAttendance() {
             Teacher · Attendance
           </p>
           <h1 style={{ margin: "4px 0 0", fontSize: 22, fontWeight: 900, color: "#111827" }}>
-            {activeSession ? `Session: ${activeSession.class.name}` : "My Sessions"}
+            {activeClass ? `Taking Attendance — ${activeClass.name}` : "My Classes"}
           </h1>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          {activeSession ? (
-            <button onClick={() => setActiveSession(null)} style={outlineBtnSt}>
-              ← Back to Sessions
-            </button>
-          ) : (
-            <>
-              <button onClick={refresh} style={outlineBtnSt}>
-                <RefreshCw size={14} /> Refresh
-              </button>
-              <button onClick={() => setShowCreate(true)} style={primaryBtnSt}>
-                <Plus size={14} /> New Session
-              </button>
-            </>
-          )}
-        </div>
+        {activeClass && (
+          <button onClick={() => setActiveClass(null)} style={{
+            display: "flex", alignItems: "center", gap: 6,
+            padding: "8px 16px", borderRadius: 8,
+            border: "1.5px solid #e5e7eb", background: "#fff",
+            fontSize: 13, fontWeight: 600, cursor: "pointer", color: "#374151",
+          }}>
+            ← Back to Classes
+          </button>
+        )}
       </div>
 
-      {/* Error */}
-      {error && (
+      {/* Classes error */}
+      {classesError && (
         <div style={{ background: "#fee2e2", border: "1px solid #fca5a5", borderRadius: 8, padding: "10px 14px", marginBottom: 16, fontSize: 13, color: "#dc2626" }}>
-          ⚠ {error}
+          ⚠ {classesError}
         </div>
       )}
 
       {/* Content */}
-      {activeSession ? (
-        <TeacherSessionDetail
-          session={activeSession}
-          onEnd={async () => { await endSession(activeSession.id); setActiveSession(null); }}
-          onRefresh={refresh}
+      {activeClass ? (
+        <AttendanceSheet
+          cls={activeClass}
+          students={students}
+          loading={studentsLoading}
+          error={studentsError}
+          saving={saving}
+          saved={saved}
+          saveError={saveError}
+          onBack={() => setActiveClass(null)}
+          onStatus={setStatus}
+          onMarkAll={markAll}
+          onSave={saveAttendance}
         />
       ) : (
-        <TeacherSessionList
-          sessions={sessions}
-          loading={loading}
-          onOpen={setActiveSession}
-          onEnd={endSession}
-          onDelete={deleteSession}
-        />
-      )}
-
-      {/* Create Session Modal */}
-      {showCreate && (
-        <CreateSessionModal
-          onClose={() => setShowCreate(false)}
-          onCreate={async (payload) => {
-            const s = await createSession(payload);
-            if (s) { setShowCreate(false); setActiveSession(s); }
-          }}
-        />
+        <div>
+          {classesLoading ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {[...Array(3)].map((_, i) => (
+                <div key={i} style={{ height: 80, background: "#f3f4f6", borderRadius: 12 }} />
+              ))}
+            </div>
+          ) : classes.length === 0 ? (
+            <div style={{ textAlign: "center", padding: 64, color: "#9ca3af" }}>
+              <p style={{ fontSize: 16, fontWeight: 600 }}>No classes assigned yet</p>
+              <p style={{ fontSize: 13 }}>Ask your admin to assign classes to you</p>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {classes.map(cls => (
+                <ClassCard key={cls.id} cls={cls} onSelect={selectClass} />
+              ))}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
 }
-
-const outlineBtnSt: React.CSSProperties = {
-  display: "flex", alignItems: "center", gap: 6,
-  padding: "8px 16px", borderRadius: 8,
-  border: "1.5px solid #e5e7eb", background: "#fff",
-  fontSize: 13, fontWeight: 600, cursor: "pointer", color: "#374151",
-};
-const primaryBtnSt: React.CSSProperties = {
-  display: "flex", alignItems: "center", gap: 6,
-  padding: "8px 16px", borderRadius: 8,
-  border: "none", background: "#111827",
-  fontSize: 13, fontWeight: 600, cursor: "pointer", color: "#fff",
-};
