@@ -46,6 +46,7 @@ enum Day {
 }
 
 
+
 model User {
   id        String      @id @default(cuid())
   username  String
