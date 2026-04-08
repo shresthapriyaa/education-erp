@@ -1,11 +1,13 @@
 "use client";
 
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Settings } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useAttendance } from "@/features/attendance/hooks/useAttendance";
 import AttendanceSummary from "@/features/attendance/components/admin/AttendanceSummary";
 import AttendanceTable from "@/features/attendance/components/admin/AttendanceTable";
 
 export default function AdminAttendancePage() {
+  const router = useRouter();
   const { records, stats, loading, error, refresh, editRecord, deleteRecord } =
     useAttendance();
 
@@ -49,23 +51,43 @@ export default function AdminAttendancePage() {
             Attendance Records
           </h1>
         </div>
-        <button
-          onClick={refresh}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            padding: "8px 16px",
-            borderRadius: 8,
-            border: "1.5px solid #e5e7eb",
-            background: "#fff",
-            fontSize: 13,
-            fontWeight: 600,
-            cursor: "pointer",
-          }}
-        >
-          <RefreshCw size={14} /> Refresh
-        </button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            onClick={() => router.push("/admin/attendance/geofence")}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "8px 16px",
+              borderRadius: 8,
+              border: "none",
+              background: "#16a34a",
+              color: "#fff",
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            <Settings size={14} /> Geofence Settings
+          </button>
+          <button
+            onClick={refresh}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "8px 16px",
+              borderRadius: 8,
+              border: "1.5px solid #e5e7eb",
+              background: "#fff",
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            <RefreshCw size={14} /> Refresh
+          </button>
+        </div>
       </div>
 
       {error && (

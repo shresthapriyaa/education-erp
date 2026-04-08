@@ -106,6 +106,15 @@ export async function GET(req: NextRequest) {
         createdAt: true, updatedAt: true,
         teacher:  { select: { id: true, username: true, email: true } },
         students: { select: { id: true } },
+        schedules: {
+          select: {
+            subject: { select: { name: true } },
+            day: true,
+            startTime: true,
+            endTime: true,
+          },
+          take: 3, // Get first 3 schedules for display
+        },
         _count:   { select: { students: true } },
       },
       orderBy: { name: "asc" },

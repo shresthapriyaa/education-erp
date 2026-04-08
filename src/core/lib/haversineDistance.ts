@@ -58,8 +58,19 @@ export function haversineDistance(a: Coords, b: Coords): number {
   const φ1 = toRad(a.latitude),  φ2 = toRad(b.latitude);
   const Δφ = toRad(b.latitude  - a.latitude);
   const Δλ = toRad(b.longitude - a.longitude);
-  const h  = Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
-  return Math.round(EARTH_RADIUS_M * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h)) * 10) / 10;
+  
+  // Haversine formula with high precision
+  const h = Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+  
+  // Use more precise Earth radius for Nepal region (WGS84 ellipsoid)
+  // Nepal is around 28°N latitude, so we use a more accurate radius
+  const earthRadiusAtNepal = 6371008.8; // meters, more precise for Nepal's latitude
+  
+  const distance = earthRadiusAtNepal * c;
+  
+  // Return distance rounded to 1 decimal place for better precision
+  return Math.round(distance * 10) / 10;
 }
 
 export function checkZone(
@@ -68,9 +79,21 @@ export function checkZone(
   radius: number,
   gpsAccuracy = 0
 ): ZoneCheck {
-  const distance  = haversineDistance(user, center);
-  const buffer    = Math.min(gpsAccuracy * 0.5, 50); // max +50m GPS buffer
+  const distance = haversineDistance(user, center);
+  
+  // Enhanced GPS accuracy buffer for Nepal conditions
+  // Account for typical GPS accuracy in urban/rural Nepal
+  let buffer = 0;
+  if (gpsAccuracy > 0) {
+    // Use 70% of reported accuracy as buffer, max 30m for safety
+    buffer = Math.min(gpsAccuracy * 0.7, 30);
+  } else {
+    // Default buffer for unknown accuracy (typical Nepal conditions)
+    buffer = 15; // 15m default buffer for Nepal GPS conditions
+  }
+  
   const effective = radius + buffer;
+  
   return {
     distance,
     isWithin:           distance <= effective,

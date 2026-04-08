@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { Save, MapPin } from "lucide-react";
+import LocationMapPicker from "./LocationMapPicker";
+import PrecisionInfo from "./PrecisionInfo";
 import type {
   GeofenceSettings,
   UpdateGeofencePayload,
@@ -36,6 +38,11 @@ export default function GeofenceSettingsForm({
     setLng(settings.longitude);
   }, [settings]);
 
+  const handleLocationSelect = (latitude: number, longitude: number) => {
+    setLat(latitude);
+    setLng(longitude);
+  };
+
   async function handleSubmit() {
     const ok = await onSave({
       latitude: lat,
@@ -63,8 +70,19 @@ export default function GeofenceSettingsForm({
     );
 
   return (
-    <div style={{ maxWidth: 560 }}>
-      {/* GPS Center */}
+    <div style={{ maxWidth: 800 }}>
+      {/* Precision Information */}
+      <PrecisionInfo />
+
+      {/* Interactive Map */}
+      <LocationMapPicker
+        latitude={lat}
+        longitude={lng}
+        radius={maxRadius}
+        onLocationSelect={handleLocationSelect}
+      />
+
+      {/* Manual GPS Center Input */}
       <div style={sectionSt}>
         <div
           style={{
@@ -83,9 +101,12 @@ export default function GeofenceSettingsForm({
               color: "#111827",
             }}
           >
-            School GPS Center
+            Manual School GPS Center
           </h3>
         </div>
+        <p style={{ margin: "0 0 14px", fontSize: 12, color: "#6b7280" }}>
+          Use the interactive map above or manually enter coordinates below.
+        </p>
         <div
           style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}
         >

@@ -8,6 +8,13 @@ export type ClassItem = {
   id:        string;
   name:      string;
   teacherId: string;
+  teacher?:  { id: string; username: string; email: string };
+  schedules?: Array<{
+    subject: { name: string };
+    day: string;
+    startTime: string;
+    endTime: string;
+  }>;
   _count:    { students: number };
 };
 
@@ -105,11 +112,16 @@ export function useTeacherAttendance() {
           );
           setGeoDistance(Math.round(dist));
 
-          if (dist > school.radiusMeters) {
+          // Enhanced accuracy check for Nepal conditions
+          const gpsAccuracy = pos.coords.accuracy || 0;
+          const buffer = gpsAccuracy > 0 ? Math.min(gpsAccuracy * 0.7, 30) : 15;
+          const effectiveRadius = school.radiusMeters + buffer;
+
+          if (dist > effectiveRadius) {
             setGeoState("failed");
             setGeoError(
-              `You are ${Math.round(dist)}m from school (allowed: ${school.radiusMeters}m). ` +
-              `Please be within the school zone to take attendance.`
+              `You are ${Math.round(dist)}m from school (allowed: ${school.radiusMeters}m + ${Math.round(buffer)}m GPS buffer = ${Math.round(effectiveRadius)}m total). ` +
+              `GPS accuracy: ±${Math.round(gpsAccuracy)}m. Please move closer to school.`
             );
             return;
           }
