@@ -97,6 +97,7 @@ export default function GeofenceSettingsForm({
               value={lat}
               onChange={(e) => setLat(Number(e.target.value))}
               style={inputSt}
+              placeholder="e.g. 27.7172"
             />
           </div>
           <div>
@@ -107,8 +108,29 @@ export default function GeofenceSettingsForm({
               value={lng}
               onChange={(e) => setLng(Number(e.target.value))}
               style={inputSt}
+              placeholder="e.g. 85.3240"
             />
           </div>
+        </div>
+        
+        {/* Helper links */}
+        <div style={{ marginTop: 12, padding: 12, background: "#f0f9ff", borderRadius: 8, fontSize: 12, color: "#0369a1" }}>
+          <p style={{ margin: "0 0 8px", fontWeight: 600 }}>📍 How to get coordinates:</p>
+          <p style={{ margin: "0 0 4px" }}>1. Open <a href="https://maps.google.com" target="_blank" style={{ color: "#0369a1", textDecoration: "underline" }}>Google Maps</a></p>
+          <p style={{ margin: "0 0 4px" }}>2. Search for your school</p>
+          <p style={{ margin: "0 0 4px" }}>3. Right-click on the school location</p>
+          <p style={{ margin: "0 0 8px" }}>4. Copy the coordinates (first number = latitude, second = longitude)</p>
+          {lat !== 0 && lng !== 0 && (
+            <p style={{ margin: 0 }}>
+              <a 
+                href={`https://maps.google.com/?q=${lat},${lng}`} 
+                target="_blank" 
+                style={{ color: "#0369a1", textDecoration: "underline", fontWeight: 600 }}
+              >
+                🗺️ View current location on Google Maps
+              </a>
+            </p>
+          )}
         </div>
       </div>
 

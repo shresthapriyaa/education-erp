@@ -2,12 +2,11 @@
 
 "use client";
 
-// import { useGeofence }      from "@/features/attendance/hooks/useGeofence";
 import GeofenceSettingsForm from "@/features/attendance/components/admin/GeofenceSettingsForm";
-import { useGeofence } from "@/features/attendance/hooks/usegeofence";
+import { useGeofenceSettings } from "@/features/attendance/hooks/useGeofenceSettings";
 
 export default function AdminGeofencePage() {
-  const { settings, loading, saving, error, update } = useGeofence();
+  const { settings, loading, saving, error, update } = useGeofenceSettings();
 
   return (
     <div style={{ padding: "28px 32px", maxWidth: 700, fontFamily: "'DM Sans','Segoe UI',sans-serif" }}>

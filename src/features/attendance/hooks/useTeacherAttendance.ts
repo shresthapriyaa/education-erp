@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import type { AttendanceStatus } from "../types/attendance.types";
+import { haversineDistance } from "@/core/lib/haversineDistance";
 
 export type ClassItem = {
   id:        string;
@@ -14,21 +15,37 @@ export type StudentRow = {
   studentId: string;
   username:  string;
   email:     string;
-  status:    AttendanceStatus;
+  status:    AttendanceStatus | null; // null = not yet marked
 };
 
+export type GeofenceState =
+  | "idle"
+  | "requesting"
+  | "verifying"
+  | "success"
+  | "failed";
+
 export function useTeacherAttendance() {
-  const [classes,       setClasses]       = useState<ClassItem[]>([]);
+  const [classes,        setClasses]        = useState<ClassItem[]>([]);
   const [classesLoading, setClassesLoading] = useState(true);
-  const [classesError,  setClassesError]  = useState<string | null>(null);
+  const [classesError,   setClassesError]   = useState<string | null>(null);
 
-  const [activeClass,   setActiveClass]   = useState<ClassItem | null>(null);
-  const [students,      setStudents]      = useState<StudentRow[]>([]);
+  const [activeClass,    setActiveClass]    = useState<ClassItem | null>(null);
+  const [students,       setStudents]       = useState<StudentRow[]>([]);
   const [studentsLoading, setStudentsLoading] = useState(false);
-  const [studentsError, setStudentsError] = useState<string | null>(null);
+  const [studentsError,  setStudentsError]  = useState<string | null>(null);
 
-  const [saving,  setSaving]  = useState(false);
-  const [saved,   setSaved]   = useState(false);
+  // One-by-one index
+  const [currentIndex,   setCurrentIndex]   = useState(0);
+
+  // Geofence
+  const [geoState,       setGeoState]       = useState<GeofenceState>("idle");
+  const [geoError,       setGeoError]       = useState<string | null>(null);
+  const [geoDistance,    setGeoDistance]    = useState<number | null>(null);
+
+  // Save
+  const [saving,    setSaving]    = useState(false);
+  const [saved,     setSaved]     = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
   // Fetch teacher's classes
@@ -50,13 +67,81 @@ export function useTeacherAttendance() {
     load();
   }, []);
 
-  // Fetch students when a class is selected
+  // Step 1: teacher clicks "Take Attendance" → verify location
   async function selectClass(cls: ClassItem) {
     setActiveClass(cls);
-    setStudentsLoading(true);
-    setStudentsError(null);
+    setGeoState("requesting");
+    setGeoError(null);
+    setGeoDistance(null);
     setSaved(false);
     setSaveError(null);
+    setCurrentIndex(0);
+    setStudents([]);
+
+    if (!navigator.geolocation) {
+      setGeoState("failed");
+      setGeoError("Geolocation is not supported by your browser.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        setGeoState("verifying");
+        try {
+          // Fetch school zone settings
+          const res = await fetch("/api/attendance/geofence");
+          if (!res.ok) {
+            throw new Error("Could not load school zone settings.");
+          }
+          const school = await res.json();
+
+          if (!school.latitude || !school.longitude || !school.radiusMeters) {
+            throw new Error("School GPS zone not configured. Ask admin to set it up.");
+          }
+
+          const dist = haversineDistance(
+            { latitude: pos.coords.latitude, longitude: pos.coords.longitude },
+            { latitude: school.latitude,     longitude: school.longitude },
+          );
+          setGeoDistance(Math.round(dist));
+
+          if (dist > school.radiusMeters) {
+            setGeoState("failed");
+            setGeoError(
+              `You are ${Math.round(dist)}m from school (allowed: ${school.radiusMeters}m). ` +
+              `Please be within the school zone to take attendance.`
+            );
+            return;
+          }
+
+          // Location verified — load students
+          setGeoState("success");
+          await loadStudents(cls);
+        } catch (e: any) {
+          setGeoState("failed");
+          setGeoError(e.message);
+        }
+      },
+      (err) => {
+        const msgs: Record<number, string> = {
+          1: "Location permission denied. Please allow location access and try again.",
+          2: "Location unavailable. Please try again.",
+          3: "Location request timed out. Please try again.",
+        };
+        setGeoState("failed");
+        setGeoError(msgs[err.code] ?? "Failed to get your location.");
+      },
+      { 
+        enableHighAccuracy: true, 
+        timeout: 15000, 
+        maximumAge: 0,
+      }
+    );
+  }
+
+  async function loadStudents(cls: ClassItem) {
+    setStudentsLoading(true);
+    setStudentsError(null);
     try {
       const res = await fetch(`/api/students?classId=${cls.id}&pageSize=200`);
       if (!res.ok) throw new Error("Failed to load students");
@@ -65,9 +150,10 @@ export function useTeacherAttendance() {
         studentId: s.id,
         username:  s.username,
         email:     s.email,
-        status:    "PRESENT" as AttendanceStatus,
+        status:    null,
       }));
       setStudents(list);
+      setCurrentIndex(0);
     } catch (e: any) {
       setStudentsError(e.message);
     } finally {
@@ -75,15 +161,21 @@ export function useTeacherAttendance() {
     }
   }
 
-  function setStatus(studentId: string, status: AttendanceStatus) {
-    setStudents(prev => prev.map(s => s.studentId === studentId ? { ...s, status } : s));
+  // Mark current student and advance
+  function markStudent(status: AttendanceStatus) {
+    setStudents(prev =>
+      prev.map((s, i) => i === currentIndex ? { ...s, status } : s)
+    );
+    setCurrentIndex(prev => prev + 1);
     setSaved(false);
   }
 
-  function markAll(status: AttendanceStatus) {
-    setStudents(prev => prev.map(s => ({ ...s, status })));
-    setSaved(false);
+  // Go back to previous student
+  function prevStudent() {
+    if (currentIndex > 0) setCurrentIndex(prev => prev - 1);
   }
+
+  const isComplete = students.length > 0 && currentIndex >= students.length;
 
   async function saveAttendance() {
     if (!activeClass) return;
@@ -93,7 +185,6 @@ export function useTeacherAttendance() {
       const now   = new Date();
       const today = now.toISOString().split("T")[0];
 
-      // Auto-create session in background
       const sessionRes = await fetch("/api/sessions", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
@@ -108,13 +199,13 @@ export function useTeacherAttendance() {
       if (!sessionRes.ok) throw new Error("Failed to create session");
       const session = await sessionRes.json();
 
-      // Save attendance records
+      const marked = students.filter(s => s.status !== null);
       const attRes = await fetch("/api/attendance", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({
           sessionId: session.id,
-          records:   students.map(({ studentId, status }) => ({ studentId, status })),
+          records:   marked.map(({ studentId, status }) => ({ studentId, status })),
         }),
       });
       if (!attRes.ok) throw new Error("Failed to save attendance");
@@ -135,11 +226,24 @@ export function useTeacherAttendance() {
     return list[0].id;
   }
 
+  function resetClass() {
+    setActiveClass(null);
+    setGeoState("idle");
+    setGeoError(null);
+    setGeoDistance(null);
+    setStudents([]);
+    setCurrentIndex(0);
+    setSaved(false);
+    setSaveError(null);
+  }
+
   return {
     classes, classesLoading, classesError,
-    activeClass, setActiveClass,
+    activeClass, resetClass,
     students, studentsLoading, studentsError,
+    currentIndex, isComplete,
+    geoState, geoError, geoDistance,
     saving, saved, saveError,
-    selectClass, setStatus, markAll, saveAttendance,
+    selectClass, markStudent, prevStudent, saveAttendance,
   };
 }

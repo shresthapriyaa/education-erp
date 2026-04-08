@@ -230,7 +230,7 @@ export default function TeacherDashboard() {
           <UserCheck className="w-6 h-6 text-emerald-600" />
           <p className="font-medium text-sm">Mark Attendance</p>
           <p className="text-xs text-muted-foreground">
-            GPS verify and mark students
+            Take attendance for your classes
           </p>
         </button>
 
