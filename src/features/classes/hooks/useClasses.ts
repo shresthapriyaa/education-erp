@@ -5,7 +5,13 @@ import { toast } from "sonner";
 import type { Class } from "../types/class.types";
 import { classApi } from "../services/class.api";
 
-type ClassPayload = Partial<Class> & { teacherId?: string };
+type ClassPayload = Partial<Class> & { 
+  teacherId?: string;
+  subjects?: Array<{
+    subjectId: string;
+    teacherId: string | null;
+  }>;
+};
 
 export function useClasses() {
   const [classes, setClasses] = useState<Class[]>([]);
@@ -28,9 +34,10 @@ export function useClasses() {
   const createClass = async (data: ClassPayload) => {
     setLoading(true);
     try {
-      await classApi.create(data);
-      toast.success("Class created successfully");
-      await fetchClasses();
+      const newClass = await classApi.create(data);
+      const subjectsCount = newClass.subjects?.length || 0;
+      toast.success(`Class created with ${subjectsCount} subject(s)`);
+      setClasses((prev) => [...prev, newClass]);
       return true;
     } catch (err: any) {
       toast.error(err?.response?.data?.error || "Failed to create class");
@@ -44,7 +51,7 @@ export function useClasses() {
     setLoading(true);
     try {
       await classApi.update(id, data);
-      toast.success("Class updated successfully");
+      // Don't show toast here - let the form handle it
       await fetchClasses();
       return true;
     } catch (err: any) {
@@ -59,7 +66,7 @@ export function useClasses() {
     setLoading(true);
     try {
       await classApi.patch(id, data);
-      toast.success("Class updated successfully");
+      // Don't show toast here - let the form handle it
       await fetchClasses();
       return true;
     } catch (err: any) {

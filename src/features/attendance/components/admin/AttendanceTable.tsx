@@ -88,7 +88,7 @@ export default function AttendanceTable({ records, loading, onEdit, onDelete }: 
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
           <thead>
             <tr style={{ background: "#f9fafb", borderBottom: "1px solid #e5e7eb" }}>
-              {["Student", "Class", "Date", "Time", "Status", "GPS", "Actions"].map(h => (
+              {["Student", "Class", "Date", "Time", "Status", "Actions"].map(h => (
                 <th key={h} style={thSt}>{h}</th>
               ))}
             </tr>
@@ -97,7 +97,7 @@ export default function AttendanceTable({ records, loading, onEdit, onDelete }: 
             {loading ? (
               [...Array(5)].map((_, i) => (
                 <tr key={i}>
-                  {[...Array(7)].map((_, j) => (
+                  {[...Array(6)].map((_, j) => (
                     <td key={j} style={{ padding: "13px 16px" }}>
                       <div style={{ height: 12, background: "#f3f4f6", borderRadius: 4 }} />
                     </td>
@@ -106,7 +106,7 @@ export default function AttendanceTable({ records, loading, onEdit, onDelete }: 
               ))
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={7} style={{ padding: 48, textAlign: "center", color: "#9ca3af" }}>
+                <td colSpan={6} style={{ padding: 48, textAlign: "center", color: "#9ca3af" }}>
                   No records found
                 </td>
               </tr>
@@ -135,16 +135,6 @@ export default function AttendanceTable({ records, loading, onEdit, onDelete }: 
                     <td style={tdSt}>
                       <span style={{ fontSize: 11, fontWeight: 800, background: cfg.bg, color: cfg.color, padding: "3px 10px", borderRadius: 20 }}>
                         {cfg.label.toUpperCase()}
-                      </span>
-                    </td>
-                    <td style={tdSt}>
-                      <span style={{
-                        fontSize: 11, fontWeight: 600,
-                        color:      r.withinSchool ? "#16a34a" : "#dc2626",
-                        background: r.withinSchool ? "#dcfce7" : "#fee2e2",
-                        padding: "3px 8px", borderRadius: 6,
-                      }}>
-                        {r.withinSchool ? "✓ Inside" : "✗ Outside"}
                       </span>
                     </td>
                     <td style={tdSt}>

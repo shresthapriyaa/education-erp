@@ -26,14 +26,15 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    if (!body.name || !body.description) {
-      return NextResponse.json({ error: "Missing: name, description" }, { status: 400 });
+    if (!body.name) {
+      return NextResponse.json({ error: "Missing: name" }, { status: 400 });
     }
 
     const subject = await prisma.subject.create({
       data: {
         name: body.name.trim(),
-        description: body.description.trim(),
+        code: body.code?.trim() || null,
+        description: body.description?.trim() || null,
       },
     });
 
@@ -41,7 +42,7 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error("[SUBJECTS_POST]", error.message);
     if (error.code === "P2002") {
-      return NextResponse.json({ error: `Already exists: ${error.meta?.target}` }, { status: 409 });
+      return NextResponse.json({ error: `Subject code already exists` }, { status: 409 });
     }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

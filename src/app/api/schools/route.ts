@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
         radiusMeters: true,
         createdAt: true,
         _count: {
-          select: { zones: true, sessions: true },
+          select: { zones: true, classes: true },
         },
       },
       orderBy: { name: "asc" },
@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
         radiusMeters: true,
         createdAt: true,
         _count: {
-          select: { zones: true, sessions: true },
+          select: { zones: true, classes: true },
         },
       },
     });

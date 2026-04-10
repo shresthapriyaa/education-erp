@@ -7,7 +7,13 @@ import { ClassTable } from "@/features/classes/components/ClassTable";
 import type { Class } from "@/features/classes/types/class.types";
 import { SubmitMode } from "@/features/classes/components/ClassForm";
 
-type ClassPayload = Partial<Class> & { teacherId?: string };
+type ClassPayload = Partial<Class> & { 
+  teacherId?: string;
+  subjects?: Array<{
+    subjectId: string;
+    teacherId: string | null;
+  }>;
+};
 
 export default function ClassesPage() {
   const {
@@ -40,12 +46,17 @@ export default function ClassesPage() {
     await deleteClass(id);
   };
 
+  const handleUpdateClass = (updatedClass: Class) => {
+    // This will be handled by useClasses hook
+    fetchClasses(filters);
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Classes</h1>
         <p className="text-muted-foreground">
-          Manage classes and their assigned teachers.
+          Manage classes and their class teachers.
         </p>
       </div>
       <ClassTable
@@ -54,6 +65,8 @@ export default function ClassesPage() {
         onAdd={handleAdd}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        onRefresh={() => fetchClasses(filters)}
+        onUpdateClass={handleUpdateClass}
       />
     </div>
   );

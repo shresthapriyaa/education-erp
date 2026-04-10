@@ -30,13 +30,17 @@ export async function PUT(
       where: { id },
       data: {
         name: body.name?.trim(),
-        description: body.description?.trim(),
+        code: body.code?.trim() || null,
+        description: body.description?.trim() || null,
       },
     });
 
     return NextResponse.json(subject);
   } catch (error: any) {
     console.error("[SUBJECT_PUT]", error.message);
+    if (error.code === "P2002") {
+      return NextResponse.json({ error: "Subject code already exists" }, { status: 409 });
+    }
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
@@ -54,12 +58,16 @@ export async function PATCH(
 
     const data: any = {};
     if (body.name !== undefined) data.name = body.name.trim();
-    if (body.description !== undefined) data.description = body.description.trim();
+    if (body.code !== undefined) data.code = body.code?.trim() || null;
+    if (body.description !== undefined) data.description = body.description?.trim() || null;
 
     const subject = await prisma.subject.update({ where: { id }, data });
     return NextResponse.json(subject);
   } catch (error: any) {
     console.error("[SUBJECT_PATCH]", error.message);
+    if (error.code === "P2002") {
+      return NextResponse.json({ error: "Subject code already exists" }, { status: 409 });
+    }
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

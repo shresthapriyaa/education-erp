@@ -12,7 +12,7 @@ const SCHOOL_SELECT = {
   radiusMeters: true,
   createdAt: true,
   _count: {
-    select: { zones: true, sessions: true },
+    select: { zones: true, classes: true },
   },
 } as const;
 

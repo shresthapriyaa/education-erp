@@ -988,12 +988,6 @@ export async function GET(req: NextRequest) {
               class:    { select: { id: true, name: true } },
             },
           },
-          session: {
-            select: {
-              id:    true,
-              class: { select: { id: true, name: true } },
-            },
-          },
         },
       }),
       prisma.attendance.count({ where }),
@@ -1015,30 +1009,24 @@ export async function GET(req: NextRequest) {
 }
 export async function POST(req: NextRequest) {
   try {
-    const { sessionId, records } = await req.json();
+    const { classId, date, records } = await req.json();
 
-    if (!sessionId || !Array.isArray(records)) {
-      return NextResponse.json({ error: "sessionId and records are required" }, { status: 400 });
+    if (!classId || !date || !Array.isArray(records)) {
+      return NextResponse.json({ error: "classId, date, and records are required" }, { status: 400 });
     }
 
-    const session = await prisma.session.findUnique({
-      where:  { id: sessionId },
-      select: { id: true, date: true, isOpen: true },
-    });
-    if (!session) {
-      return NextResponse.json({ error: "Session not found" }, { status: 404 });
-    }
+    const attendanceDate = new Date(date);
 
     const results = await Promise.all(
       records.map(({ studentId, status }: { studentId: string; status: string }) =>
         prisma.attendance.upsert({
-          where:  { studentId_sessionId: { studentId, sessionId } },
+          where:  { studentId_date_classId: { studentId, date: attendanceDate, classId } },
           update: { status: status as any },
           create: {
             studentId,
-            sessionId,
+            classId,
             status: status as any,
-            date:   session.date,
+            date:   attendanceDate,
           },
         })
       )

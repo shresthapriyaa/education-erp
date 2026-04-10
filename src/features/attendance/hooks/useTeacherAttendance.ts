@@ -194,33 +194,23 @@ export function useTeacherAttendance() {
     setSaving(true);
     setSaveError(null);
     try {
-      const now   = new Date();
-      const today = now.toISOString().split("T")[0];
-
-      const sessionRes = await fetch("/api/sessions", {
-        method:  "POST",
-        headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({
-          classId:   activeClass.id,
-          schoolId:  await getFirstSchoolId(),
-          date:      today,
-          startTime: now.toISOString(),
-          isOpen:    false,
-        }),
-      });
-      if (!sessionRes.ok) throw new Error("Failed to create session");
-      const session = await sessionRes.json();
-
+      const today = new Date().toISOString().split("T")[0];
       const marked = students.filter(s => s.status !== null);
+
       const attRes = await fetch("/api/attendance", {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({
-          sessionId: session.id,
-          records:   marked.map(({ studentId, status }) => ({ studentId, status })),
+          classId: activeClass.id,
+          date:    today,
+          records: marked.map(({ studentId, status }) => ({ studentId, status })),
         }),
       });
-      if (!attRes.ok) throw new Error("Failed to save attendance");
+      
+      if (!attRes.ok) {
+        const error = await attRes.json();
+        throw new Error(error.error || "Failed to save attendance");
+      }
 
       setSaved(true);
     } catch (e: any) {
@@ -228,14 +218,6 @@ export function useTeacherAttendance() {
     } finally {
       setSaving(false);
     }
-  }
-
-  async function getFirstSchoolId(): Promise<string> {
-    const res  = await fetch("/api/schools?pageSize=1");
-    const data = await res.json();
-    const list = data.schools ?? data.data ?? data ?? [];
-    if (!list[0]) throw new Error("No school found. Please add a school first.");
-    return list[0].id;
   }
 
   function resetClass() {

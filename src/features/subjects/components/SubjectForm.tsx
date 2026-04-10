@@ -15,7 +15,8 @@ import { Subject } from "../types/subject.types";
 
 const schema = z.object({
   name: z.string().min(2, "Minimum 2 characters"),
-  description: z.string().min(5, "Minimum 5 characters"),
+  code: z.string().optional(),
+  description: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -42,6 +43,7 @@ export function SubjectForm({
     resolver: zodResolver(schema),
     defaultValues: {
       name: initialValues?.name ?? "",
+      code: initialValues?.code ?? "",
       description: initialValues?.description ?? "",
     },
   });
@@ -55,8 +57,16 @@ export function SubjectForm({
       <form className="space-y-4">
         <FormField control={form.control} name="name" render={({ field }) => (
           <FormItem>
-            <FormLabel>Subject Name</FormLabel>
+            <FormLabel>Subject Name <span className="text-red-500">*</span></FormLabel>
             <FormControl><Input placeholder="e.g. Mathematics" {...field} /></FormControl>
+            <FormMessage />
+          </FormItem>
+        )} />
+
+        <FormField control={form.control} name="code" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Subject Code</FormLabel>
+            <FormControl><Input placeholder="e.g. MATH101" {...field} /></FormControl>
             <FormMessage />
           </FormItem>
         )} />

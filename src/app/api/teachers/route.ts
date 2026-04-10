@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
         address: true,
         img: true,
         createdAt: true,
-        classes: { select: { id: true, name: true } },
+        classTeacherFor: { select: { id: true, name: true, grade: true, section: true } },
       },
       orderBy: { username: "asc" },
     });
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
         address: true,
         img: true,
         createdAt: true,
-        classes: { select: { id: true, name: true } },
+        classTeacherFor: { select: { id: true, name: true, grade: true, section: true } },
       },
     });
 

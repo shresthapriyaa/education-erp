@@ -14,18 +14,30 @@ import {
   Select, SelectContent, SelectItem,
   SelectTrigger, SelectValue,
 } from "@/core/components/ui/select";
-import { Loader2, Save, PlusCircle } from "lucide-react";
+import { Loader2, Save, PlusCircle, Trash2, Plus } from "lucide-react";
 import { Class } from "../types/class.types";
+import { toast } from "sonner";
 
 const schema = z.object({
-  name: z.string().min(2, "Minimum 2 characters"),
-  teacherId: z.string().min(1, "Please select a teacher"),
+  grade: z.string().min(1, "Grade is required"),
+  section: z.string().min(1, "Section is required"),
+  academicYear: z.string().min(1, "Academic year is required"),
+  classTeacherId: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
 
 export type SubmitMode = "create" | "put" | "patch";
-type ClassPayload = Partial<Class> & { teacherId?: string };
+type ClassPayload = Partial<Class> & { 
+  grade?: string; 
+  section?: string; 
+  academicYear?: string;
+  classTeacherId?: string;
+  subjects?: Array<{
+    subjectId: string;
+    teacherId: string | null;
+  }>;
+};
 
 interface TeacherOption {
   id: string;
@@ -33,9 +45,21 @@ interface TeacherOption {
   email: string;
 }
 
+interface Subject {
+  id: string;
+  name: string;
+  code?: string | null;
+}
+
+interface ClassSubject {
+  id: string;
+  subject: { id: string; name: string; code?: string | null };
+  teacher?: { id: string; username: string } | null;
+}
+
 interface ClassFormProps {
   initialValues?: Partial<Class>;
-  onSubmit: (values: ClassPayload, mode: SubmitMode) => void;
+  onSubmit: (values: ClassPayload, mode: SubmitMode) => Promise<void>;
   loading?: boolean;
   isEdit?: boolean;
   onCancel?: () => void;
@@ -49,45 +73,235 @@ export function ClassForm({
   onCancel,
 }: ClassFormProps) {
   const [teachers, setTeachers] = useState<TeacherOption[]>([]);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [classSubjects, setClassSubjects] = useState<ClassSubject[]>([]);
+  const [originalClassSubjects, setOriginalClassSubjects] = useState<ClassSubject[]>([]);
+  const [selectedSubject, setSelectedSubject] = useState<string>("");
+  const [selectedTeacher, setSelectedTeacher] = useState<string>("none");
 
   useEffect(() => {
     fetch("/api/teachers")
       .then((r) => r.json())
       .then((data) => setTeachers(Array.isArray(data) ? data : []))
       .catch(() => setTeachers([]));
+    
+    fetch("/api/subjects")
+      .then((r) => r.json())
+      .then((data) => setSubjects(Array.isArray(data) ? data : []))
+      .catch(() => setSubjects([]));
   }, []);
+
+  // Reload class subjects whenever the form opens in edit mode
+  useEffect(() => {
+    if (isEdit && initialValues?.id) {
+      fetch(`/api/classes/${initialValues.id}/subjects`)
+        .then((r) => r.json())
+        .then((data) => {
+          const subjects = Array.isArray(data) ? data : [];
+          setClassSubjects(subjects);
+          setOriginalClassSubjects(subjects);
+        })
+        .catch(() => {
+          setClassSubjects([]);
+          setOriginalClassSubjects([]);
+        });
+    } else {
+      setClassSubjects([]);
+      setOriginalClassSubjects([]);
+    }
+    // Reset selections when dialog opens
+    setSelectedSubject("");
+    setSelectedTeacher("none");
+  }, [isEdit, initialValues?.id]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
-      name: initialValues?.name ?? "",
-      teacherId: initialValues?.teacherId ?? "",
+      grade: initialValues?.grade ?? "",
+      section: initialValues?.section ?? "",
+      academicYear: initialValues?.academicYear ?? new Date().getFullYear() + "-" + (new Date().getFullYear() + 1),
+      classTeacherId: initialValues?.classTeacherId ?? undefined,
     },
   });
 
-  const handlePut = form.handleSubmit((values) => {
-    onSubmit(values, isEdit ? "put" : "create");
+  const handlePut = form.handleSubmit(async (values) => {
+    try {
+      if (isEdit) {
+        // Edit mode: save class details first, then subjects
+        await onSubmit(values, "put");
+        if (initialValues?.id) {
+          await saveSubjectChanges();
+        }
+      } else {
+        // Create mode: pass subjects along with class data
+        const classData = {
+          ...values,
+          subjects: classSubjects.map(cs => ({
+            subjectId: cs.subject.id,
+            teacherId: cs.teacher?.id || null,
+          })),
+        };
+        await onSubmit(classData, "create");
+      }
+    } catch (error: any) {
+      console.error('Error in handlePut:', error);
+      toast.error("Failed to save changes");
+    }
   });
+
+  async function saveSubjectChanges() {
+    if (!initialValues?.id) return;
+
+    try {
+      // Find subjects to add (in classSubjects but not in originalClassSubjects)
+      const toAdd = classSubjects.filter(
+        cs => !cs.id || cs.id.startsWith('temp-')
+      );
+
+      // Find subjects to remove (in originalClassSubjects but not in classSubjects)
+      const toRemove = originalClassSubjects.filter(
+        orig => !classSubjects.some(cs => cs.subject.id === orig.subject.id)
+      );
+
+      // Find subjects with teacher changes
+      const toUpdate = classSubjects.filter(cs => {
+        if (!cs.id || cs.id.startsWith('temp-')) return false;
+        const orig = originalClassSubjects.find(o => o.subject.id === cs.subject.id);
+        return orig && orig.teacher?.id !== cs.teacher?.id;
+      });
+
+      // Execute all changes and wait for completion
+      const results = await Promise.allSettled([
+        ...toAdd.map(cs =>
+          fetch(`/api/classes/${initialValues.id}/subjects`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              subjectId: cs.subject.id,
+              teacherId: cs.teacher?.id || null,
+            }),
+          }).then(res => {
+            if (!res.ok) throw new Error('Failed to add subject');
+            return res.json();
+          })
+        ),
+        ...toRemove.map(cs =>
+          fetch(`/api/classes/${initialValues.id}/subjects/${cs.subject.id}`, {
+            method: "DELETE",
+          }).then(res => {
+            if (!res.ok) throw new Error('Failed to remove subject');
+            return res.json();
+          })
+        ),
+        ...toUpdate.map(cs =>
+          fetch(`/api/classes/${initialValues.id}/subjects/${cs.subject.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              teacherId: cs.teacher?.id || null,
+            }),
+          }).then(res => {
+            if (!res.ok) throw new Error('Failed to update teacher');
+            return res.json();
+          })
+        ),
+      ]);
+
+      // Check if any failed
+      const failed = results.filter(r => r.status === 'rejected');
+      if (failed.length > 0) {
+        console.error('Some subject changes failed:', failed);
+        toast.error(`${failed.length} subject change(s) failed`);
+      } else {
+        toast.success("Class and subjects saved successfully");
+      }
+    } catch (error: any) {
+      console.error('Error saving subject changes:', error);
+      toast.error("Failed to save subject changes");
+      throw error;
+    }
+  }
+
+  function handleAddSubject() {
+    if (!selectedSubject) return;
+
+    const subject = subjects.find(s => s.id === selectedSubject);
+    if (!subject) return;
+
+    const teacher = selectedTeacher !== "none" 
+      ? teachers.find(t => t.id === selectedTeacher)
+      : null;
+
+    // Add to local state with temporary ID
+    const newSubject: ClassSubject = {
+      id: `temp-${Date.now()}`,
+      subject: { id: subject.id, name: subject.name, code: subject.code },
+      teacher: teacher ? { id: teacher.id, username: teacher.username } : null,
+    };
+
+    setClassSubjects([...classSubjects, newSubject]);
+    setSelectedSubject("");
+    setSelectedTeacher("none");
+  }
+
+  function handleUpdateTeacher(subjectId: string, teacherId: string) {
+    const teacher = teacherId !== "none" 
+      ? teachers.find(t => t.id === teacherId)
+      : null;
+
+    setClassSubjects(classSubjects.map(cs =>
+      cs.subject.id === subjectId
+        ? { ...cs, teacher: teacher ? { id: teacher.id, username: teacher.username } : null }
+        : cs
+    ));
+  }
+
+  function handleRemoveSubject(subjectId: string) {
+    setClassSubjects(classSubjects.filter(cs => cs.subject.id !== subjectId));
+  }
+
+  const availableSubjects = subjects.filter(
+    (s) => !classSubjects.some((cs) => cs.subject.id === s.id)
+  );
 
   return (
     <Form {...form}>
       <form className="space-y-4">
-        <FormField control={form.control} name="name" render={({ field }) => (
+        <div className="grid grid-cols-2 gap-4">
+          <FormField control={form.control} name="grade" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Grade</FormLabel>
+              <FormControl><Input placeholder="e.g. Grade 10" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+
+          <FormField control={form.control} name="section" render={({ field }) => (
+            <FormItem>
+              <FormLabel>Section</FormLabel>
+              <FormControl><Input placeholder="e.g. A, B, C" {...field} /></FormControl>
+              <FormMessage />
+            </FormItem>
+          )} />
+        </div>
+
+        <FormField control={form.control} name="academicYear" render={({ field }) => (
           <FormItem>
-            <FormLabel>Class Name</FormLabel>
-            <FormControl><Input placeholder="e.g. Grade 10A" {...field} /></FormControl>
+            <FormLabel>Academic Year</FormLabel>
+            <FormControl><Input placeholder="e.g. 2025-2026" {...field} /></FormControl>
             <FormMessage />
           </FormItem>
         )} />
 
-        <FormField control={form.control} name="teacherId" render={({ field }) => (
+        <FormField control={form.control} name="classTeacherId" render={({ field }) => (
           <FormItem>
-            <FormLabel>Assigned Teacher</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value}>
+            <FormLabel>Class Teacher (Optional)</FormLabel>
+            <Select onValueChange={(value) => field.onChange(value === "none" ? undefined : value)} value={field.value || "none"}>
               <FormControl>
-                <SelectTrigger><SelectValue placeholder="Select a teacher" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Select class teacher" /></SelectTrigger>
               </FormControl>
               <SelectContent>
+                <SelectItem value="none">None</SelectItem>
                 {teachers.map((t) => (
                   <SelectItem key={t.id} value={t.id}>
                     {t.username} — {t.email}
@@ -98,6 +312,121 @@ export function ClassForm({
             <FormMessage />
           </FormItem>
         )} />
+
+        {/* Subjects Section - Show in both add and edit mode */}
+        <div className="space-y-4 pt-4 border-t">
+          <div>
+            <h3 className="text-sm font-semibold mb-2">Class Subjects</h3>
+            <p className="text-xs text-muted-foreground mb-4">
+              {isEdit ? "Manage subjects and assign teachers for this class" : "Add subjects for this class (optional)"}
+            </p>
+          </div>
+
+          {/* Add Subject */}
+          <div className="border rounded-lg p-4 space-y-3 bg-muted/30">
+            <h4 className="text-xs font-semibold">Add Subject</h4>
+            <div className="grid grid-cols-2 gap-3">
+              <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Select subject" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableSubjects.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.name} {s.code && `(${s.code})`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedTeacher} onValueChange={setSelectedTeacher}>
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="Teacher (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {teachers.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.username}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              type="button"
+              onClick={handleAddSubject}
+              disabled={!selectedSubject}
+              size="sm"
+              className="w-full"
+              variant="outline"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add Subject
+            </Button>
+          </div>
+
+          {/* Current Subjects */}
+          <div className="space-y-2">
+            <h4 className="text-xs font-semibold">
+              Current Subjects ({classSubjects.length})
+            </h4>
+            {classSubjects.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-4 border rounded-lg">
+                No subjects added yet
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {classSubjects.map((cs) => (
+                  <div
+                    key={cs.id}
+                    className="flex items-center gap-3 p-3 border rounded-lg bg-card"
+                  >
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">
+                        {cs.subject.name}
+                        {cs.subject.code && (
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            ({cs.subject.code})
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    <div className="w-40">
+                      <Select
+                        value={cs.teacher?.id || "none"}
+                        onValueChange={(val) =>
+                          handleUpdateTeacher(cs.subject.id, val)
+                        }
+                      >
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue placeholder="Assign teacher" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">No teacher</SelectItem>
+                          {teachers.map((t) => (
+                            <SelectItem key={t.id} value={t.id}>
+                              {t.username}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:bg-red-50"
+                      onClick={() => handleRemoveSubject(cs.subject.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
 
         <div className="flex gap-2 pt-2 justify-end">
           {onCancel && (

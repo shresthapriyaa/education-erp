@@ -134,10 +134,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {
           label: "Daily Ops",
-          href: "/admin/sessions",
+          href: "/admin/attendance",
           icon: <CalendarDays className="w-5 h-5" />,
           submenu: [
-            { label: "Sessions",   href: "/admin/sessions",   icon: <CalendarDays className="w-4 h-4" /> },
             { label: "Attendance", href: "/admin/attendance", icon: <UserCheck    className="w-4 h-4" /> },
           ],
         },

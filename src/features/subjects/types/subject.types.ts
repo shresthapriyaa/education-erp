@@ -1,7 +1,8 @@
 export interface Subject {
   id: string;
   name: string;
-  description: string;
+  code?: string | null;
+  description?: string | null;
   createdAt: string;
   updatedAt: string;
 }

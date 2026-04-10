@@ -36,7 +36,8 @@ export function SubjectTable({
   const filtered = subjects.filter(
     (s) =>
       s.name.toLowerCase().includes(search.toLowerCase()) ||
-      s.description.toLowerCase().includes(search.toLowerCase())
+      (s.code?.toLowerCase() || "").includes(search.toLowerCase()) ||
+      (s.description?.toLowerCase() || "").includes(search.toLowerCase())
   );
 
   const handleAdd = async (values: SubjectPayload, _mode: SubmitMode) => {
@@ -102,6 +103,7 @@ export function SubjectTable({
           <TableHeader>
             <TableRow>
               <TableHead className="text-black font-semibold">Name</TableHead>
+              <TableHead className="text-black font-semibold">Code</TableHead>
               <TableHead className="text-black font-semibold">Description</TableHead>
               <TableHead className="text-black font-semibold">Created</TableHead>
               <TableHead className="text-right text-black font-semibold">Actions</TableHead>
@@ -110,13 +112,13 @@ export function SubjectTable({
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-10 text-muted-foreground">
+                <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
                   Loading...
                 </TableCell>
               </TableRow>
             ) : filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-10 text-muted-foreground">
+                <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
                   No subjects found.
                 </TableCell>
               </TableRow>
@@ -124,8 +126,17 @@ export function SubjectTable({
               filtered.map((subject) => (
                 <TableRow key={subject.id}>
                   <TableCell className="font-medium text-black">{subject.name}</TableCell>
+                  <TableCell className="text-sm text-black">
+                    {subject.code ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {subject.code}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground text-xs">No code</span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-sm text-black max-w-[300px] truncate">
-                    {subject.description}
+                    {subject.description || <span className="text-muted-foreground text-xs">No description</span>}
                   </TableCell>
                   <TableCell className="text-sm text-black">{formatDate(subject.createdAt)}</TableCell>
                   <TableCell className="text-right">
@@ -163,9 +174,18 @@ export function SubjectTable({
           filtered.map((subject) => (
             <div key={subject.id} className="rounded-xl border bg-card p-4 shadow-sm space-y-3">
               <div className="flex items-start justify-between gap-3">
-                <div>
+                <div className="flex-1">
                   <p className="font-semibold text-sm text-black">{subject.name}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{subject.description}</p>
+                  {subject.code && (
+                    <p className="text-xs mt-1">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {subject.code}
+                      </span>
+                    </p>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {subject.description || "No description"}
+                  </p>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
                   <Button

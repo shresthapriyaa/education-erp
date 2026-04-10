@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import * as z from "zod";
 import { Button } from "@/core/components/ui/button";
 import {
@@ -10,6 +10,7 @@ import {
   FormLabel, FormMessage, FormDescription,
 } from "@/core/components/ui/form";
 import { Input } from "@/core/components/ui/input";
+import { Checkbox } from "@/core/components/ui/checkbox";
 import { Loader2, Save, PlusCircle } from "lucide-react";
 import { Teacher } from "../types/teacher.types";
 
@@ -21,12 +22,19 @@ const schema = z.object({
   phone: z.string().optional().or(z.literal("")),
   address: z.string().optional().or(z.literal("")),
   img: z.string().optional().or(z.literal("")),
+  subjectIds: z.array(z.string()).optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
 
 export type SubmitMode = "create" | "put" | "patch";
-type TeacherPayload = Partial<Teacher>;
+type TeacherPayload = Partial<Teacher> & { subjectIds?: string[] };
+
+interface Subject {
+  id: string;
+  name: string;
+  code?: string | null;
+}
 
 interface TeacherFormProps {
   initialValues?: Partial<Teacher>;
@@ -44,6 +52,14 @@ export function TeacherForm({
   onCancel,
 }: TeacherFormProps) {
   const [imgTimestamp, setImgTimestamp] = useState<number>(Date.now());
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+
+  useEffect(() => {
+    fetch("/api/subjects")
+      .then((r) => r.json())
+      .then((data) => setSubjects(Array.isArray(data) ? data : []))
+      .catch(() => setSubjects([]));
+  }, []);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -53,6 +69,7 @@ export function TeacherForm({
       phone: initialValues?.phone ?? "",
       address: initialValues?.address ?? "",
       img: initialValues?.img ?? "",
+      subjectIds: [],
     },
   });
 
@@ -148,6 +165,43 @@ export function TeacherForm({
               </div>
             </FormControl>
             <FormDescription>Upload a profile photo. Max size: 5MB.</FormDescription>
+            <FormMessage />
+          </FormItem>
+        )} />
+
+        {/* Subjects Multi-Select */}
+        <FormField control={form.control} name="subjectIds" render={({ field }) => (
+          <FormItem>
+            <FormLabel>Subjects (Optional)</FormLabel>
+            <FormDescription>Select subjects this teacher can teach</FormDescription>
+            <div className="border rounded-lg p-4 max-h-48 overflow-y-auto space-y-2">
+              {subjects.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No subjects available. Add subjects first.</p>
+              ) : (
+                subjects.map((subject) => (
+                  <div key={subject.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`subject-${subject.id}`}
+                      checked={field.value?.includes(subject.id)}
+                      onCheckedChange={(checked) => {
+                        const current = field.value || [];
+                        if (checked) {
+                          field.onChange([...current, subject.id]);
+                        } else {
+                          field.onChange(current.filter((id) => id !== subject.id));
+                        }
+                      }}
+                    />
+                    <label
+                      htmlFor={`subject-${subject.id}`}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                    >
+                      {subject.name} {subject.code && `(${subject.code})`}
+                    </label>
+                  </div>
+                ))
+              )}
+            </div>
             <FormMessage />
           </FormItem>
         )} />

@@ -9,10 +9,29 @@ export async function GET(
     const { id } = await params;
     const c = await prisma.class.findUnique({
       where: { id },
-      include: { teacher: { select: { id: true, username: true, email: true } } },
+      select: {
+        id: true, name: true, grade: true, section: true, academicYear: true, classTeacherId: true,
+        schoolId: true,
+        createdAt: true, updatedAt: true,
+        classTeacher: { select: { id: true, username: true, email: true } },
+        school:       { select: { id: true, name: true } },
+        students:     { select: { id: true } },
+        subjects: {
+          select: {
+            id: true,
+            subject: { select: { id: true, name: true, code: true } },
+            teacher: { select: { id: true, username: true, email: true } },
+          },
+        },
+        _count: { select: { students: true } },
+      },
     });
     if (!c) return NextResponse.json({ error: "Class not found" }, { status: 404 });
-    return NextResponse.json(c);
+    return NextResponse.json(c, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate',
+      },
+    });
   } catch (error: any) {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
@@ -29,18 +48,27 @@ export async function PUT(
     const existing = await prisma.class.findUnique({ where: { id } });
     if (!existing) return NextResponse.json({ error: "Class not found" }, { status: 404 });
 
-    if (body.teacherId) {
-      const teacherExists = await prisma.teacher.findUnique({ where: { id: body.teacherId } });
+    if (body.classTeacherId) {
+      const teacherExists = await prisma.teacher.findUnique({ where: { id: body.classTeacherId } });
       if (!teacherExists) return NextResponse.json({ error: "Teacher not found" }, { status: 404 });
     }
+
+    // Generate new display name if grade or section changed
+    const name = `${body.grade || existing.grade} - ${body.section || existing.section}`;
 
     const updated = await prisma.class.update({
       where: { id },
       data: {
-        name: body.name?.trim(),
-        teacherId: body.teacherId,
+        name,
+        grade:          body.grade?.trim() || existing.grade,
+        section:        body.section?.trim() || existing.section,
+        academicYear:   body.academicYear?.trim() || existing.academicYear,
+        classTeacherId: body.classTeacherId || null,
       },
-      include: { teacher: { select: { id: true, username: true, email: true } } },
+      include: { 
+        classTeacher: { select: { id: true, username: true, email: true } },
+        school: { select: { id: true, name: true } },
+      },
     });
 
     return NextResponse.json(updated);
@@ -62,13 +90,23 @@ export async function PATCH(
     if (!existing) return NextResponse.json({ error: "Class not found" }, { status: 404 });
 
     const data: any = {};
-    if (body.name !== undefined) data.name = body.name.trim();
-    if (body.teacherId !== undefined) data.teacherId = body.teacherId;
+    if (body.grade !== undefined) data.grade = body.grade.trim();
+    if (body.section !== undefined) data.section = body.section.trim();
+    if (body.academicYear !== undefined) data.academicYear = body.academicYear.trim();
+    if (body.classTeacherId !== undefined) data.classTeacherId = body.classTeacherId || null;
+
+    // Update display name if grade or section changed
+    if (body.grade || body.section) {
+      data.name = `${body.grade || existing.grade} - ${body.section || existing.section}`;
+    }
 
     const updated = await prisma.class.update({
       where: { id },
       data,
-      include: { teacher: { select: { id: true, username: true, email: true } } },
+      include: { 
+        classTeacher: { select: { id: true, username: true, email: true } },
+        school: { select: { id: true, name: true } },
+      },
     });
 
     return NextResponse.json(updated);

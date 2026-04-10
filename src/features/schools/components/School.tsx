@@ -114,7 +114,7 @@ export default function SchoolsPage() {
         title="Delete School?"
         description={
           deleteTarget
-            ? `Permanently delete "${deleteTarget.name}"? All sessions linked to this school will also be affected.`
+            ? `Permanently delete "${deleteTarget.name}"? All classes and attendance records linked to this school will also be affected.`
             : "This action cannot be undone."
         }
         onConfirm={handleDelete}
