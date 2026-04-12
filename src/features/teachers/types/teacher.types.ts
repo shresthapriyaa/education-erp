@@ -1,18 +1,3 @@
-export interface Teacher {
-  id: string;
-  username: string;
-  email: string;
-  phone?: string | null;
-  address?: string | null;
-  img?: string | null;
-  userId: string;
-  createdAt: string;
-  updatedAt: string;
-  classes?: { id: string; name: string }[];
-}
-
-
-
 // export interface Teacher {
 //   id: string;
 //   username: string;
@@ -20,8 +5,24 @@ export interface Teacher {
 //   phone?: string | null;
 //   address?: string | null;
 //   img?: string | null;
-//   userId: string;
+//   userId?: string;
 //   createdAt: string;
-//   updatedAt: string;
-//   classTeacherFor?: { id: string; name: string }[]; // ✅ correct relation name
+//   updatedAt?: string;
+//   classTeacherFor?: { id: string; name: string; grade: string; section: string }[];
 // }
+
+
+
+export interface Teacher {
+  id: string;
+  username: string;
+  email: string;
+  phone?: string | null;
+  address?: string | null;
+  img?: string | null;
+  userId?: string;
+  createdAt: string;
+  updatedAt?: string;
+  // FIX: was "classes", API returns "classTeacherFor" (matches Prisma relation name)
+  classTeacherFor?: { id: string; name: string; grade: string; section: string }[];
+}

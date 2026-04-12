@@ -1,18 +1,19 @@
 export interface Grade {
-  id: string;
-  studentId: string;
+  id:           string;
+  studentId:    string;
   assignmentId: string;
-  score: number;
-  createdAt: string;
-  updatedAt: string;
+  score:        number;
+  remarks?:     string | null;
   student?: {
-    id: string;
+    id:       string;
     username: string;
-    email: string;
+    email:    string;
   };
   assignment?: {
-    id: string;
-    title: string;
-    dueDate: string;
+    id:       string;
+    title:    string;
+    dueDate:  string;
   };
+  createdAt: string;
+  updatedAt: string;
 }

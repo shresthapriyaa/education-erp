@@ -26,3 +26,6 @@ export interface Class {
   createdAt: string;
   updatedAt: string;
 }
+
+
+

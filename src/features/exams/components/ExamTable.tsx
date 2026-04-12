@@ -1,3 +1,240 @@
+// "use client";
+
+// import { useState } from "react";
+// import { Button } from "@/core/components/ui/button";
+// import { Input } from "@/core/components/ui/input";
+// import { Badge } from "@/core/components/ui/badge";
+// import {
+//   Table, TableBody, TableCell, TableHead,
+//   TableHeader, TableRow,
+// } from "@/core/components/ui/table";
+// import { Pencil, Trash2, PlusCircle, Search } from "lucide-react";
+// import { ExamDialog } from "./ExamDialog";
+// import { SubmitMode } from "./ExamForm";
+// import { ConfirmDeleteDialog } from "./ConfirmDelete";
+// import { Exam } from "../types/exam.types";
+
+// type ExamPayload = Partial<Exam> & { subjectId?: string };
+
+// interface ExamTableProps {
+//   exams: Exam[];
+//   onAdd: (values: ExamPayload) => Promise<void>;
+//   onEdit: (id: string, values: ExamPayload, mode: SubmitMode) => Promise<void>;
+//   onDelete: (id: string) => Promise<void>;
+//   loading?: boolean;
+// }
+
+// export function ExamTable({
+//   exams, onAdd, onEdit, onDelete, loading = false,
+// }: ExamTableProps) {
+//   const [search, setSearch] = useState("");
+//   const [addOpen, setAddOpen] = useState(false);
+//   const [editOpen, setEditOpen] = useState(false);
+//   const [deleteOpen, setDeleteOpen] = useState(false);
+//   const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
+//   const [actionLoading, setActionLoading] = useState(false);
+
+//   const filtered = exams.filter(
+//     (e) =>
+//       e.title.toLowerCase().includes(search.toLowerCase()) ||
+//       (e.subject?.name ?? "").toLowerCase().includes(search.toLowerCase())
+//   );
+
+//   const handleAdd = async (values: ExamPayload, _mode: SubmitMode) => {
+//     setActionLoading(true);
+//     try {
+//       await onAdd(values);
+//       setAddOpen(false);
+//     } finally {
+//       setActionLoading(false);
+//     }
+//   };
+
+//   const handleEdit = async (values: ExamPayload, mode: SubmitMode) => {
+//     if (!selectedExam) return;
+//     setActionLoading(true);
+//     try {
+//       await onEdit(selectedExam.id, values, mode);
+//       setEditOpen(false);
+//       setSelectedExam(null);
+//     } finally {
+//       setActionLoading(false);
+//     }
+//   };
+
+//   const handleDelete = async () => {
+//     if (!selectedExam) return;
+//     setActionLoading(true);
+//     try {
+//       await onDelete(selectedExam.id);
+//       setDeleteOpen(false);
+//       setSelectedExam(null);
+//     } finally {
+//       setActionLoading(false);
+//     }
+//   };
+
+//   const formatDate = (date: string) => new Date(date).toLocaleDateString("en-GB");
+
+//   const isUpcoming = (date: string) => new Date(date) > new Date();
+
+//   return (
+//     <div className="space-y-4">
+//       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+//         <div className="relative flex-1">
+//           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+//           <Input
+//             placeholder="Search by title or subject..."
+//             value={search}
+//             onChange={(e) => setSearch(e.target.value)}
+//             className="pl-9 w-full"
+//           />
+//         </div>
+//         <Button
+//           className="bg-black hover:bg-gray-700 text-white w-full sm:w-auto"
+//           onClick={() => setAddOpen(true)}
+//         >
+//           <PlusCircle className="mr-2 h-4 w-4" />
+//           Add Exam
+//         </Button>
+//       </div>
+
+//       {/* Desktop Table */}
+//       <div className="hidden lg:block rounded-md border-b-4 border-t-4 overflow-x-auto">
+//         <Table>
+//           <TableHeader>
+//             <TableRow>
+//               <TableHead className="text-black font-semibold">Title</TableHead>
+//               <TableHead className="text-black font-semibold">Subject</TableHead>
+//               <TableHead className="text-black font-semibold">Date</TableHead>
+//               <TableHead className="text-black font-semibold">Status</TableHead>
+//               <TableHead className="text-right text-black font-semibold">Actions</TableHead>
+//             </TableRow>
+//           </TableHeader>
+//           <TableBody>
+//             {loading ? (
+//               <TableRow>
+//                 <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
+//                   Loading...
+//                 </TableCell>
+//               </TableRow>
+//             ) : filtered.length === 0 ? (
+//               <TableRow>
+//                 <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
+//                   No exams found.
+//                 </TableCell>
+//               </TableRow>
+//             ) : (
+//               filtered.map((exam) => (
+//                 <TableRow key={exam.id}>
+//                   <TableCell className="font-medium text-black">{exam.title}</TableCell>
+//                   <TableCell className="text-sm text-black">{exam.subject?.name ?? "—"}</TableCell>
+//                   <TableCell className="text-sm text-black">{formatDate(exam.date)}</TableCell>
+//                   <TableCell>
+//                     <Badge variant={isUpcoming(exam.date) ? "default" : "secondary"}>
+//                       {isUpcoming(exam.date) ? "Upcoming" : "Completed"}
+//                     </Badge>
+//                   </TableCell>
+//                   <TableCell className="text-right">
+//                     <div className="flex justify-end gap-2">
+//                       <Button
+//                         variant="ghost" size="icon"
+//                         className="bg-white text-black border border-gray-300 hover:bg-gray-100"
+//                         onClick={() => { setSelectedExam(exam); setEditOpen(true); }}
+//                       >
+//                         <Pencil className="h-4 w-4" />
+//                       </Button>
+//                       <Button
+//                         variant="ghost" size="icon"
+//                         className="hover:bg-red-600 border border-gray-300 text-destructive"
+//                         onClick={() => { setSelectedExam(exam); setDeleteOpen(true); }}
+//                       >
+//                         <Trash2 className="h-4 w-4" />
+//                       </Button>
+//                     </div>
+//                   </TableCell>
+//                 </TableRow>
+//               ))
+//             )}
+//           </TableBody>
+//         </Table>
+//       </div>
+
+//       {/* Mobile Cards */}
+//       <div className="lg:hidden space-y-3">
+//         {loading ? (
+//           <p className="text-center py-10 text-muted-foreground text-sm">Loading...</p>
+//         ) : filtered.length === 0 ? (
+//           <p className="text-center py-10 text-muted-foreground text-sm">No exams found.</p>
+//         ) : (
+//           filtered.map((exam) => (
+//             <div key={exam.id} className="rounded-xl border bg-card p-4 shadow-sm space-y-3">
+//               <div className="flex items-start justify-between gap-3">
+//                 <div>
+//                   <p className="font-semibold text-sm text-black">{exam.title}</p>
+//                   <p className="text-xs text-muted-foreground mt-1">
+//                     Subject: {exam.subject?.name ?? "—"}
+//                   </p>
+//                 </div>
+//                 <div className="flex items-center gap-1 shrink-0">
+//                   <Button
+//                     variant="ghost" size="icon"
+//                     className="h-8 w-8 bg-white text-black border border-gray-300 hover:bg-gray-100"
+//                     onClick={() => { setSelectedExam(exam); setEditOpen(true); }}
+//                   >
+//                     <Pencil className="h-3.5 w-3.5" />
+//                   </Button>
+//                   <Button
+//                     variant="ghost" size="icon"
+//                     className="h-8 w-8 border border-gray-300 text-destructive hover:bg-red-50"
+//                     onClick={() => { setSelectedExam(exam); setDeleteOpen(true); }}
+//                   >
+//                     <Trash2 className="h-3.5 w-3.5" />
+//                   </Button>
+//                 </div>
+//               </div>
+//               <div className="flex items-center justify-between">
+//                 <p className="text-xs text-muted-foreground">{formatDate(exam.date)}</p>
+//                 <Badge variant={isUpcoming(exam.date) ? "default" : "secondary"}>
+//                   {isUpcoming(exam.date) ? "Upcoming" : "Completed"}
+//                 </Badge>
+//               </div>
+//             </div>
+//           ))
+//         )}
+//       </div>
+
+//       <ExamDialog
+//         open={addOpen}
+//         onOpenChange={setAddOpen}
+//         onSubmit={handleAdd}
+//         loading={actionLoading}
+//         isEdit={false}
+//       />
+//       <ExamDialog
+//         open={editOpen}
+//         onOpenChange={setEditOpen}
+//         initialValues={selectedExam ?? undefined}
+//         onSubmit={handleEdit}
+//         loading={actionLoading}
+//         isEdit={true}
+//       />
+//       <ConfirmDeleteDialog
+//         open={deleteOpen}
+//         onOpenChange={setDeleteOpen}
+//         onConfirm={handleDelete}
+//         loading={actionLoading}
+//         examTitle={selectedExam?.title}
+//       />
+//     </div>
+//   );
+// }
+
+
+
+
+
+
 "use client";
 
 import { useState } from "react";
@@ -5,8 +242,7 @@ import { Button } from "@/core/components/ui/button";
 import { Input } from "@/core/components/ui/input";
 import { Badge } from "@/core/components/ui/badge";
 import {
-  Table, TableBody, TableCell, TableHead,
-  TableHeader, TableRow,
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/core/components/ui/table";
 import { Pencil, Trash2, PlusCircle, Search } from "lucide-react";
 import { ExamDialog } from "./ExamDialog";
@@ -14,7 +250,7 @@ import { SubmitMode } from "./ExamForm";
 import { ConfirmDeleteDialog } from "./ConfirmDelete";
 import { Exam } from "../types/exam.types";
 
-type ExamPayload = Partial<Exam> & { subjectId?: string };
+type ExamPayload = Partial<Exam>;
 
 interface ExamTableProps {
   exams: Exam[];
@@ -24,59 +260,50 @@ interface ExamTableProps {
   loading?: boolean;
 }
 
-export function ExamTable({
-  exams, onAdd, onEdit, onDelete, loading = false,
-}: ExamTableProps) {
-  const [search, setSearch] = useState("");
-  const [addOpen, setAddOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
+const TYPE_COLORS: Record<string, string> = {
+  MIDTERM:   "bg-blue-100 text-blue-800",
+  FINAL:     "bg-red-100 text-red-800",
+  UNIT_TEST: "bg-yellow-100 text-yellow-800",
+  PRACTICAL: "bg-green-100 text-green-800",
+};
+
+export function ExamTable({ exams, onAdd, onEdit, onDelete, loading = false }: ExamTableProps) {
+  const [search, setSearch]           = useState("");
+  const [addOpen, setAddOpen]         = useState(false);
+  const [editOpen, setEditOpen]       = useState(false);
+  const [deleteOpen, setDeleteOpen]   = useState(false);
   const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
 
-  const filtered = exams.filter(
-    (e) =>
-      e.title.toLowerCase().includes(search.toLowerCase()) ||
-      (e.subject?.name ?? "").toLowerCase().includes(search.toLowerCase())
+  const filtered = exams.filter(e =>
+    e.title.toLowerCase().includes(search.toLowerCase()) ||
+    (e.subject?.name ?? "").toLowerCase().includes(search.toLowerCase()) ||
+    (e.class?.name   ?? "").toLowerCase().includes(search.toLowerCase()) ||
+    e.type.toLowerCase().includes(search.toLowerCase())
   );
 
   const handleAdd = async (values: ExamPayload, _mode: SubmitMode) => {
     setActionLoading(true);
-    try {
-      await onAdd(values);
-      setAddOpen(false);
-    } finally {
-      setActionLoading(false);
-    }
+    try { await onAdd(values); setAddOpen(false); } finally { setActionLoading(false); }
   };
 
   const handleEdit = async (values: ExamPayload, mode: SubmitMode) => {
     if (!selectedExam) return;
     setActionLoading(true);
-    try {
-      await onEdit(selectedExam.id, values, mode);
-      setEditOpen(false);
-      setSelectedExam(null);
-    } finally {
-      setActionLoading(false);
-    }
+    try { await onEdit(selectedExam.id, values, mode); setEditOpen(false); setSelectedExam(null); }
+    finally { setActionLoading(false); }
   };
 
   const handleDelete = async () => {
     if (!selectedExam) return;
     setActionLoading(true);
-    try {
-      await onDelete(selectedExam.id);
-      setDeleteOpen(false);
-      setSelectedExam(null);
-    } finally {
-      setActionLoading(false);
-    }
+    try { await onDelete(selectedExam.id); setDeleteOpen(false); setSelectedExam(null); }
+    finally { setActionLoading(false); }
   };
 
-  const formatDate = (date: string) => new Date(date).toLocaleDateString("en-GB");
-
-  const isUpcoming = (date: string) => new Date(date) > new Date();
+  const formatDate  = (date: string) => new Date(date).toLocaleDateString("en-GB");
+  const isUpcoming  = (date: string) => new Date(date) > new Date();
+  const formatType  = (type: string) => type.replace("_", " ").charAt(0) + type.replace("_", " ").slice(1).toLowerCase();
 
   return (
     <div className="space-y-4">
@@ -84,18 +311,14 @@ export function ExamTable({
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search by title or subject..."
+            placeholder="Search by title, subject or class..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9 w-full"
           />
         </div>
-        <Button
-          className="bg-black hover:bg-gray-700 text-white w-full sm:w-auto"
-          onClick={() => setAddOpen(true)}
-        >
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Add Exam
+        <Button className="bg-black hover:bg-gray-700 text-white w-full sm:w-auto" onClick={() => setAddOpen(true)}>
+          <PlusCircle className="mr-2 h-4 w-4" />Add Exam
         </Button>
       </div>
 
@@ -105,31 +328,33 @@ export function ExamTable({
           <TableHeader>
             <TableRow>
               <TableHead className="text-black font-semibold">Title</TableHead>
+              <TableHead className="text-black font-semibold">Type</TableHead>
+              <TableHead className="text-black font-semibold">Class</TableHead>
               <TableHead className="text-black font-semibold">Subject</TableHead>
               <TableHead className="text-black font-semibold">Date</TableHead>
+              <TableHead className="text-black font-semibold">Marks</TableHead>
               <TableHead className="text-black font-semibold">Status</TableHead>
               <TableHead className="text-right text-black font-semibold">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
-                  Loading...
-                </TableCell>
-              </TableRow>
+              <TableRow><TableCell colSpan={8} className="text-center py-10 text-muted-foreground">Loading...</TableCell></TableRow>
             ) : filtered.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
-                  No exams found.
-                </TableCell>
-              </TableRow>
+              <TableRow><TableCell colSpan={8} className="text-center py-10 text-muted-foreground">No exams found.</TableCell></TableRow>
             ) : (
               filtered.map((exam) => (
                 <TableRow key={exam.id}>
                   <TableCell className="font-medium text-black">{exam.title}</TableCell>
+                  <TableCell>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${TYPE_COLORS[exam.type] ?? ""}`}>
+                      {formatType(exam.type)}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-sm text-black">{exam.class?.name ?? "—"}</TableCell>
                   <TableCell className="text-sm text-black">{exam.subject?.name ?? "—"}</TableCell>
                   <TableCell className="text-sm text-black">{formatDate(exam.date)}</TableCell>
+                  <TableCell className="text-sm text-black">{exam.passMarks}/{exam.totalMarks}</TableCell>
                   <TableCell>
                     <Badge variant={isUpcoming(exam.date) ? "default" : "secondary"}>
                       {isUpcoming(exam.date) ? "Upcoming" : "Completed"}
@@ -137,18 +362,12 @@ export function ExamTable({
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost" size="icon"
-                        className="bg-white text-black border border-gray-300 hover:bg-gray-100"
-                        onClick={() => { setSelectedExam(exam); setEditOpen(true); }}
-                      >
+                      <Button variant="ghost" size="icon" className="bg-white text-black border border-gray-300 hover:bg-gray-100"
+                        onClick={() => { setSelectedExam(exam); setEditOpen(true); }}>
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button
-                        variant="ghost" size="icon"
-                        className="hover:bg-red-600 border border-gray-300 text-destructive"
-                        onClick={() => { setSelectedExam(exam); setDeleteOpen(true); }}
-                      >
+                      <Button variant="ghost" size="icon" className="hover:bg-red-600 border border-gray-300 text-destructive"
+                        onClick={() => { setSelectedExam(exam); setDeleteOpen(true); }}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -172,60 +391,43 @@ export function ExamTable({
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="font-semibold text-sm text-black">{exam.title}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Subject: {exam.subject?.name ?? "—"}
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {exam.class?.name ?? "—"} · {exam.subject?.name ?? "—"}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Pass: {exam.passMarks}/{exam.totalMarks} marks
                   </p>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  <Button
-                    variant="ghost" size="icon"
-                    className="h-8 w-8 bg-white text-black border border-gray-300 hover:bg-gray-100"
-                    onClick={() => { setSelectedExam(exam); setEditOpen(true); }}
-                  >
+                  <Button variant="ghost" size="icon" className="h-8 w-8 bg-white text-black border border-gray-300 hover:bg-gray-100"
+                    onClick={() => { setSelectedExam(exam); setEditOpen(true); }}>
                     <Pencil className="h-3.5 w-3.5" />
                   </Button>
-                  <Button
-                    variant="ghost" size="icon"
-                    className="h-8 w-8 border border-gray-300 text-destructive hover:bg-red-50"
-                    onClick={() => { setSelectedExam(exam); setDeleteOpen(true); }}
-                  >
+                  <Button variant="ghost" size="icon" className="h-8 w-8 border border-gray-300 text-destructive hover:bg-red-50"
+                    onClick={() => { setSelectedExam(exam); setDeleteOpen(true); }}>
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </div>
               <div className="flex items-center justify-between">
+                <div className="flex gap-2">
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${TYPE_COLORS[exam.type] ?? ""}`}>
+                    {formatType(exam.type)}
+                  </span>
+                  <Badge variant={isUpcoming(exam.date) ? "default" : "secondary"}>
+                    {isUpcoming(exam.date) ? "Upcoming" : "Completed"}
+                  </Badge>
+                </div>
                 <p className="text-xs text-muted-foreground">{formatDate(exam.date)}</p>
-                <Badge variant={isUpcoming(exam.date) ? "default" : "secondary"}>
-                  {isUpcoming(exam.date) ? "Upcoming" : "Completed"}
-                </Badge>
               </div>
             </div>
           ))
         )}
       </div>
 
-      <ExamDialog
-        open={addOpen}
-        onOpenChange={setAddOpen}
-        onSubmit={handleAdd}
-        loading={actionLoading}
-        isEdit={false}
-      />
-      <ExamDialog
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        initialValues={selectedExam ?? undefined}
-        onSubmit={handleEdit}
-        loading={actionLoading}
-        isEdit={true}
-      />
-      <ConfirmDeleteDialog
-        open={deleteOpen}
-        onOpenChange={setDeleteOpen}
-        onConfirm={handleDelete}
-        loading={actionLoading}
-        examTitle={selectedExam?.title}
-      />
+      <ExamDialog open={addOpen} onOpenChange={setAddOpen} onSubmit={handleAdd} loading={actionLoading} isEdit={false} />
+      <ExamDialog open={editOpen} onOpenChange={setEditOpen} initialValues={selectedExam ?? undefined} onSubmit={handleEdit} loading={actionLoading} isEdit={true} />
+      <ConfirmDeleteDialog open={deleteOpen} onOpenChange={setDeleteOpen} onConfirm={handleDelete} loading={actionLoading} examTitle={selectedExam?.title} />
     </div>
   );
 }
