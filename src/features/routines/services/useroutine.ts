@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export function useSessionFilters() {
+export function useRoutineFilters() {
   const [filters, setFilters] = useState<{ search?: string }>({});
 
   const updateFilter = (key: string, value: string) => {
@@ -11,8 +11,3 @@ export function useSessionFilters() {
 
   return { filters, updateFilter };
 }
-
-
-
-
-

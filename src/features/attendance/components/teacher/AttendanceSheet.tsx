@@ -25,7 +25,10 @@ export default function AttendanceSheet({
   onBack, onStatus, onMarkAll, onSave,
 }: Props) {
   const counts = students.reduce(
-    (acc, s) => { acc[s.status] = (acc[s.status] ?? 0) + 1; return acc; },
+    (acc, s) => {
+      if (s.status) acc[s.status] = (acc[s.status] ?? 0) + 1;
+      return acc;
+    },
     {} as Record<string, number>
   );
 

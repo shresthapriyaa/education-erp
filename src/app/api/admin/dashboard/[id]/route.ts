@@ -1,283 +1,413 @@
-import { NextResponse } from 'next/server';
-import { db } from '@/core/lib/db';
+// import { NextResponse } from 'next/server';
+// import { db } from '@/core/lib/db';
 
 
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const { id } = params;
+// export async function GET(
+//   request: Request,
+//   { params }: { params: { id: string } }
+// ) {
+//   try {
+//     const { id } = params;
 
    
-    const eventItem = await db.event.findUnique({
-      where: { id },
-    });
+//     const eventItem = await db.event.findUnique({
+//       where: { id },
+//     });
 
-    if (eventItem) {
-      return NextResponse.json({
-        type: 'event',
-        data: eventItem,
-      });
-    }
+//     if (eventItem) {
+//       return NextResponse.json({
+//         type: 'event',
+//         data: eventItem,
+//       });
+//     }
 
   
-    const announcementItem = await db.announcement.findUnique({
-      where: { id },
-    });
+//     const announcementItem = await db.announcement.findUnique({
+//       where: { id },
+//     });
 
-    if (announcementItem) {
-      return NextResponse.json({
-        type: 'announcement',
-        data: announcementItem,
-      });
-    }
+//     if (announcementItem) {
+//       return NextResponse.json({
+//         type: 'announcement',
+//         data: announcementItem,
+//       });
+//     }
 
-    // If neither found
-    return NextResponse.json(
-      { error: 'Item not found' },
-      { status: 404 }
-    );
-  } catch (error) {
-    console.error('Dashboard [id] GET error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch item' },
-      { status: 500 }
-    );
-  }
-}
+//     // If neither found
+//     return NextResponse.json(
+//       { error: 'Item not found' },
+//       { status: 404 }
+//     );
+//   } catch (error) {
+//     console.error('Dashboard [id] GET error:', error);
+//     return NextResponse.json(
+//       { error: 'Failed to fetch item' },
+//       { status: 500 }
+//     );
+//   }
+// }
 
 
-export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const { id } = params;
-    const body = await request.json();
-    const { type, ...data } = body;
+// export async function PUT(
+//   request: Request,
+//   { params }: { params: { id: string } }
+// ) {
+//   try {
+//     const { id } = params;
+//     const body = await request.json();
+//     const { type, ...data } = body;
 
-    if (type === 'event') {
+//     if (type === 'event') {
      
-      const existingEvent = await db.event.findUnique({
-        where: { id },
-      });
+//       const existingEvent = await db.event.findUnique({
+//         where: { id },
+//       });
 
-      if (!existingEvent) {
-        return NextResponse.json(
-          { error: 'Event not found' },
-          { status: 404 }
-        );
-      }
+//       if (!existingEvent) {
+//         return NextResponse.json(
+//           { error: 'Event not found' },
+//           { status: 404 }
+//         );
+//       }
 
       
-      const updatedEvent = await db.event.update({
-        where: { id },
-        data: {
-          title: data.title,
-          description: data.description,
-          eventDate: new Date(data.eventDate),
-        },
-      });
+//       const updatedEvent = await db.event.update({
+//         where: { id },
+//         data: {
+//           title: data.title,
+//           description: data.description,
+//           eventDate: new Date(data.eventDate),
+//         },
+//       });
 
-      return NextResponse.json({
-        message: 'Event updated successfully',
-        event: updatedEvent,
-      });
-    } 
+//       return NextResponse.json({
+//         message: 'Event updated successfully',
+//         event: updatedEvent,
+//       });
+//     } 
     
-    else if (type === 'announcement') {
+//     else if (type === 'announcement') {
      
-      const existingAnnouncement = await db.announcement.findUnique({
-        where: { id },
-      });
+//       const existingAnnouncement = await db.announcement.findUnique({
+//         where: { id },
+//       });
 
-      if (!existingAnnouncement) {
-        return NextResponse.json(
-          { error: 'Announcement not found' },
-          { status: 404 }
-        );
-      }
+//       if (!existingAnnouncement) {
+//         return NextResponse.json(
+//           { error: 'Announcement not found' },
+//           { status: 404 }
+//         );
+//       }
 
      
-      const updatedAnnouncement = await db.announcement.update({
-        where: { id },
-        data: {
-          title: data.title,
-          content: data.content,
-        },
-      });
+//       const updatedAnnouncement = await db.announcement.update({
+//         where: { id },
+//         data: {
+//           title: data.title,
+//           content: data.content,
+//         },
+//       });
 
-      return NextResponse.json({
-        message: 'Announcement updated successfully',
-        announcement: updatedAnnouncement,
-      });
-    }
+//       return NextResponse.json({
+//         message: 'Announcement updated successfully',
+//         announcement: updatedAnnouncement,
+//       });
+//     }
 
-    return NextResponse.json(
-      { error: 'Invalid type. Use "event" or "announcement"' },
-      { status: 400 }
-    );
-  } catch (error) {
-    console.error('Dashboard [id] PUT error:', error);
-    return NextResponse.json(
-      { error: 'Failed to update item' },
-      { status: 500 }
-    );
-  }
-}
+//     return NextResponse.json(
+//       { error: 'Invalid type. Use "event" or "announcement"' },
+//       { status: 400 }
+//     );
+//   } catch (error) {
+//     console.error('Dashboard [id] PUT error:', error);
+//     return NextResponse.json(
+//       { error: 'Failed to update item' },
+//       { status: 500 }
+//     );
+//   }
+// }
 
 
-export async function PATCH(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const { id } = params;
-    const body = await request.json();
-    const { type, ...data } = body;
+// export async function PATCH(
+//   request: Request,
+//   { params }: { params: { id: string } }
+// ) {
+//   try {
+//     const { id } = params;
+//     const body = await request.json();
+//     const { type, ...data } = body;
 
-    if (type === 'event') {
+//     if (type === 'event') {
     
-      const existingEvent = await db.event.findUnique({
-        where: { id },
-      });
+//       const existingEvent = await db.event.findUnique({
+//         where: { id },
+//       });
 
-      if (!existingEvent) {
-        return NextResponse.json(
-          { error: 'Event not found' },
-          { status: 404 }
-        );
-      }
+//       if (!existingEvent) {
+//         return NextResponse.json(
+//           { error: 'Event not found' },
+//           { status: 404 }
+//         );
+//       }
 
      
-      const updateData: Record<string, any> = {};
-      if (data.title !== undefined) updateData.title = data.title;
-      if (data.description !== undefined) updateData.description = data.description;
-      if (data.eventDate !== undefined) updateData.eventDate = new Date(data.eventDate);
+//       const updateData: Record<string, any> = {};
+//       if (data.title !== undefined) updateData.title = data.title;
+//       if (data.description !== undefined) updateData.description = data.description;
+//       if (data.eventDate !== undefined) updateData.eventDate = new Date(data.eventDate);
 
  
-      const updatedEvent = await db.event.update({
-        where: { id },
-        data: updateData,
-      });
+//       const updatedEvent = await db.event.update({
+//         where: { id },
+//         data: updateData,
+//       });
 
-      return NextResponse.json({
-        message: 'Event updated successfully',
-        event: updatedEvent,
-      });
-    } 
+//       return NextResponse.json({
+//         message: 'Event updated successfully',
+//         event: updatedEvent,
+//       });
+//     } 
     
-    else if (type === 'announcement') {
+//     else if (type === 'announcement') {
       
-      const existingAnnouncement = await db.announcement.findUnique({
-        where: { id },
-      });
+//       const existingAnnouncement = await db.announcement.findUnique({
+//         where: { id },
+//       });
 
-      if (!existingAnnouncement) {
-        return NextResponse.json(
-          { error: 'Announcement not found' },
-          { status: 404 }
-        );
-      }
+//       if (!existingAnnouncement) {
+//         return NextResponse.json(
+//           { error: 'Announcement not found' },
+//           { status: 404 }
+//         );
+//       }
 
 
-      const updateData: Record<string, any> = {};
-      if (data.title !== undefined) updateData.title = data.title;
-      if (data.content !== undefined) updateData.content = data.content;
+//       const updateData: Record<string, any> = {};
+//       if (data.title !== undefined) updateData.title = data.title;
+//       if (data.content !== undefined) updateData.content = data.content;
 
       
-      const updatedAnnouncement = await db.announcement.update({
-        where: { id },
-        data: updateData,
-      });
+//       const updatedAnnouncement = await db.announcement.update({
+//         where: { id },
+//         data: updateData,
+//       });
 
-      return NextResponse.json({
-        message: 'Announcement updated successfully',
-        announcement: updatedAnnouncement,
-      });
-    }
+//       return NextResponse.json({
+//         message: 'Announcement updated successfully',
+//         announcement: updatedAnnouncement,
+//       });
+//     }
 
-    return NextResponse.json(
-      { error: 'Invalid type. Use "event" or "announcement"' },
-      { status: 400 }
-    );
+//     return NextResponse.json(
+//       { error: 'Invalid type. Use "event" or "announcement"' },
+//       { status: 400 }
+//     );
+//   } catch (error) {
+//     console.error('Dashboard [id] PATCH error:', error);
+//     return NextResponse.json(
+//       { error: 'Failed to update item' },
+//       { status: 500 }
+//     );
+//   }
+// }
+
+
+// export async function DELETE(
+//   request: Request,
+//   { params }: { params: { id: string } }
+// ) {
+//   try {
+//     const { id } = params;
+//     const { searchParams } = new URL(request.url);
+//     const type = searchParams.get('type');
+
+//     if (type === 'event') {
+     
+//       const existingEvent = await db.event.findUnique({
+//         where: { id },
+//       });
+
+//       if (!existingEvent) {
+//         return NextResponse.json(
+//           { error: 'Event not found' },
+//           { status: 404 }
+//         );
+//       }
+
+    
+//       await db.event.delete({
+//         where: { id },
+//       });
+
+//       return NextResponse.json({
+//         message: 'Event deleted successfully',
+//         id,
+//       });
+//     } 
+    
+//     else if (type === 'announcement') {
+   
+//       const existingAnnouncement = await db.announcement.findUnique({
+//         where: { id },
+//       });
+
+//       if (!existingAnnouncement) {
+//         return NextResponse.json(
+//           { error: 'Announcement not found' },
+//           { status: 404 }
+//         );
+//       }
+
+     
+//       await db.announcement.delete({
+//         where: { id },
+//       });
+
+//       return NextResponse.json({
+//         message: 'Announcement deleted successfully',
+//         id,
+//       });
+//     }
+
+//     return NextResponse.json(
+//       { error: 'Type parameter required. Use ?type=event or ?type=announcement' },
+//       { status: 400 }
+//     );
+//   } catch (error) {
+//     console.error('Dashboard [id] DELETE error:', error);
+//     return NextResponse.json(
+//       { error: 'Failed to delete item' },
+//       { status: 500 }
+//     );
+//   }
+// }
+
+
+
+
+
+import { NextRequest, NextResponse } from 'next/server';
+import { db } from '@/core/lib/db';
+
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    const eventItem = await db.event.findUnique({ where: { id } });
+    if (eventItem) return NextResponse.json({ type: 'event', data: eventItem });
+
+    const announcementItem = await db.announcement.findUnique({ where: { id } });
+    if (announcementItem) return NextResponse.json({ type: 'announcement', data: announcementItem });
+
+    return NextResponse.json({ error: 'Item not found' }, { status: 404 });
   } catch (error) {
-    console.error('Dashboard [id] PATCH error:', error);
-    return NextResponse.json(
-      { error: 'Failed to update item' },
-      { status: 500 }
-    );
+    console.error('Dashboard [id] GET error:', error);
+    return NextResponse.json({ error: 'Failed to fetch item' }, { status: 500 });
   }
 }
 
-
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
+    const body = await request.json();
+    const { type, ...data } = body;
+
+    if (type === 'event') {
+      const existing = await db.event.findUnique({ where: { id } });
+      if (!existing) return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+      const updatedEvent = await db.event.update({
+        where: { id },
+        data: { title: data.title, description: data.description, eventDate: new Date(data.eventDate) },
+      });
+      return NextResponse.json({ message: 'Event updated successfully', event: updatedEvent });
+    }
+
+    if (type === 'announcement') {
+      const existing = await db.announcement.findUnique({ where: { id } });
+      if (!existing) return NextResponse.json({ error: 'Announcement not found' }, { status: 404 });
+      const updatedAnnouncement = await db.announcement.update({
+        where: { id },
+        data: { title: data.title, content: data.content },
+      });
+      return NextResponse.json({ message: 'Announcement updated successfully', announcement: updatedAnnouncement });
+    }
+
+    return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
+  } catch (error) {
+    console.error('Dashboard [id] PUT error:', error);
+    return NextResponse.json({ error: 'Failed to update item' }, { status: 500 });
+  }
+}
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const body = await request.json();
+    const { type, ...data } = body;
+
+    if (type === 'event') {
+      const existing = await db.event.findUnique({ where: { id } });
+      if (!existing) return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+      const updateData: Record<string, any> = {};
+      if (data.title       !== undefined) updateData.title       = data.title;
+      if (data.description !== undefined) updateData.description = data.description;
+      if (data.eventDate   !== undefined) updateData.eventDate   = new Date(data.eventDate);
+      const updatedEvent = await db.event.update({ where: { id }, data: updateData });
+      return NextResponse.json({ message: 'Event updated successfully', event: updatedEvent });
+    }
+
+    if (type === 'announcement') {
+      const existing = await db.announcement.findUnique({ where: { id } });
+      if (!existing) return NextResponse.json({ error: 'Announcement not found' }, { status: 404 });
+      const updateData: Record<string, any> = {};
+      if (data.title   !== undefined) updateData.title   = data.title;
+      if (data.content !== undefined) updateData.content = data.content;
+      const updatedAnnouncement = await db.announcement.update({ where: { id }, data: updateData });
+      return NextResponse.json({ message: 'Announcement updated successfully', announcement: updatedAnnouncement });
+    }
+
+    return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
+  } catch (error) {
+    console.error('Dashboard [id] PATCH error:', error);
+    return NextResponse.json({ error: 'Failed to update item' }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type');
 
     if (type === 'event') {
-     
-      const existingEvent = await db.event.findUnique({
-        where: { id },
-      });
-
-      if (!existingEvent) {
-        return NextResponse.json(
-          { error: 'Event not found' },
-          { status: 404 }
-        );
-      }
-
-    
-      await db.event.delete({
-        where: { id },
-      });
-
-      return NextResponse.json({
-        message: 'Event deleted successfully',
-        id,
-      });
-    } 
-    
-    else if (type === 'announcement') {
-   
-      const existingAnnouncement = await db.announcement.findUnique({
-        where: { id },
-      });
-
-      if (!existingAnnouncement) {
-        return NextResponse.json(
-          { error: 'Announcement not found' },
-          { status: 404 }
-        );
-      }
-
-     
-      await db.announcement.delete({
-        where: { id },
-      });
-
-      return NextResponse.json({
-        message: 'Announcement deleted successfully',
-        id,
-      });
+      const existing = await db.event.findUnique({ where: { id } });
+      if (!existing) return NextResponse.json({ error: 'Event not found' }, { status: 404 });
+      await db.event.delete({ where: { id } });
+      return NextResponse.json({ message: 'Event deleted successfully', id });
     }
 
-    return NextResponse.json(
-      { error: 'Type parameter required. Use ?type=event or ?type=announcement' },
-      { status: 400 }
-    );
+    if (type === 'announcement') {
+      const existing = await db.announcement.findUnique({ where: { id } });
+      if (!existing) return NextResponse.json({ error: 'Announcement not found' }, { status: 404 });
+      await db.announcement.delete({ where: { id } });
+      return NextResponse.json({ message: 'Announcement deleted successfully', id });
+    }
+
+    return NextResponse.json({ error: 'Type parameter required' }, { status: 400 });
   } catch (error) {
     console.error('Dashboard [id] DELETE error:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete item' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to delete item' }, { status: 500 });
   }
 }

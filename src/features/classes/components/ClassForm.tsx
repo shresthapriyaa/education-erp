@@ -28,7 +28,8 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export type SubmitMode = "create" | "put" | "patch";
-type ClassPayload = Partial<Class> & { 
+
+type ClassPayload = Omit<Partial<Class>, "subjects"> & { 
   grade?: string; 
   section?: string; 
   academicYear?: string;
@@ -38,7 +39,6 @@ type ClassPayload = Partial<Class> & {
     teacherId: string | null;
   }>;
 };
-
 interface TeacherOption {
   id: string;
   username: string;

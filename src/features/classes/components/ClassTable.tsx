@@ -14,7 +14,7 @@ import { ConfirmDeleteDialog } from "./ConfirmDelete";
 import { Class } from "../types/class.types";
 import { Checkbox } from "@/core/components/ui/checkbox";
 
-type ClassPayload = Partial<Class> & { 
+type ClassPayload = Omit<Partial<Class>, "subjects"> & { 
   teacherId?: string;
   subjects?: Array<{
     subjectId: string;
@@ -328,7 +328,7 @@ export function ClassTable({
       <ClassDialog
         open={addOpen}
         onOpenChange={setAddOpen}
-        onSubmit={handleAdd}
+        onSubmit={handleAdd as any}
         loading={actionLoading}
         isEdit={false}
       />
@@ -336,7 +336,7 @@ export function ClassTable({
         open={editOpen}
         onOpenChange={setEditOpen}
         initialValues={selectedClass ?? undefined}
-        onSubmit={handleEdit}
+        onSubmit={handleEdit as any}
         loading={actionLoading}
         isEdit={true}
         onClose={onRefresh}

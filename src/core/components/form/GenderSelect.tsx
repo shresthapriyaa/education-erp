@@ -7,25 +7,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/core/components/ui/select";
-import { Usersex } from "@/generated/prisma/enums";
-import { cn } from "@/core/lib/utils"; // assuming you have cn helper
+import { UserSex } from "@/generated/prisma/enums";
+import { cn } from "@/core/lib/utils";
 
 interface GenderSelectProps {
-  value?: Usersex | null;
-  onChange?: (value: Usersex) => void;
+  value?: UserSex | null;
+  onChange?: (value: UserSex) => void;
   placeholder?: string;
   disabled?: boolean;
   className?: string;
   triggerClassName?: string;
-  error?: boolean; // for form validation red border
+  error?: boolean;
 }
 
-const genderOptions: Array<{ label: string; value: Usersex }> = [
-  { label: "Male", value: Usersex.MALE },
-  { label: "Female", value: Usersex.FEMALE },
-  // Add more later if needed, e.g.:
-  // { label: "Other", value: Usersex.OTHER },
-  // { label: "Prefer not to say", value: Usersex.PREFER_NOT_TO_SAY },
+const genderOptions: Array<{ label: string; value: UserSex }> = [
+  { label: "Male",   value: UserSex.MALE   },
+  { label: "Female", value: UserSex.FEMALE },
 ];
 
 export function GenderSelect({
@@ -40,7 +37,7 @@ export function GenderSelect({
   return (
     <Select
       value={value ?? undefined}
-      onValueChange={(val) => onChange?.(val as Usersex)}
+      onValueChange={(val) => onChange?.(val as UserSex)}
       disabled={disabled}
     >
       <SelectTrigger
@@ -56,11 +53,7 @@ export function GenderSelect({
 
       <SelectContent>
         {genderOptions.map((option) => (
-          <SelectItem
-            key={option.value}
-            value={option.value}
-            className="capitalize"
-          >
+          <SelectItem key={option.value} value={option.value} className="capitalize">
             {option.label}
           </SelectItem>
         ))}

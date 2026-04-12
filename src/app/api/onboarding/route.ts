@@ -1,20 +1,21 @@
 // import { NextRequest, NextResponse } from "next/server";
 // import prisma from "@/core/lib/prisma";
 
-// export async function POST(req: NextRequest) {
+// export async function POST(
+//   req: NextRequest,
+//   { params }: { params: Promise<{ id: string }> }
+// ) {
 //   try {
+//     const { id: userId } = await params;
 //     const body = await req.json();
-//     const { userId, phone, address, sex, dateOfBirth, img } = body;
+//     const { phone, address, sex, dateOfBirth, img, bloodGroup, parentName } = body;
 
 //     if (!userId) {
 //       return NextResponse.json({ error: "userId is required" }, { status: 400 });
 //     }
 
 //     if (!phone || !address) {
-//       return NextResponse.json(
-//         { error: "Phone and address are required" },
-//         { status: 400 }
-//       );
+//       return NextResponse.json({ error: "Phone and address are required" }, { status: 400 });
 //     }
 
 //     const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -45,6 +46,7 @@
 //             sex,
 //             dateOfBirth: new Date(dateOfBirth),
 //             img: img || null,
+//             bloodGroup: bloodGroup || null,  // ← save bloodGroup
 //           },
 //         });
 //         break;
@@ -52,33 +54,21 @@
 //       case "TEACHER":
 //         await prisma.teacher.update({
 //           where: { userId },
-//           data: {
-//             phone,
-//             address,
-//             img: img || null,
-//           },
+//           data: { phone, address, img: img || null },
 //         });
 //         break;
 
 //       case "PARENT":
 //         await prisma.parent.update({
 //           where: { userId },
-//           data: {
-//             phone,
-//             address,
-//             img: img || null,
-//           },
+//           data: { phone, address, img: img || null },
 //         });
 //         break;
 
 //       case "ACCOUNTANT":
 //         await prisma.accountant.update({
 //           where: { userId },
-//           data: {
-//             phone,
-//             address,
-//             img: img || null,
-//           },
+//           data: { phone, address, img: img || null },
 //         });
 //         break;
 
@@ -98,12 +88,11 @@
 
 //   } catch (error) {
 //     console.error("[ONBOARDING ERROR]", error);
-//     return NextResponse.json(
-//       { error: "Internal server error" },
-//       { status: 500 }
-//     );
+//     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
 //   }
 // }
+
+
 
 
 
@@ -111,14 +100,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/core/lib/prisma";
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(req: NextRequest) {
   try {
-    const { id: userId } = await params;
     const body = await req.json();
-    const { phone, address, sex, dateOfBirth, img, bloodGroup, parentName } = body;
+    const { userId, phone, address, sex, dateOfBirth, img, bloodGroup, parentName } = body;
 
     if (!userId) {
       return NextResponse.json({ error: "userId is required" }, { status: 400 });
@@ -155,8 +140,8 @@ export async function POST(
             address,
             sex,
             dateOfBirth: new Date(dateOfBirth),
-            img: img || null,
-            bloodGroup: bloodGroup || null,  // ← save bloodGroup
+            img:        img || null,
+            bloodGroup: bloodGroup || null,
           },
         });
         break;

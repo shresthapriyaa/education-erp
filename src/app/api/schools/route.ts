@@ -8,9 +8,7 @@ export async function GET(req: NextRequest) {
 
     const schools = await prisma.school.findMany({
       where: search
-        ? {
-            name: { contains: search, mode: "insensitive" },
-          }
+        ? { name: { contains: search, mode: "insensitive" } }
         : undefined,
       select: {
         id: true,
@@ -21,7 +19,7 @@ export async function GET(req: NextRequest) {
         radiusMeters: true,
         createdAt: true,
         _count: {
-          select: { zones: true, classes: true },
+          select: { classes: true },
         },
       },
       orderBy: { name: "asc" },
@@ -30,13 +28,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(schools);
   } catch (error: any) {
     console.error("[SCHOOLS_GET]", error.message);
-    return NextResponse.json(
-      { error: "Failed to fetch schools" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch schools" }, { status: 500 });
   }
 }
-
 
 export async function POST(req: NextRequest) {
   try {
@@ -54,10 +48,10 @@ export async function POST(req: NextRequest) {
 
     const school = await prisma.school.create({
       data: {
-        name: body.name.trim(),
-        address: body.address || null,
-        latitude: Number(body.latitude),
-        longitude: Number(body.longitude),
+        name:         body.name.trim(),
+        address:      body.address || null,
+        latitude:     Number(body.latitude),
+        longitude:    Number(body.longitude),
         radiusMeters: body.radiusMeters ? Number(body.radiusMeters) : 200,
       },
       select: {
@@ -69,7 +63,7 @@ export async function POST(req: NextRequest) {
         radiusMeters: true,
         createdAt: true,
         _count: {
-          select: { zones: true, classes: true },
+          select: { classes: true },
         },
       },
     });
