@@ -690,7 +690,6 @@ model Assignment {
   description String
   dueDate     DateTime
   totalMarks  Float    @default(100)
-  fileUrl     String?
 
   classId   String
   class     Class   @relation(fields: [classId], references: [id])
@@ -699,7 +698,20 @@ model Assignment {
   teacherId String
   teacher   Teacher @relation(fields: [teacherId], references: [id])
 
-  grades Grade[]
+  materials AssignmentMaterial[]
+  grades    Grade[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AssignmentMaterial {
+  id           String       @id @default(cuid())
+  assignmentId String
+  assignment   Assignment   @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  title        String
+  type         MaterialType
+  url          String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

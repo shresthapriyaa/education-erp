@@ -9,7 +9,7 @@ import {
   Table, TableBody, TableCell, TableHead,
   TableHeader, TableRow,
 } from "@/core/components/ui/table";
-import { Pencil, Trash2, PlusCircle, Search, FileText, ExternalLink } from "lucide-react";
+import { Pencil, Trash2, PlusCircle, Search, FileText, ExternalLink, File, Video, Link2, Image, HelpCircle } from "lucide-react";
 import { AssignmentDialog } from "./AssignmentDialog";
 import { SubmitMode } from "./AssignmentForm";
 import { ConfirmDeleteDialog } from "./ConfirmDelete";
@@ -25,20 +25,36 @@ interface AssignmentTableProps {
   loading?: boolean;
 }
 
-/** Clickable pill for attachment file */
-function AttachmentPill({ url }: { url: string }) {
-  const filename = url.split("/").pop() || "File";
+const MATERIAL_META: Record<string, { icon: React.ReactNode; color: string; bg: string }> = {
+  PDF:      { icon: <FileText className="h-3 w-3" />, color: "text-red-600",    bg: "bg-red-50 border-red-200"       },
+  VIDEO:    { icon: <Video    className="h-3 w-3" />, color: "text-blue-600",   bg: "bg-blue-50 border-blue-200"     },
+  LINK:     { icon: <Link2    className="h-3 w-3" />, color: "text-green-600",  bg: "bg-green-50 border-green-200"   },
+  IMAGE:    { icon: <Image    className="h-3 w-3" />, color: "text-purple-600", bg: "bg-purple-50 border-purple-200" },
+  DOCUMENT: { icon: <File     className="h-3 w-3" />, color: "text-yellow-700", bg: "bg-yellow-50 border-yellow-200" },
+  OTHER:    { icon: <HelpCircle className="h-3 w-3" />, color: "text-gray-500", bg: "bg-gray-50 border-gray-200"    },
+};
+
+function MaterialPill({ title, type, url }: { title: string; type: string; url: string }) {
+  const meta = MATERIAL_META[type] ?? MATERIAL_META["OTHER"];
   return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-medium text-blue-600 bg-blue-50 border-blue-200 hover:opacity-80 transition-opacity"
-    >
-      <FileText className="h-3 w-3" />
-      <span className="max-w-[100px] truncate">{filename}</span>
+    <a href={url} target="_blank" rel="noopener noreferrer"
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-medium ${meta.color} ${meta.bg} hover:opacity-80`}>
+      {meta.icon}
+      <span className="max-w-[100px] truncate">{title}</span>
       <ExternalLink className="h-2.5 w-2.5 shrink-0 opacity-60" />
     </a>
+  );
+}
+
+function MaterialSummary({ materials }: { materials?: Assignment["materials"] }) {
+  if (!materials?.length) return <span className="text-xs text-muted-foreground">—</span>;
+  const visible = materials.slice(0, 2);
+  const rest = materials.length - visible.length;
+  return (
+    <div className="flex flex-wrap gap-1 items-center">
+      {visible.map((m) => <MaterialPill key={m.id} title={m.title} type={m.type} url={m.url} />)}
+      {rest > 0 && <span className="text-xs text-muted-foreground">+{rest} more</span>}
+    </div>
   );
 }
 
@@ -129,7 +145,7 @@ export function AssignmentTable({
                 <TableHead className="text-black font-semibold">Teacher</TableHead>
                 <TableHead className="text-black font-semibold">Due Date</TableHead>
                 <TableHead className="text-black font-semibold">Marks</TableHead>
-                <TableHead className="text-black font-semibold">Attachment</TableHead>
+                <TableHead className="text-black font-semibold">Materials</TableHead>
                 <TableHead className="text-black font-semibold">Status</TableHead>
                 <TableHead className="text-right text-black font-semibold">Actions</TableHead>
               </TableRow>
@@ -162,12 +178,8 @@ export function AssignmentTable({
                     </TableCell>
                     <TableCell className="text-sm text-black">{formatDate(assignment.dueDate)}</TableCell>
                     <TableCell className="text-sm text-black font-medium">{assignment.totalMarks} pts</TableCell>
-                    <TableCell>
-                      {assignment.fileUrl ? (
-                        <AttachmentPill url={assignment.fileUrl} />
-                      ) : (
-                        <span className="text-xs text-muted-foreground">No file</span>
-                      )}
+                    <TableCell className="max-w-[200px]">
+                      <MaterialSummary materials={assignment.materials} />
                     </TableCell>
                     <TableCell>
                       <Badge variant={isOverdue(assignment.dueDate) ? "destructive" : "default"}>
@@ -220,8 +232,10 @@ export function AssignmentTable({
                         <p>Teacher: <span className="text-foreground font-medium">{assignment.teacher?.username || "—"}</span></p>
                         <p>Marks: <span className="text-foreground font-medium">{assignment.totalMarks} pts</span></p>
                       </div>
-                      {assignment.fileUrl && (
-                        <AttachmentPill url={assignment.fileUrl} />
+                      {assignment.materials && assignment.materials.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {assignment.materials.map((m) => <MaterialPill key={m.id} title={m.title} type={m.type} url={m.url} />)}
+                        </div>
                       )}
                     </div>
                     <div className="flex items-center gap-1 shrink-0">

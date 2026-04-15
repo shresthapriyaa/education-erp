@@ -37,7 +37,7 @@ interface Event {
   updatedAt: string;
 }
 
-export default function Admin() {
+export function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats>({
     totalStudents: 0,
     totalTeachers: 0,
@@ -85,6 +85,8 @@ export default function Admin() {
       const studentsArray = Array.isArray(students) ? students : (students.students || []);
       const boys = studentsArray.filter((s: any) => s.sex === "MALE").length;
       const girls = studentsArray.filter((s: any) => s.sex === "FEMALE").length;
+
+      console.log("Students data:", { studentsArray, boys, girls, eventsData });
 
       setStats({
         totalStudents: studentsArray.length,
@@ -182,73 +184,42 @@ export default function Admin() {
         ))}
       </div>
 
-      {/* Gender Distribution & Events Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Student Gender Distribution - Left Side */}
-        <Card className="hover:shadow-lg transition-shadow">
+      {/* Events Calendar & Announcements */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Calendar - Left Side */}
+        <Card className="lg:col-span-1 hover:shadow-lg transition-shadow">
           <CardHeader>
-            <CardTitle className="text-lg">Student Gender Distribution</CardTitle>
+            <CardTitle className="text-lg">Calendar</CardTitle>
           </CardHeader>
-          <CardContent>
-            {genderData[0].value === 0 && genderData[1].value === 0 ? (
-              <div className="h-[400px] flex items-center justify-center text-muted-foreground">
-                <p>No student data available</p>
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={400}>
-                <PieChart>
-                  <Pie
-                    data={genderData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={120}
-                    label={({ name, percent }) => `${name}: ${(percent! * 100).toFixed(0)}%`}
-                  >
-                    {genderData.map((entry, index) => (
-                      <Cell key={index} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
+          <CardContent className="flex justify-center">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={setSelectedDate}
+              className="rounded-lg border w-full"
+              modifiers={{
+                hasEvent: events.map(e => {
+                  const d = new Date(e.eventDate);
+                  d.setHours(0, 0, 0, 0);
+                  return d;
+                })
+              }}
+              modifiersStyles={{
+                hasEvent: { fontWeight: 'bold', textDecoration: 'underline', color: '#3b82f6' }
+              }}
+            />
           </CardContent>
         </Card>
 
-        <div className="">
-          {/* Events & Announcements - Right Side */}
-        <Card className="hover:shadow-lg transition-shadow ">
+        {/* Events & Announcements - Right Side */}
+        <Card className="lg:col-span-2 hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle className="text-lg">Events & Announcements</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {/* Calendar */}
-              <div>
-                <h3 className="text-sm font-semibold text-black mb-3">Calendar</h3>
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                  className="rounded-lg border"
-                  modifiers={{
-                    hasEvent: events.map(e => {
-                      const d = new Date(e.eventDate);
-                      d.setHours(0, 0, 0, 0);
-                      return d;
-                    })
-                  }}
-                  modifiersStyles={{
-                    hasEvent: { fontWeight: 'bold', textDecoration: 'underline', color: '#3b82f6' }
-                  }}
-                />
-              </div>
-
               {/* Selected Date Events */}
-              <div className="pt-4 border-t  ">
+              <div>
                 <h3 className="text-sm font-semibold text-black mb-2">
                   {selectedDate 
                     ? `Events on ${selectedDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`
@@ -264,24 +235,26 @@ export default function Admin() {
                           <div className="flex-1">
                             <p className="text-sm font-semibold text-black">{e.title}</p>
                             <p className="text-xs text-muted-foreground mt-1">{e.description}</p>
+                            <p className="text-xs text-blue-600 mt-1 font-medium">
+                              {e.date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
+                            </p>
                           </div>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground py-2">No events on this date</p>
+                  <p className="text-sm text-muted-foreground py-4">No events on this date</p>
                 )}
               </div>
 
-              {/* Upcoming Events */}
+              {/* All Upcoming Events */}
               <div className="pt-4 border-t">
                 <h3 className="text-sm font-semibold text-black mb-2">Upcoming Events</h3>
                 {events.length > 0 ? (
-                  <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto">
                     {events
                       .sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime())
-                      .slice(0, 5)
                       .map((e, i) => {
                         const eventDate = new Date(e.eventDate);
                         const isToday = eventDate.toDateString() === new Date().toDateString();
@@ -290,7 +263,7 @@ export default function Admin() {
                         return (
                           <div 
                             key={i} 
-                            className={`p-2 rounded-lg border ${
+                            className={`p-3 rounded-lg border ${
                               isPast 
                                 ? 'bg-gray-50 border-gray-200 opacity-60' 
                                 : isToday 
@@ -299,14 +272,16 @@ export default function Admin() {
                             }`}
                           >
                             <div className="flex items-start gap-2">
-                              <span className="text-base">{isToday ? '🔔' : isPast ? '✓' : '📌'}</span>
+                              <span className="text-lg">{isToday ? '🔔' : isPast ? '✓' : '📌'}</span>
                               <div className="flex-1">
-                                <p className="text-xs font-medium text-black">{e.title}</p>
+                                <p className="text-sm font-medium text-black">{e.title}</p>
+                                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{e.description}</p>
                                 <p className={`text-xs mt-1 font-medium ${
                                   isToday ? 'text-green-600' : isPast ? 'text-gray-500' : 'text-blue-600'
                                 }`}>
-                                  {eventDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                                  {eventDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                                   {isToday && ' (Today)'}
+                                  {isPast && ' (Past)'}
                                 </p>
                               </div>
                             </div>
@@ -315,13 +290,12 @@ export default function Admin() {
                       })}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground py-2">No upcoming events</p>
+                  <p className="text-sm text-muted-foreground py-4">No upcoming events</p>
                 )}
               </div>
             </div>
           </CardContent>
         </Card>
-        </div>
       </div>
 
       {/* Attendance Section */}
@@ -509,8 +483,3 @@ function AttendanceBarChart({ data }: { data: AttendanceData[] }) {
     </div>
   );
 }
-
-
-
-
-

@@ -7,7 +7,7 @@ export interface Assignment {
   classId:     string;
   subjectId:   string;
   teacherId:   string;
-  fileUrl?:    string | null;
+  materials?:  Array<{ id: string; title: string; type: string; url: string }>;
   class?:      { name: string };
   subject?:    { name: string };
   teacher?:    { username: string };
