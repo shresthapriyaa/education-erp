@@ -3,6 +3,7 @@ import { Outfit } from "next/font/google";
 import "./globals.css";
 import AuthProvider from "@/core/providers/Auth-provider";
 import { Toaster } from "sonner";
+import "leaflet/dist/leaflet.css";
 
 
 const outfit =  Outfit({

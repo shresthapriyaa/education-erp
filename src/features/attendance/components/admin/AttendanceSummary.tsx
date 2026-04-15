@@ -1,4 +1,4 @@
-import { CheckCircle2, XCircle, Clock, Users, TrendingUp } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, Users } from "lucide-react";
 import type { AttendanceStats } from "../../types/attendance.types";
 
 interface Props {
@@ -7,9 +7,6 @@ interface Props {
 }
 
 export default function AttendanceSummary({ stats, loading }: Props) {
-  const rate =
-    stats.total > 0 ? Math.round((stats.present / stats.total) * 100) : 0;
-
   const cards = [
     {
       label: "Total",
@@ -48,7 +45,6 @@ export default function AttendanceSummary({ stats, loading }: Props) {
           display: "grid",
           gridTemplateColumns: "repeat(4,1fr)",
           gap: 12,
-          marginBottom: 14,
         }}
       >
         {cards.map((c) => (
@@ -103,65 +99,6 @@ export default function AttendanceSummary({ stats, loading }: Props) {
             )}
           </div>
         ))}
-      </div>
-
-      {/* Rate bar */}
-      <div
-        style={{
-          background: "#f9fafb",
-          border: "1px solid #e5e7eb",
-          borderRadius: 12,
-          padding: "12px 18px",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginBottom: 6,
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <TrendingUp size={13} color="#6b7280" />
-            <span style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>
-              Attendance Rate
-            </span>
-          </div>
-          <span
-            style={{
-              fontSize: 13,
-              fontWeight: 800,
-              color:
-                rate >= 75 ? "#16a34a" : rate >= 50 ? "#ca8a04" : "#dc2626",
-            }}
-          >
-            {loading ? "—" : `${rate}%`}
-          </span>
-        </div>
-        <div
-          style={{
-            height: 7,
-            background: "#e5e7eb",
-            borderRadius: 8,
-            overflow: "hidden",
-          }}
-        >
-          <div
-            style={{
-              height: "100%",
-              borderRadius: 8,
-              width: loading ? "0%" : `${rate}%`,
-              background:
-                rate >= 75 ? "#16a34a" : rate >= 50 ? "#ca8a04" : "#dc2626",
-              transition: "width 0.6s ease",
-            }}
-          />
-        </div>
-        {!loading && (
-          <p style={{ margin: "6px 0 0", fontSize: 11, color: "#9ca3af" }}>
-            {stats.present} present out of {stats.total} total
-          </p>
-        )}
       </div>
     </div>
   );
