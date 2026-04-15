@@ -3,7 +3,7 @@ import Admin from '@/features/admin/components/dashboard/admin'
 
 const page = () => {
   return (
-    <div>
+    <div className="h-full overflow-auto">
       <Admin/>
     </div>
   )

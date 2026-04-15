@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
 import * as z from "zod";
 import { Button } from "@/core/components/ui/button";
+import { ScrollArea } from "@/core/components/ui/scroll-area";
 import {
   Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
 } from "@/core/components/ui/form";
@@ -86,88 +87,90 @@ export function RoutineForm({ initialValues, onSubmit, loading = false, isEdit =
   return (
     <Form {...form}>
       <form className="space-y-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <FormField control={form.control} name="classId" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Class</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl><SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger></FormControl>
-                <SelectContent position="popper" className="z-[9999]">
-                  {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )} />
+        <ScrollArea className="h-[400px] pr-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <FormField control={form.control} name="classId" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Class</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl><SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger></FormControl>
+                  <SelectContent position="popper" className="z-[9999]">
+                    {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
 
-          <FormField control={form.control} name="subjectId" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Subject</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl><SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger></FormControl>
-                <SelectContent position="popper" className="z-[9999]">
-                  {subjects.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )} />
+            <FormField control={form.control} name="subjectId" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Subject</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl><SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger></FormControl>
+                  <SelectContent position="popper" className="z-[9999]">
+                    {subjects.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
 
-          <FormField control={form.control} name="teacherId" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Teacher <span className="text-muted-foreground text-xs">(optional)</span></FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl><SelectTrigger><SelectValue placeholder="Select teacher" /></SelectTrigger></FormControl>
-                <SelectContent position="popper" className="z-[9999]">
-                  <SelectItem value="none">None</SelectItem>
-                  {teachers.map(t => <SelectItem key={t.id} value={t.id}>{t.username}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )} />
+            <FormField control={form.control} name="teacherId" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Teacher <span className="text-muted-foreground text-xs">(optional)</span></FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl><SelectTrigger><SelectValue placeholder="Select teacher" /></SelectTrigger></FormControl>
+                  <SelectContent position="popper" className="z-[9999]">
+                    <SelectItem value="none">None</SelectItem>
+                    {teachers.map(t => <SelectItem key={t.id} value={t.id}>{t.username}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
 
-          <FormField control={form.control} name="day" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Day</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl><SelectTrigger><SelectValue placeholder="Select day" /></SelectTrigger></FormControl>
-                <SelectContent position="popper" className="z-[9999]">
-                  {DAYS.map(d => (
-                    <SelectItem key={d} value={d}>
-                      {d.charAt(0) + d.slice(1).toLowerCase()}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )} />
+            <FormField control={form.control} name="day" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Day</FormLabel>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl><SelectTrigger><SelectValue placeholder="Select day" /></SelectTrigger></FormControl>
+                  <SelectContent position="popper" className="z-[9999]">
+                    {DAYS.map(d => (
+                      <SelectItem key={d} value={d}>
+                        {d.charAt(0) + d.slice(1).toLowerCase()}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )} />
 
-          <FormField control={form.control} name="startTime" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Start Time</FormLabel>
-              <FormControl><Input type="time" {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
+            <FormField control={form.control} name="startTime" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Start Time</FormLabel>
+                <FormControl><Input type="time" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
 
-          <FormField control={form.control} name="endTime" render={({ field }) => (
-            <FormItem>
-              <FormLabel>End Time</FormLabel>
-              <FormControl><Input type="time" {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
+            <FormField control={form.control} name="endTime" render={({ field }) => (
+              <FormItem>
+                <FormLabel>End Time</FormLabel>
+                <FormControl><Input type="time" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
 
-          <FormField control={form.control} name="room" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Room <span className="text-muted-foreground text-xs">(optional)</span></FormLabel>
-              <FormControl><Input placeholder="e.g. Room 101" {...field} /></FormControl>
-              <FormMessage />
-            </FormItem>
-          )} />
-        </div>
+            <FormField control={form.control} name="room" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Room <span className="text-muted-foreground text-xs">(optional)</span></FormLabel>
+                <FormControl><Input placeholder="e.g. Room 101" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
+          </div>
+        </ScrollArea>
 
         <div className="flex gap-2 pt-2 justify-end">
           {onCancel && <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>}

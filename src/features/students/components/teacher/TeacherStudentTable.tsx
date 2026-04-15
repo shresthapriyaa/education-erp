@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/core/components/ui/button";
 import { Input } from "@/core/components/ui/input";
+import { ScrollArea } from "@/core/components/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/core/components/ui/table";
 import { Badge } from "@/core/components/ui/badge";
 import { Trash2, UserPlus, Search, Upload, Download } from "lucide-react";
@@ -139,7 +140,7 @@ export function TeacherStudentTable({
       </div>
 
       {/* Desktop Table */}
-      <div className="hidden lg:block rounded-md border-b-4 border-t-4 overflow-x-auto">
+      <ScrollArea className="h-[600px] rounded-md border-b-4 border-t-4">
         <Table>
           <TableHeader>
             <TableRow>
@@ -204,10 +205,11 @@ export function TeacherStudentTable({
             )}
           </TableBody>
         </Table>
-      </div>
+      </ScrollArea>
 
       {/* Mobile Cards */}
-      <div className="lg:hidden space-y-3">
+      <ScrollArea className="h-[600px] lg:hidden">
+        <div className="space-y-3 pr-4">
         {loading ? (
           <p className="text-center py-10 text-muted-foreground text-sm">Loading...</p>
         ) : filtered.length === 0 ? (
@@ -256,7 +258,8 @@ export function TeacherStudentTable({
             </div>
           ))
         )}
-      </div>
+        </div>
+      </ScrollArea>
 
       {!readOnly && <TeacherStudentDialog
         open={addOpen}

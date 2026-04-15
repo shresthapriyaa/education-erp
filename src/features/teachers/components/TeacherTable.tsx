@@ -263,6 +263,7 @@
 import { useState } from "react";
 import { Button } from "@/core/components/ui/button";
 import { Input } from "@/core/components/ui/input";
+import { ScrollArea } from "@/core/components/ui/scroll-area";
 import {
   Table, TableBody, TableCell, TableHead,
   TableHeader, TableRow,
@@ -359,7 +360,7 @@ export function TeacherTable({
       </div>
 
       {/* Desktop Table */}
-      <div className="hidden lg:block rounded-md border-b-4 border-t-4 overflow-x-auto">
+      <ScrollArea className="h-[600px] rounded-md border-b-4 border-t-4">
         <Table>
           <TableHeader>
             <TableRow>
@@ -430,65 +431,67 @@ export function TeacherTable({
             )}
           </TableBody>
         </Table>
-      </div>
+      </ScrollArea>
 
       {/* Mobile Cards */}
-      <div className="lg:hidden space-y-3">
-        {loading ? (
-          <p className="text-center py-10 text-muted-foreground text-sm">Loading...</p>
-        ) : filtered.length === 0 ? (
-          <p className="text-center py-10 text-muted-foreground text-sm">No teachers found.</p>
-        ) : (
-          filtered.map((teacher) => (
-            <div key={teacher.id} className="rounded-xl border bg-card p-4 shadow-sm space-y-3">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <img
-                    src={getImgSrc(teacher.img)}
-                    alt={teacher.username}
-                    className="h-11 w-11 rounded-full object-cover shrink-0"
-                  />
-                  <div>
-                    <p className="font-semibold text-sm text-black">{teacher.username}</p>
-                    <p className="text-xs text-muted-foreground">{teacher.email}</p>
+      <ScrollArea className="h-[600px] lg:hidden">
+        <div className="space-y-3 pr-4">
+          {loading ? (
+            <p className="text-center py-10 text-muted-foreground text-sm">Loading...</p>
+          ) : filtered.length === 0 ? (
+            <p className="text-center py-10 text-muted-foreground text-sm">No teachers found.</p>
+          ) : (
+            filtered.map((teacher) => (
+              <div key={teacher.id} className="rounded-xl border bg-card p-4 shadow-sm space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={getImgSrc(teacher.img)}
+                      alt={teacher.username}
+                      className="h-11 w-11 rounded-full object-cover shrink-0"
+                    />
+                    <div>
+                      <p className="font-semibold text-sm text-black">{teacher.username}</p>
+                      <p className="text-xs text-muted-foreground">{teacher.email}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button
+                      variant="ghost" size="icon"
+                      className="h-8 w-8 bg-white text-black border border-gray-300 hover:bg-gray-100"
+                      onClick={() => { setSelectedTeacher(teacher); setEditOpen(true); }}
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost" size="icon"
+                      className="h-8 w-8 border border-gray-300 text-destructive hover:bg-red-50"
+                      onClick={() => { setSelectedTeacher(teacher); setDeleteOpen(true); }}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
                   </div>
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <Button
-                    variant="ghost" size="icon"
-                    className="h-8 w-8 bg-white text-black border border-gray-300 hover:bg-gray-100"
-                    onClick={() => { setSelectedTeacher(teacher); setEditOpen(true); }}
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button
-                    variant="ghost" size="icon"
-                    className="h-8 w-8 border border-gray-300 text-destructive hover:bg-red-50"
-                    onClick={() => { setSelectedTeacher(teacher); setDeleteOpen(true); }}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Phone</p>
+                    <p className="text-black">{teacher.phone ?? "—"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Address</p>
+                    <p className="text-black truncate">{teacher.address ?? "—"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Classes</p>
+                    {/* FIX: was teacher.classes, API returns classTeacherFor */}
+                    <p className="text-black">{teacher.classTeacherFor?.length ?? 0} class(es)</p>
+                  </div>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                <div>
-                  <p className="text-xs text-muted-foreground">Phone</p>
-                  <p className="text-black">{teacher.phone ?? "—"}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Address</p>
-                  <p className="text-black truncate">{teacher.address ?? "—"}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Classes</p>
-                  {/* FIX: was teacher.classes, API returns classTeacherFor */}
-                  <p className="text-black">{teacher.classTeacherFor?.length ?? 0} class(es)</p>
-                </div>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
+            ))
+          )}
+        </div>
+      </ScrollArea>
 
       <TeacherDialog
         open={addOpen}

@@ -637,6 +637,7 @@ import { useState } from "react";
 import { Button } from "@/core/components/ui/button";
 import { Input } from "@/core/components/ui/input";
 import { Badge } from "@/core/components/ui/badge";
+import { ScrollArea } from "@/core/components/ui/scroll-area";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/core/components/ui/table";
@@ -739,7 +740,7 @@ export function LessonTable({ lessons, onAdd, onEdit, onDelete, loading = false 
       </div>
 
       {/* Desktop Table */}
-      <div className="hidden lg:block rounded-md border-b-4 border-t-4 overflow-x-auto">
+      <ScrollArea className="h-[600px] hidden lg:block rounded-md border-b-4 border-t-4">
         <Table>
           <TableHeader>
             <TableRow>
@@ -789,10 +790,11 @@ export function LessonTable({ lessons, onAdd, onEdit, onDelete, loading = false 
             )}
           </TableBody>
         </Table>
-      </div>
+      </ScrollArea>
 
       {/* Mobile Cards */}
-      <div className="lg:hidden space-y-3">
+      <ScrollArea className="h-[600px] lg:hidden">
+        <div className="space-y-3 pr-4">
         {loading ? (
           <p className="text-center py-10 text-muted-foreground text-sm">Loading...</p>
         ) : filtered.length === 0 ? (
@@ -834,7 +836,8 @@ export function LessonTable({ lessons, onAdd, onEdit, onDelete, loading = false 
             </div>
           ))
         )}
-      </div>
+        </div>
+      </ScrollArea>
 
       <LessonDialog open={addOpen} onOpenChange={setAddOpen} onSubmit={handleAdd} loading={actionLoading} isEdit={false} />
       <LessonDialog open={editOpen} onOpenChange={setEditOpen} initialValues={selectedLesson ?? undefined} onSubmit={handleEdit} loading={actionLoading} isEdit={true} />

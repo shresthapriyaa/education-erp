@@ -1,10 +1,36 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/core/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/core/components/ui/card";
 import { Calendar } from "@/core/components/ui/calendar";
-import { Users, GraduationCap, BookOpen, ClipboardList, TrendingUp, TrendingDown, UserCheck, Wallet } from "lucide-react";
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import {
+  Users,
+  GraduationCap,
+  BookOpen,
+  ClipboardList,
+  TrendingUp,
+  TrendingDown,
+  UserCheck,
+  Wallet,
+} from "lucide-react";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from "recharts";
 
 interface DashboardStats {
   totalStudents: number;
@@ -51,7 +77,9 @@ export default function Admin() {
   });
   const [attendanceData, setAttendanceData] = useState<AttendanceData[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+    new Date(),
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -61,7 +89,16 @@ export default function Admin() {
   async function loadDashboardData() {
     setLoading(true);
     try {
-      const [studentsRes, teachersRes, classesRes, assignmentsRes, attendanceRes, parentsRes, accountantsRes, eventsRes] = await Promise.all([
+      const [
+        studentsRes,
+        teachersRes,
+        classesRes,
+        assignmentsRes,
+        attendanceRes,
+        parentsRes,
+        accountantsRes,
+        eventsRes,
+      ] = await Promise.all([
         fetch("/api/students"),
         fetch("/api/teachers"),
         fetch("/api/classes"),
@@ -81,8 +118,9 @@ export default function Admin() {
       const accountants = await accountantsRes.json();
       const eventsData = await eventsRes.json();
 
-      // Handle students API response (can be array or object with students property)
-      const studentsArray = Array.isArray(students) ? students : (students.students || []);
+      const studentsArray = Array.isArray(students)
+        ? students
+        : students.students || [];
       const boys = studentsArray.filter((s: any) => s.sex === "MALE").length;
       const girls = studentsArray.filter((s: any) => s.sex === "FEMALE").length;
 
@@ -108,10 +146,34 @@ export default function Admin() {
   }
 
   const statCards = [
-    { title: "Total Students", value: stats.totalStudents, icon: Users, color: "text-blue-600", bgColor: "bg-blue-50" },
-    { title: "Total Teachers", value: stats.totalTeachers, icon: GraduationCap, color: "text-green-600", bgColor: "bg-green-50" },
-    { title: "Total Parents", value: stats.totalParents, icon: UserCheck, color: "text-purple-600", bgColor: "bg-purple-50" },
-    { title: "Accountants", value: stats.totalAccountants, icon: Wallet, color: "text-orange-600", bgColor: "bg-orange-50" },
+    {
+      title: "Total Students",
+      value: stats.totalStudents,
+      icon: Users,
+      color: "text-blue-600",
+      bgColor: "bg-blue-50",
+    },
+    {
+      title: "Total Teachers",
+      value: stats.totalTeachers,
+      icon: GraduationCap,
+      color: "text-green-600",
+      bgColor: "bg-green-50",
+    },
+    {
+      title: "Total Parents",
+      value: stats.totalParents,
+      icon: UserCheck,
+      color: "text-purple-600",
+      bgColor: "bg-purple-50",
+    },
+    {
+      title: "Accountants",
+      value: stats.totalAccountants,
+      icon: Wallet,
+      color: "text-orange-600",
+      bgColor: "bg-orange-50",
+    },
   ];
 
   const genderData = [
@@ -126,16 +188,19 @@ export default function Admin() {
     })
     .filter((e) => {
       if (!selectedDate) return false;
-      // Normalize both dates to compare only year, month, day
       const eventYear = e.date.getFullYear();
       const eventMonth = e.date.getMonth();
       const eventDay = e.date.getDate();
-      
+
       const selectedYear = selectedDate.getFullYear();
       const selectedMonth = selectedDate.getMonth();
       const selectedDay = selectedDate.getDate();
-      
-      return eventYear === selectedYear && eventMonth === selectedMonth && eventDay === selectedDay;
+
+      return (
+        eventYear === selectedYear &&
+        eventMonth === selectedMonth &&
+        eventDay === selectedDay
+      );
     });
 
   if (loading) {
@@ -147,370 +212,337 @@ export default function Admin() {
             <div key={i} className="h-32 bg-muted animate-pulse rounded" />
           ))}
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="h-96 bg-muted animate-pulse rounded" />
-          <div className="h-96 bg-muted animate-pulse rounded" />
-        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
+      {/* Header - Sticky */}
+      <div className="sticky top-0 z-10 bg-background pb-4">
         <h1 className="text-3xl font-bold text-black">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">Welcome back! Here's what's happening today.</p>
+        <p className="text-muted-foreground mt-1">
+          Welcome back! Here's what's happening today.
+        </p>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {statCards.map((card) => (
-          <Card key={card.title} className="hover:shadow-lg transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">{card.title}</p>
-                  <p className="text-3xl font-bold text-black mt-2">{card.value}</p>
+      {/* Scrollable Content */}
+      <div className="space-y-6">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {statCards.map((card) => (
+            <Card
+              key={card.title}
+              className="hover:shadow-lg transition-shadow"
+            >
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      {card.title}
+                    </p>
+                    <p className="text-3xl font-bold text-black mt-2">
+                      {card.value}
+                    </p>
+                  </div>
+                  <div className={`${card.bgColor} p-3 rounded-full`}>
+                    <card.icon className={`h-6 w-6 ${card.color}`} />
+                  </div>
                 </div>
-                <div className={`${card.bgColor} p-3 rounded-full`}>
-                  <card.icon className={`h-6 w-6 ${card.color}`} />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Gender Distribution & Events Section */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          {/* Student Gender Distribution */}
+          <Card className="lg:col-span-1 hover:shadow-lg transition-shadow">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">
+                Student Gender Distribution
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex items-center justify-center py-2">
+              {genderData[0].value === 0 && genderData[1].value === 0 ? (
+                <div className="h-[140px] flex items-center justify-center text-muted-foreground">
+                  <p className="text-xs">No data</p>
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie
+                      data={genderData}
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={60}
+                      label={({ percent }) => `${(percent! * 100).toFixed(0)}%`}
+                      labelLine={false}
+                    >
+                      {genderData.map((entry, index) => (
+                        <Cell key={index} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend wrapperStyle={{ fontSize: "10px" }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Events & Announcements */}
+          <Card className="lg:col-span-2 hover:shadow-lg transition-shadow gap-6">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">
+                Events & Announcements
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="py-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="flex justify-center">
+                  <div className="scale-100 origin-top">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={setSelectedDate}
+                      className="rounded-lg border p-1"
+                      modifiers={{
+                        hasEvent: events.map((e) => {
+                          const d = new Date(e.eventDate);
+                          d.setHours(0, 0, 0, 0);
+                          return d;
+                        }),
+                      }}
+                      modifiersStyles={{
+                        hasEvent: {
+                          fontWeight: "bold",
+                          textDecoration: "underline",
+                          color: "#3b82f6",
+                        },
+                      }}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  {filteredEvents.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold text-black mb-1">
+                        {selectedDate?.toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </h3>
+                      {filteredEvents.slice(0, 1).map((e, i) => (
+                        <div
+                          key={i}
+                          className="p-2.5 bg-blue-50 rounded border border-blue-200"
+                        >
+                          <p className="text-xs font-medium text-black truncate">
+                            {e.title}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {events.length > 0 && (
+                    <div
+                      className={
+                        filteredEvents.length > 0 ? "pt-2 border-t" : ""
+                      }
+                    >
+                      <h3 className="text-lg font-semibold text-black mb-1">
+                        Upcoming
+                      </h3>
+                      <div className="space-y-1 max-h-[100px] overflow-y-auto pr-1">
+                        {events
+                          .sort(
+                            (a, b) =>
+                              new Date(a.eventDate).getTime() -
+                              new Date(b.eventDate).getTime(),
+                          )
+                          .slice(0, 3)
+                          .map((e, i) => {
+                            const eventDate = new Date(e.eventDate);
+                            const isToday =
+                              eventDate.toDateString() ===
+                              new Date().toDateString();
+                            return (
+                              <div
+                                key={i}
+                                className={`p-1 rounded border flex items-center gap-1.5 ${
+                                  isToday
+                                    ? "bg-green-50 border-green-200"
+                                    : "bg-muted border-gray-200"
+                                }`}
+                              >
+                                <span className="text-lg">
+                                  {isToday ? "🔔" : "📌"}
+                                </span>
+                                <p className="text-xs font-medium text-black truncate flex-1">
+                                  {e.title}
+                                </p>
+                                <p
+                                  className={`text-xs shrink-0 ${isToday ? "text-green-600" : "text-blue-600"}`}
+                                >
+                                  {eventDate.getDate()}/
+                                  {eventDate.getMonth() + 1}
+                                </p>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  )}
+                  {events.length === 0 && filteredEvents.length === 0 && (
+                    <div className="h-[140px] flex items-center justify-center text-muted-foreground">
+                      <p className="text-xs">No events</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>
           </Card>
-        ))}
-      </div>
+        </div>
 
-      {/* Gender Distribution & Events Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Student Gender Distribution - Left Side */}
+        {/* Attendance Section */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          {/* Attendance Rate Card */}
+          <Card className="lg:col-span-1 hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <CardTitle className="text-base">Attendance Rate</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-center">
+                <div className="relative w-32 h-32">
+                  <svg className="w-full h-full transform -rotate-90">
+                    <circle
+                      cx="64"
+                      cy="64"
+                      r="56"
+                      stroke="#e5e7eb"
+                      strokeWidth="10"
+                      fill="none"
+                    />
+                    <circle
+                      cx="64"
+                      cy="64"
+                      r="56"
+                      stroke="#10b981"
+                      strokeWidth="10"
+                      fill="none"
+                      strokeDasharray={`${2 * Math.PI * 56}`}
+                      strokeDashoffset={`${2 * Math.PI * 56 * (1 - stats.attendanceRate / 100)}`}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-2xl font-bold text-black">
+                      {stats.attendanceRate}%
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      This Week
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center justify-center gap-2 mt-3">
+                {stats.attendanceTrend === "up" ? (
+                  <>
+                    <TrendingUp className="h-3.5 w-3.5 text-green-600" />
+                    <span className="text-xs text-green-600 font-medium">
+                      Trending up
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <TrendingDown className="h-3.5 w-3.5 text-red-600" />
+                    <span className="text-xs text-red-600 font-medium">
+                      Trending down
+                    </span>
+                  </>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Weekly Attendance Chart */}
+          <Card className="lg:col-span-2 hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <CardTitle className="text-base">Weekly Attendance</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {attendanceData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart data={attendanceData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                    <YAxis tick={{ fontSize: 11 }} />
+                    <Tooltip />
+                    <Legend wrapperStyle={{ fontSize: "11px" }} />
+                    <Bar dataKey="present" fill="#22c55e" name="Present" />
+                    <Bar dataKey="late" fill="#eab308" name="Late" />
+                    <Bar dataKey="absent" fill="#ef4444" name="Absent" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-[200px] text-muted-foreground text-sm">
+                  No attendance data available
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Quick Actions */}
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
-            <CardTitle className="text-lg">Student Gender Distribution</CardTitle>
+            <CardTitle className="text-base">Quick Actions</CardTitle>
           </CardHeader>
           <CardContent>
-            {genderData[0].value === 0 && genderData[1].value === 0 ? (
-              <div className="h-[400px] flex items-center justify-center text-muted-foreground">
-                <p>No student data available</p>
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height={400}>
-                <PieChart>
-                  <Pie
-                    data={genderData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={120}
-                    label={({ name, percent }) => `${name}: ${(percent! * 100).toFixed(0)}%`}
-                  >
-                    {genderData.map((entry, index) => (
-                      <Cell key={index} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-
-        <div className="">
-          {/* Events & Announcements - Right Side */}
-        <Card className="hover:shadow-lg transition-shadow ">
-          <CardHeader>
-            <CardTitle className="text-lg">Events & Announcements</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {/* Calendar */}
-              <div>
-                <h3 className="text-sm font-semibold text-black mb-3">Calendar</h3>
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                  className="rounded-lg border"
-                  modifiers={{
-                    hasEvent: events.map(e => {
-                      const d = new Date(e.eventDate);
-                      d.setHours(0, 0, 0, 0);
-                      return d;
-                    })
-                  }}
-                  modifiersStyles={{
-                    hasEvent: { fontWeight: 'bold', textDecoration: 'underline', color: '#3b82f6' }
-                  }}
-                />
-              </div>
-
-              {/* Selected Date Events */}
-              <div className="pt-4 border-t  ">
-                <h3 className="text-sm font-semibold text-black mb-2">
-                  {selectedDate 
-                    ? `Events on ${selectedDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`
-                    : "Select a date to view events"
-                  }
-                </h3>
-                {filteredEvents.length > 0 ? (
-                  <div className="space-y-2">
-                    {filteredEvents.map((e, i) => (
-                      <div key={i} className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                        <div className="flex items-start gap-2">
-                          <span className="text-lg">📅</span>
-                          <div className="flex-1">
-                            <p className="text-sm font-semibold text-black">{e.title}</p>
-                            <p className="text-xs text-muted-foreground mt-1">{e.description}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground py-2">No events on this date</p>
-                )}
-              </div>
-
-              {/* Upcoming Events */}
-              <div className="pt-4 border-t">
-                <h3 className="text-sm font-semibold text-black mb-2">Upcoming Events</h3>
-                {events.length > 0 ? (
-                  <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2">
-                    {events
-                      .sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime())
-                      .slice(0, 5)
-                      .map((e, i) => {
-                        const eventDate = new Date(e.eventDate);
-                        const isToday = eventDate.toDateString() === new Date().toDateString();
-                        const isPast = eventDate < new Date() && !isToday;
-                        
-                        return (
-                          <div 
-                            key={i} 
-                            className={`p-2 rounded-lg border ${
-                              isPast 
-                                ? 'bg-gray-50 border-gray-200 opacity-60' 
-                                : isToday 
-                                  ? 'bg-green-50 border-green-200' 
-                                  : 'bg-muted border-gray-200'
-                            }`}
-                          >
-                            <div className="flex items-start gap-2">
-                              <span className="text-base">{isToday ? '🔔' : isPast ? '✓' : '📌'}</span>
-                              <div className="flex-1">
-                                <p className="text-xs font-medium text-black">{e.title}</p>
-                                <p className={`text-xs mt-1 font-medium ${
-                                  isToday ? 'text-green-600' : isPast ? 'text-gray-500' : 'text-blue-600'
-                                }`}>
-                                  {eventDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                                  {isToday && ' (Today)'}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground py-2">No upcoming events</p>
-                )}
-              </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <a
+                href="/admin/students"
+                className="flex flex-col items-center justify-center p-3 rounded-lg border hover:bg-muted/50 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
+              >
+                <Users className="h-6 w-6 text-blue-600 mb-1.5" />
+                <span className="text-xs font-medium text-center">
+                  Manage Students
+                </span>
+              </a>
+              <a
+                href="/admin/teachers"
+                className="flex flex-col items-center justify-center p-3 rounded-lg border hover:bg-muted/50 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
+              >
+                <GraduationCap className="h-6 w-6 text-green-600 mb-1.5" />
+                <span className="text-xs font-medium text-center">
+                  Manage Teachers
+                </span>
+              </a>
+              <a
+                href="/admin/classes"
+                className="flex flex-col items-center justify-center p-3 rounded-lg border hover:bg-muted/50 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
+              >
+                <BookOpen className="h-6 w-6 text-purple-600 mb-1.5" />
+                <span className="text-xs font-medium text-center">
+                  Manage Classes
+                </span>
+              </a>
+              <a
+                href="/admin/assignments"
+                className="flex flex-col items-center justify-center p-3 rounded-lg border hover:bg-muted/50 transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
+              >
+                <ClipboardList className="h-6 w-6 text-orange-600 mb-1.5" />
+                <span className="text-xs font-medium text-center">
+                  View Assignments
+                </span>
+              </a>
             </div>
           </CardContent>
         </Card>
-        </div>
-      </div>
-
-      {/* Attendance Section */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Attendance Rate Card */}
-        <Card className="lg:col-span-1 hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-lg">Attendance Rate</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-center">
-              <div className="relative w-40 h-40">
-                <svg className="w-full h-full transform -rotate-90">
-                  <circle cx="80" cy="80" r="70" stroke="#e5e7eb" strokeWidth="12" fill="none" />
-                  <circle
-                    cx="80" cy="80" r="70" stroke="#10b981" strokeWidth="12" fill="none"
-                    strokeDasharray={`${2 * Math.PI * 70}`}
-                    strokeDashoffset={`${2 * Math.PI * 70 * (1 - stats.attendanceRate / 100)}`}
-                    strokeLinecap="round"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-3xl font-bold text-black">{stats.attendanceRate}%</span>
-                  <span className="text-xs text-muted-foreground">This Week</span>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center justify-center gap-2 mt-4">
-              {stats.attendanceTrend === "up" ? (
-                <>
-                  <TrendingUp className="h-4 w-4 text-green-600" />
-                  <span className="text-sm text-green-600 font-medium">Trending up</span>
-                </>
-              ) : (
-                <>
-                  <TrendingDown className="h-4 w-4 text-red-600" />
-                  <span className="text-sm text-red-600 font-medium">Trending down</span>
-                </>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Weekly Attendance Chart */}
-        <Card className="lg:col-span-2 hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-lg">Weekly Attendance</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <AttendanceBarChart data={attendanceData} />
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Gender Distribution */}
-      <Card className="hover:shadow-lg transition-shadow">
-        <CardHeader>
-          <CardTitle className="text-lg">Student Gender Distribution</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {genderData[0].value === 0 && genderData[1].value === 0 ? (
-            <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-              <p>No student data available</p>
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={genderData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={100}
-                  label={({ name, percent }) => `${name}: ${(percent! * 100).toFixed(0)}%`}
-                >
-                  {genderData.map((entry, index) => (
-                    <Cell key={index} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Quick Actions */}
-      <Card className="hover:shadow-lg transition-shadow">
-        <CardHeader>
-          <CardTitle className="text-lg">Quick Actions</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <a href="/admin/students" className="flex flex-col items-center justify-center p-4 rounded-lg border hover:bg-muted/50 transition-colors">
-              <Users className="h-8 w-8 text-blue-600 mb-2" />
-              <span className="text-sm font-medium">Manage Students</span>
-            </a>
-            <a href="/admin/teachers" className="flex flex-col items-center justify-center p-4 rounded-lg border hover:bg-muted/50 transition-colors">
-              <GraduationCap className="h-8 w-8 text-green-600 mb-2" />
-              <span className="text-sm font-medium">Manage Teachers</span>
-            </a>
-            <a href="/admin/classes" className="flex flex-col items-center justify-center p-4 rounded-lg border hover:bg-muted/50 transition-colors">
-              <BookOpen className="h-8 w-8 text-purple-600 mb-2" />
-              <span className="text-sm font-medium">Manage Classes</span>
-            </a>
-            <a href="/admin/assignments" className="flex flex-col items-center justify-center p-4 rounded-lg border hover:bg-muted/50 transition-colors">
-              <ClipboardList className="h-8 w-8 text-orange-600 mb-2" />
-              <span className="text-sm font-medium">View Assignments</span>
-            </a>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-function AttendanceBarChart({ data }: { data: AttendanceData[] }) {
-  if (!data || data.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-64 text-muted-foreground">
-        No attendance data available
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      {data.map((day, index) => {
-        const total = day.present + day.absent + day.late;
-        const presentPercent = total > 0 ? (day.present / total) * 100 : 0;
-        const absentPercent = total > 0 ? (day.absent / total) * 100 : 0;
-        const latePercent = total > 0 ? (day.late / total) * 100 : 0;
-
-        return (
-          <div key={index} className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="font-medium text-black">{day.date}</span>
-              <span className="text-muted-foreground">{total} students</span>
-            </div>
-            <div className="flex h-8 w-full overflow-hidden rounded-full bg-gray-100">
-              {day.present > 0 && (
-                <div
-                  className="bg-green-500 flex items-center justify-center text-xs text-white font-medium"
-                  style={{ width: `${presentPercent}%` }}
-                >
-                  {presentPercent > 10 && `${day.present}`}
-                </div>
-              )}
-              {day.late > 0 && (
-                <div
-                  className="bg-yellow-500 flex items-center justify-center text-xs text-white font-medium"
-                  style={{ width: `${latePercent}%` }}
-                >
-                  {latePercent > 10 && `${day.late}`}
-                </div>
-              )}
-              {day.absent > 0 && (
-                <div
-                  className="bg-red-500 flex items-center justify-center text-xs text-white font-medium"
-                  style={{ width: `${absentPercent}%` }}
-                >
-                  {absentPercent > 10 && `${day.absent}`}
-                </div>
-              )}
-            </div>
-          </div>
-        );
-      })}
-      <div className="flex items-center justify-center gap-6 pt-4 border-t">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-green-500" />
-          <span className="text-xs text-muted-foreground">Present</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-yellow-500" />
-          <span className="text-xs text-muted-foreground">Late</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-red-500" />
-          <span className="text-xs text-muted-foreground">Absent</span>
-        </div>
       </div>
     </div>
   );
 }
-
-
-
-
-

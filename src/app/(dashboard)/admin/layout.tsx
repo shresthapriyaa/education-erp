@@ -249,13 +249,13 @@ export default function AdminLayout({
         {
           label: "Dashboard",
           href: "/admin",
-          icon: <LayoutDashboard className="w-5 h-5" />,
+          icon: <LayoutDashboard className="w-5 h-5 " />,
         },
 
         {
           label: "Users",
           href: "/admin/users",
-          icon: <Users className="w-5 h-5" />,
+          icon: <Users className="w-5 h-5 " />,
           submenu: [
             {
               label: "All Users",
