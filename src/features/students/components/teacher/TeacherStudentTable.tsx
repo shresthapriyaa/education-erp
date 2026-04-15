@@ -14,13 +14,14 @@ import { Student } from "../../types/student.types";
 interface TeacherStudentTableProps {
   students: Student[];
   loading: boolean;
-  onAdd: (values: any) => Promise<void>;
-  onBulkImport: (file: File) => Promise<void>;
-  onDelete: (id: string) => Promise<void>;
+  onAdd?: (values: any) => Promise<void>;
+  onBulkImport?: (file: File) => Promise<void>;
+  onDelete?: (id: string) => Promise<void>;
+  readOnly?: boolean;
 }
 
 export function TeacherStudentTable({
-  students, loading, onAdd, onBulkImport, onDelete
+  students, loading, onAdd, onBulkImport, onDelete, readOnly = false
 }: TeacherStudentTableProps) {
   const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
@@ -36,6 +37,7 @@ export function TeacherStudentTable({
   );
 
   const handleAdd = async (values: any) => {
+    if (!onAdd) return;
     setActionLoading(true);
     try {
       await onAdd(values);
@@ -46,6 +48,7 @@ export function TeacherStudentTable({
   };
 
   const handleImport = async (file: File) => {
+    if (!onBulkImport) return;
     setActionLoading(true);
     try {
       await onBulkImport(file);
@@ -56,7 +59,7 @@ export function TeacherStudentTable({
   };
 
   const handleDelete = async () => {
-    if (!selectedStudent) return;
+    if (!selectedStudent || !onDelete) return;
     setActionLoading(true);
     try {
       await onDelete(selectedStudent.id);
@@ -106,29 +109,33 @@ export function TeacherStudentTable({
             className="pl-9 w-full"
           />
         </div>
-        <Button
-          variant="outline"
-          className="w-full sm:w-auto"
-          onClick={downloadTemplate}
-        >
-          <Download className="mr-2 h-4 w-4" />
-          Download Template
-        </Button>
-        <Button
-          variant="outline"
-          className="w-full sm:w-auto"
-          onClick={() => setImportOpen(true)}
-        >
-          <Upload className="mr-2 h-4 w-4" />
-          Bulk Import
-        </Button>
-        <Button
-          className="bg-black hover:bg-gray-700 text-white w-full sm:w-auto"
-          onClick={() => setAddOpen(true)}
-        >
-          <UserPlus className="mr-2 h-4 w-4" />
-          Add Student
-        </Button>
+        {!readOnly && (
+          <>
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={downloadTemplate}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Download Template
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() => setImportOpen(true)}
+            >
+              <Upload className="mr-2 h-4 w-4" />
+              Bulk Import
+            </Button>
+            <Button
+              className="bg-black hover:bg-gray-700 text-white w-full sm:w-auto"
+              onClick={() => setAddOpen(true)}
+            >
+              <UserPlus className="mr-2 h-4 w-4" />
+              Add Student
+            </Button>
+          </>
+        )}
       </div>
 
       {/* Desktop Table */}
@@ -142,19 +149,19 @@ export function TeacherStudentTable({
               <TableHead className="text-black font-semibold">Blood Group</TableHead>
               <TableHead className="text-black font-semibold">Date of Birth</TableHead>
               <TableHead className="text-black font-semibold">Phone</TableHead>
-              <TableHead className="text-right text-black font-semibold">Actions</TableHead>
+              {!readOnly && <TableHead className="text-right text-black font-semibold">Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
+                <TableCell colSpan={readOnly ? 6 : 7} className="text-center py-10 text-muted-foreground">
                   Loading...
                 </TableCell>
               </TableRow>
             ) : filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-10 text-muted-foreground">
+                <TableCell colSpan={readOnly ? 6 : 7} className="text-center py-10 text-muted-foreground">
                   No students found.
                 </TableCell>
               </TableRow>
@@ -181,15 +188,17 @@ export function TeacherStudentTable({
                   </TableCell>
                   <TableCell className="text-sm text-black">{formatDate(student.dateOfBirth)}</TableCell>
                   <TableCell className="text-sm text-black">{student.phone ?? "—"}</TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="ghost" size="icon"
-                      className="hover:bg-red-600 border border-gray-300 text-destructive"
-                      onClick={() => { setSelectedStudent(student); setDeleteOpen(true); }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
+                  {!readOnly && (
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost" size="icon"
+                        className="hover:bg-red-600 border border-gray-300 text-destructive"
+                        onClick={() => { setSelectedStudent(student); setDeleteOpen(true); }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))
             )}
@@ -214,13 +223,15 @@ export function TeacherStudentTable({
                     <p className="text-xs text-muted-foreground">{student.email}</p>
                   </div>
                 </div>
-                <Button
-                  variant="ghost" size="icon"
-                  className="h-8 w-8 border border-gray-300 text-destructive hover:bg-red-50"
-                  onClick={() => { setSelectedStudent(student); setDeleteOpen(true); }}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
+                {!readOnly && (
+                  <Button
+                    variant="ghost" size="icon"
+                    className="h-8 w-8 border border-gray-300 text-destructive hover:bg-red-50"
+                    onClick={() => { setSelectedStudent(student); setDeleteOpen(true); }}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
                 <div>
@@ -247,25 +258,25 @@ export function TeacherStudentTable({
         )}
       </div>
 
-      <TeacherStudentDialog
+      {!readOnly && <TeacherStudentDialog
         open={addOpen}
         onOpenChange={setAddOpen}
         onSubmit={handleAdd}
         loading={actionLoading}
-      />
-      <BulkImportDialog
+      />}
+      {!readOnly && <BulkImportDialog
         open={importOpen}
         onOpenChange={setImportOpen}
         onImport={handleImport}
         loading={actionLoading}
-      />
-      <ConfirmDeleteDialog
+      />}
+      {!readOnly && <ConfirmDeleteDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
         onConfirm={handleDelete}
         loading={actionLoading}
         studentName={selectedStudent?.username}
-      />
+      />}
     </div>
   );
 }

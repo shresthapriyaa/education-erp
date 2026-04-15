@@ -54,13 +54,14 @@ const DAY_COLORS: Record<string, string> = {
 
 interface RoutineTableProps {
   routines: Routine[];
-  onAdd: (values: RoutinePayload) => Promise<void>;
-  onEdit: (id: string, values: RoutinePayload, mode: SubmitMode) => Promise<void>;
-  onDelete: (id: string) => Promise<void>;
+  onAdd?: (values: RoutinePayload) => Promise<void>;
+  onEdit?: (id: string, values: RoutinePayload, mode: SubmitMode) => Promise<void>;
+  onDelete?: (id: string) => Promise<void>;
   loading?: boolean;
+  readOnly?: boolean;
 }
 
-export function RoutineTable({ routines, onAdd, onEdit, onDelete, loading = false }: RoutineTableProps) {
+export function RoutineTable({ routines, onAdd, onEdit, onDelete, loading = false, readOnly = false }: RoutineTableProps) {
   const [search, setSearch]             = useState("");
   const [addOpen, setAddOpen]           = useState(false);
   const [editOpen, setEditOpen]         = useState(false);
@@ -79,19 +80,20 @@ export function RoutineTable({ routines, onAdd, onEdit, onDelete, loading = fals
     .sort((a, b) => DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day) || a.startTime.localeCompare(b.startTime));
 
   const handleAdd = async (values: RoutinePayload, _mode: SubmitMode) => {
+    if (!onAdd) return;
     setActionLoading(true);
     try { await onAdd(values); setAddOpen(false); } finally { setActionLoading(false); }
   };
 
   const handleEdit = async (values: RoutinePayload, mode: SubmitMode) => {
-    if (!selected) return;
+    if (!selected || !onEdit) return;
     setActionLoading(true);
     try { await onEdit(selected.id, values, mode); setEditOpen(false); setSelected(null); }
     finally { setActionLoading(false); }
   };
 
   const handleDelete = async () => {
-    if (!selected) return;
+    if (!selected || !onDelete) return;
     setActionLoading(true);
     try { await onDelete(selected.id); setDeleteOpen(false); setSelected(null); }
     finally { setActionLoading(false); }
@@ -109,9 +111,11 @@ export function RoutineTable({ routines, onAdd, onEdit, onDelete, loading = fals
             className="pl-9 w-full"
           />
         </div>
-        <Button className="bg-black hover:bg-gray-700 text-white w-full sm:w-auto" onClick={() => setAddOpen(true)}>
-          <PlusCircle className="mr-2 h-4 w-4" />Add Routine
-        </Button>
+        {!readOnly && (
+          <Button className="bg-black hover:bg-gray-700 text-white w-full sm:w-auto" onClick={() => setAddOpen(true)}>
+            <PlusCircle className="mr-2 h-4 w-4" />Add Routine
+          </Button>
+        )}
       </div>
 
       {/* Desktop Table */}
@@ -125,14 +129,14 @@ export function RoutineTable({ routines, onAdd, onEdit, onDelete, loading = fals
               <TableHead className="text-black font-semibold">Subject</TableHead>
               <TableHead className="text-black font-semibold">Teacher</TableHead>
               <TableHead className="text-black font-semibold">Room</TableHead>
-              <TableHead className="text-right text-black font-semibold">Actions</TableHead>
+              {!readOnly && <TableHead className="text-right text-black font-semibold">Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
-              <TableRow><TableCell colSpan={7} className="text-center py-10 text-muted-foreground">Loading...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={readOnly ? 6 : 7} className="text-center py-10 text-muted-foreground">Loading...</TableCell></TableRow>
             ) : filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={7} className="text-center py-10 text-muted-foreground">No routines found.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={readOnly ? 6 : 7} className="text-center py-10 text-muted-foreground">No routines found.</TableCell></TableRow>
             ) : (
               filtered.map((r) => (
                 <TableRow key={r.id}>
@@ -148,18 +152,20 @@ export function RoutineTable({ routines, onAdd, onEdit, onDelete, loading = fals
                   <TableCell className="text-sm text-black">{r.subject?.name ?? "—"}</TableCell>
                   <TableCell className="text-sm text-black">{r.teacher?.username ?? <span className="text-muted-foreground">Unassigned</span>}</TableCell>
                   <TableCell className="text-sm text-black">{r.room ?? <span className="text-muted-foreground">—</span>}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" className="bg-white text-black border border-gray-300 hover:bg-gray-100"
-                        onClick={() => { setSelected(r); setEditOpen(true); }}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="hover:bg-red-600 border border-gray-300 text-destructive"
-                        onClick={() => { setSelected(r); setDeleteOpen(true); }}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+                  {!readOnly && (
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button variant="ghost" size="icon" className="bg-white text-black border border-gray-300 hover:bg-gray-100"
+                          onClick={() => { setSelected(r); setEditOpen(true); }}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="hover:bg-red-600 border border-gray-300 text-destructive"
+                          onClick={() => { setSelected(r); setDeleteOpen(true); }}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))
             )}
@@ -188,31 +194,33 @@ export function RoutineTable({ routines, onAdd, onEdit, onDelete, loading = fals
                   <p className="text-xs text-muted-foreground">{r.class?.name ?? "—"} · {r.teacher?.username ?? "Unassigned"}</p>
                   {r.room && <p className="text-xs text-muted-foreground">Room: {r.room}</p>}
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <Button variant="ghost" size="icon" className="h-8 w-8 bg-white text-black border border-gray-300 hover:bg-gray-100"
-                    onClick={() => { setSelected(r); setEditOpen(true); }}>
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 border border-gray-300 text-destructive hover:bg-red-50"
-                    onClick={() => { setSelected(r); setDeleteOpen(true); }}>
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
+                {!readOnly && (
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 bg-white text-black border border-gray-300 hover:bg-gray-100"
+                      onClick={() => { setSelected(r); setEditOpen(true); }}>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 border border-gray-300 text-destructive hover:bg-red-50"
+                      onClick={() => { setSelected(r); setDeleteOpen(true); }}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           ))
         )}
       </div>
 
-      <RoutineDialog open={addOpen} onOpenChange={setAddOpen} onSubmit={handleAdd} loading={actionLoading} isEdit={false} />
-      <RoutineDialog open={editOpen} onOpenChange={setEditOpen} initialValues={selected ?? undefined} onSubmit={handleEdit} loading={actionLoading} isEdit={true} />
-      <ConfirmDeleteDialog
+      {!readOnly && <RoutineDialog open={addOpen} onOpenChange={setAddOpen} onSubmit={handleAdd} loading={actionLoading} isEdit={false} />}
+      {!readOnly && <RoutineDialog open={editOpen} onOpenChange={setEditOpen} initialValues={selected ?? undefined} onSubmit={handleEdit} loading={actionLoading} isEdit={true} />}
+      {!readOnly && <ConfirmDeleteDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
         onConfirm={handleDelete}
         loading={actionLoading}
         label={selected ? `${selected.class?.name} — ${selected.subject?.name}` : undefined}
-      />
+      />}
     </div>
   );
 }

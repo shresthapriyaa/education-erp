@@ -856,7 +856,7 @@ export function TeacherForm({
       address:    initialValues?.address  ?? "",
       img:        initialValues?.img      ?? "",
       subjectIds: [],
-      classIds:   initialValues?.classes?.map((c) => c.id) ?? [], // ✅ pre-fill existing classes
+      classIds:   initialValues?.classTeacherFor?.map((c) => c.id) ?? [], // ✅ pre-fill existing classes
     },
   });
 

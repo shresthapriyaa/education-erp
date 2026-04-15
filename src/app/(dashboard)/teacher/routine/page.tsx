@@ -1,10 +1,10 @@
-import RoutinesPage from '@/features/routines/components/Routine'
+import TeacherRoutinePage from '@/features/routines/components/TeacherRoutinePage'
 import React from 'react'
 
 const page = () => {
   return (
     <div>
-      <RoutinesPage/>
+      <TeacherRoutinePage/>
     </div>
   )
 }

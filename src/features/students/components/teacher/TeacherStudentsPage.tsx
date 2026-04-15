@@ -36,47 +36,6 @@ export default function TeacherStudentsPage() {
     }
   };
 
-  const handleAdd = async (values: any) => {
-    const res = await fetch("/api/teacher/students", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
-    });
-    if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.error || "Failed to add student");
-    }
-    await loadData();
-  };
-
-  const handleBulkImport = async (file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    
-    const res = await fetch("/api/teacher/students/bulk-import", {
-      method: "POST",
-      body: formData,
-    });
-    
-    if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.error || "Failed to import students");
-    }
-    
-    await loadData();
-  };
-
-  const handleDelete = async (id: string) => {
-    const res = await fetch(`/api/teacher/students/${id}`, {
-      method: "DELETE",
-    });
-    if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.error || "Failed to delete student");
-    }
-    await loadData();
-  };
-
   if (error && error.includes("not a class teacher")) {
     return (
       <div className="max-w-2xl mx-auto py-16 px-4">
@@ -84,7 +43,7 @@ export default function TeacherStudentsPage() {
           <AlertCircle className="w-12 h-12 text-amber-600 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-amber-900 mb-2">Access Restricted</h2>
           <p className="text-amber-800">
-            Only class teachers can manage students. Please contact your admin if you believe this is an error.
+            Only class teachers can view students. Please contact your admin if you believe this is an error.
           </p>
         </div>
       </div>
@@ -96,16 +55,14 @@ export default function TeacherStudentsPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">My Students</h1>
         <p className="text-muted-foreground">
-          {classInfo ? `Manage students for ${classInfo.name}` : "Loading..."}
+          {classInfo ? `View students for ${classInfo.name}` : "Loading..."}
         </p>
       </div>
 
       <TeacherStudentTable
         students={students}
         loading={loading}
-        onAdd={handleAdd}
-        onBulkImport={handleBulkImport}
-        onDelete={handleDelete}
+        readOnly={true}
       />
     </div>
   );

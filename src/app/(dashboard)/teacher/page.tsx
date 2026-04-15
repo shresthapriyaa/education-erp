@@ -11,6 +11,7 @@ import {
   Clock,
   MapPin,
   Users,
+  FileText,
 } from "lucide-react";
 import {
   Card,
@@ -134,6 +135,22 @@ export default function TeacherDashboard() {
       bg: "bg-purple-50",
       href: "/teacher/lessons",
     },
+    {
+      label: "Assignments",
+      desc: "Upload and manage assignments",
+      icon: FileText,
+      color: "text-rose-600",
+      bg: "bg-rose-50",
+      href: "/teacher/assignments",
+    },
+    {
+      label: "View Students",
+      desc: "See your class students",
+      icon: Users,
+      color: "text-cyan-600",
+      bg: "bg-cyan-50",
+      href: "/teacher/students",
+    },
   ];
 
   return (
@@ -190,7 +207,7 @@ export default function TeacherDashboard() {
             size="sm"
             variant="outline"
             className="h-8 text-xs gap-1.5"
-            onClick={() => router.push("/teacher/schedule")}
+            onClick={() => router.push("/teacher/routine")}
           >
             <CalendarDays className="w-3.5 h-3.5" />
             Full Routine
@@ -265,7 +282,7 @@ export default function TeacherDashboard() {
         <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
           Quick Actions
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {quickActions.map(({ label, desc, icon: Icon, color, bg, href }) => (
             <button
               key={label}
@@ -291,3 +308,8 @@ export default function TeacherDashboard() {
     </div>
   );
 }
+
+
+
+
+
