@@ -99,6 +99,7 @@ export async function POST(req: NextRequest) {
         classId:     body.classId,
         subjectId:   body.subjectId,
         teacherId:   body.teacherId,
+        fileUrl:     body.fileUrl || null,
       },
       include: {
         class:   { select: { name: true } },

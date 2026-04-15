@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/core/components/ui/button";
 import { Input } from "@/core/components/ui/input";
 import { Badge } from "@/core/components/ui/badge";
+import { ScrollArea } from "@/core/components/ui/scroll-area";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/core/components/ui/table";
@@ -119,97 +120,103 @@ export function RoutineTable({ routines, onAdd, onEdit, onDelete, loading = fals
       </div>
 
       {/* Desktop Table */}
-      <div className="hidden lg:block rounded-md border-b-4 border-t-4 overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="text-black font-semibold">Day</TableHead>
-              <TableHead className="text-black font-semibold">Time</TableHead>
-              <TableHead className="text-black font-semibold">Class</TableHead>
-              <TableHead className="text-black font-semibold">Subject</TableHead>
-              <TableHead className="text-black font-semibold">Teacher</TableHead>
-              <TableHead className="text-black font-semibold">Room</TableHead>
-              {!readOnly && <TableHead className="text-right text-black font-semibold">Actions</TableHead>}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              <TableRow><TableCell colSpan={readOnly ? 6 : 7} className="text-center py-10 text-muted-foreground">Loading...</TableCell></TableRow>
-            ) : filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={readOnly ? 6 : 7} className="text-center py-10 text-muted-foreground">No routines found.</TableCell></TableRow>
-            ) : (
-              filtered.map((r) => (
-                <TableRow key={r.id}>
-                  <TableCell>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${DAY_COLORS[r.day] ?? ""}`}>
-                      {r.day.charAt(0) + r.day.slice(1).toLowerCase()}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-sm text-black font-mono">
-                    {r.startTime} — {r.endTime}
-                  </TableCell>
-                  <TableCell className="text-sm text-black">{r.class?.name ?? "—"}</TableCell>
-                  <TableCell className="text-sm text-black">{r.subject?.name ?? "—"}</TableCell>
-                  <TableCell className="text-sm text-black">{r.teacher?.username ?? <span className="text-muted-foreground">Unassigned</span>}</TableCell>
-                  <TableCell className="text-sm text-black">{r.room ?? <span className="text-muted-foreground">—</span>}</TableCell>
-                  {!readOnly && (
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon" className="bg-white text-black border border-gray-300 hover:bg-gray-100"
-                          onClick={() => { setSelected(r); setEditOpen(true); }}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="hover:bg-red-600 border border-gray-300 text-destructive"
-                          onClick={() => { setSelected(r); setDeleteOpen(true); }}>
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+      <div className="hidden lg:block rounded-md border-b-4 border-t-4 overflow-hidden">
+        <ScrollArea className="h-[600px]">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-black font-semibold">Day</TableHead>
+                <TableHead className="text-black font-semibold">Time</TableHead>
+                <TableHead className="text-black font-semibold">Class</TableHead>
+                <TableHead className="text-black font-semibold">Subject</TableHead>
+                <TableHead className="text-black font-semibold">Teacher</TableHead>
+                <TableHead className="text-black font-semibold">Room</TableHead>
+                {!readOnly && <TableHead className="text-right text-black font-semibold">Actions</TableHead>}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow><TableCell colSpan={readOnly ? 6 : 7} className="text-center py-10 text-muted-foreground">Loading...</TableCell></TableRow>
+              ) : filtered.length === 0 ? (
+                <TableRow><TableCell colSpan={readOnly ? 6 : 7} className="text-center py-10 text-muted-foreground">No routines found.</TableCell></TableRow>
+              ) : (
+                filtered.map((r) => (
+                  <TableRow key={r.id}>
+                    <TableCell>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${DAY_COLORS[r.day] ?? ""}`}>
+                        {r.day.charAt(0) + r.day.slice(1).toLowerCase()}
+                      </span>
                     </TableCell>
-                  )}
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+                    <TableCell className="text-sm text-black font-mono">
+                      {r.startTime} — {r.endTime}
+                    </TableCell>
+                    <TableCell className="text-sm text-black">{r.class?.name ?? "—"}</TableCell>
+                    <TableCell className="text-sm text-black">{r.subject?.name ?? "—"}</TableCell>
+                    <TableCell className="text-sm text-black">{r.teacher?.username ?? <span className="text-muted-foreground">Unassigned</span>}</TableCell>
+                    <TableCell className="text-sm text-black">{r.room ?? <span className="text-muted-foreground">—</span>}</TableCell>
+                    {!readOnly && (
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button variant="ghost" size="icon" className="bg-white text-black border border-gray-300 hover:bg-gray-100"
+                            onClick={() => { setSelected(r); setEditOpen(true); }}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="hover:bg-red-600 border border-gray-300 text-destructive"
+                            onClick={() => { setSelected(r); setDeleteOpen(true); }}>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </ScrollArea>
       </div>
 
       {/* Mobile Cards */}
-      <div className="lg:hidden space-y-3">
-        {loading ? (
-          <p className="text-center py-10 text-muted-foreground text-sm">Loading...</p>
-        ) : filtered.length === 0 ? (
-          <p className="text-center py-10 text-muted-foreground text-sm">No routines found.</p>
-        ) : (
-          filtered.map((r) => (
-            <div key={r.id} className="rounded-xl border bg-card p-4 shadow-sm space-y-3">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${DAY_COLORS[r.day] ?? ""}`}>
-                      {r.day.charAt(0) + r.day.slice(1).toLowerCase()}
-                    </span>
-                    <span className="text-xs font-mono text-muted-foreground">{r.startTime} — {r.endTime}</span>
+      <div className="lg:hidden">
+        <ScrollArea className="h-[600px]">
+          <div className="space-y-3 pr-4">
+            {loading ? (
+              <p className="text-center py-10 text-muted-foreground text-sm">Loading...</p>
+            ) : filtered.length === 0 ? (
+              <p className="text-center py-10 text-muted-foreground text-sm">No routines found.</p>
+            ) : (
+              filtered.map((r) => (
+                <div key={r.id} className="rounded-xl border bg-card p-4 shadow-sm space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${DAY_COLORS[r.day] ?? ""}`}>
+                          {r.day.charAt(0) + r.day.slice(1).toLowerCase()}
+                        </span>
+                        <span className="text-xs font-mono text-muted-foreground">{r.startTime} — {r.endTime}</span>
+                      </div>
+                      <p className="font-semibold text-sm text-black mt-1">{r.subject?.name ?? "—"}</p>
+                      <p className="text-xs text-muted-foreground">{r.class?.name ?? "—"} · {r.teacher?.username ?? "Unassigned"}</p>
+                      {r.room && <p className="text-xs text-muted-foreground">Room: {r.room}</p>}
+                    </div>
+                    {!readOnly && (
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 bg-white text-black border border-gray-300 hover:bg-gray-100"
+                          onClick={() => { setSelected(r); setEditOpen(true); }}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 border border-gray-300 text-destructive hover:bg-red-50"
+                          onClick={() => { setSelected(r); setDeleteOpen(true); }}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                  <p className="font-semibold text-sm text-black mt-1">{r.subject?.name ?? "—"}</p>
-                  <p className="text-xs text-muted-foreground">{r.class?.name ?? "—"} · {r.teacher?.username ?? "Unassigned"}</p>
-                  {r.room && <p className="text-xs text-muted-foreground">Room: {r.room}</p>}
                 </div>
-                {!readOnly && (
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 bg-white text-black border border-gray-300 hover:bg-gray-100"
-                      onClick={() => { setSelected(r); setEditOpen(true); }}>
-                      <Pencil className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 border border-gray-300 text-destructive hover:bg-red-50"
-                      onClick={() => { setSelected(r); setDeleteOpen(true); }}>
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))
-        )}
+              ))
+            )}
+          </div>
+        </ScrollArea>
       </div>
 
       {!readOnly && <RoutineDialog open={addOpen} onOpenChange={setAddOpen} onSubmit={handleAdd} loading={actionLoading} isEdit={false} />}

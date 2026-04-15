@@ -130,6 +130,7 @@ export async function PUT(
         classId:     body.classId,
         subjectId:   body.subjectId,
         teacherId:   body.teacherId,
+        fileUrl:     body.fileUrl !== undefined ? body.fileUrl : undefined,
       },
       include: {
         class:   { select: { name: true } },
@@ -164,6 +165,7 @@ export async function PATCH(
     if (body.classId !== undefined)     data.classId     = body.classId;
     if (body.subjectId !== undefined)   data.subjectId   = body.subjectId;
     if (body.teacherId !== undefined)   data.teacherId   = body.teacherId;
+    if (body.fileUrl !== undefined)     data.fileUrl     = body.fileUrl;
 
     const assignment = await prisma.assignment.update({
       where: { id },

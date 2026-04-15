@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/core/components/ui/button";
 import { Input } from "@/core/components/ui/input";
 import {
   Table, TableBody, TableCell, TableHead,
   TableHeader, TableRow,
 } from "@/core/components/ui/table";
-import { Pencil, Trash2, PlusCircle, Search } from "lucide-react";
+import { Pencil, Trash2, PlusCircle, Search, Eye } from "lucide-react";
 import { SubjectDialog } from "./SubjectDialog";
 import { SubmitMode } from "./SubjectForm";
 import { ConfirmDeleteDialog } from "./ConfirmDelete";
@@ -26,6 +27,7 @@ interface SubjectTableProps {
 export function SubjectTable({
   subjects, onAdd, onEdit, onDelete, loading = false,
 }: SubjectTableProps) {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -143,6 +145,14 @@ export function SubjectTable({
                     <div className="flex justify-end gap-2">
                       <Button
                         variant="ghost" size="icon"
+                        className="bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100"
+                        onClick={() => router.push(`/admin/subjects/${subject.id}`)}
+                        title="View lessons & assignments"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost" size="icon"
                         className="bg-white text-black border border-gray-300 hover:bg-gray-100"
                         onClick={() => { setSelectedSubject(subject); setEditOpen(true); }}
                       >
@@ -188,6 +198,13 @@ export function SubjectTable({
                   </p>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
+                  <Button
+                    variant="ghost" size="icon"
+                    className="h-8 w-8 bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100"
+                    onClick={() => router.push(`/admin/subjects/${subject.id}`)}
+                  >
+                    <Eye className="h-3.5 w-3.5" />
+                  </Button>
                   <Button
                     variant="ghost" size="icon"
                     className="h-8 w-8 bg-white text-black border border-gray-300 hover:bg-gray-100"

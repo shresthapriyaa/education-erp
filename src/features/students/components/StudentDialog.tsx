@@ -165,6 +165,7 @@ import {
   Dialog, DialogContent, DialogDescription,
   DialogHeader, DialogTitle,
 } from "@/core/components/ui/dialog";
+import { ScrollArea } from "@/core/components/ui/scroll-area";
 import { StudentForm, SubmitMode } from "./StudentForm";
 import { Student } from "../types/student.types";
 import { useState, useEffect } from "react";
@@ -205,8 +206,8 @@ export function StudentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl h-[90vh] flex flex-col p-0 gap-0">
+        <DialogHeader className="px-6 pt-6 pb-4 shrink-0 border-b">
           <DialogTitle>{isEdit ? "Edit Student" : "Add New Student"}</DialogTitle>
           <DialogDescription>
             {isEdit
@@ -214,15 +215,19 @@ export function StudentDialog({
               : "Fill in the details below. Click submit when you're done."}
           </DialogDescription>
         </DialogHeader>
-        <StudentForm
-          initialValues={initialValues}
-          onSubmit={onSubmit}
-          loading={loading}
-          isEdit={isEdit}
-          onCancel={() => onOpenChange(false)}
-          parents={parents}
-          classes={classes}
-        />
+        <div className="flex-1 overflow-hidden">
+          <ScrollArea className="h-full px-6 py-4">
+            <StudentForm
+              initialValues={initialValues}
+              onSubmit={onSubmit}
+              loading={loading}
+              isEdit={isEdit}
+              onCancel={() => onOpenChange(false)}
+              parents={parents}
+              classes={classes}
+            />
+          </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );

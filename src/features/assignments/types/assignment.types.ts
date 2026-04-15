@@ -7,6 +7,7 @@ export interface Assignment {
   classId:     string;
   subjectId:   string;
   teacherId:   string;
+  fileUrl?:    string | null;
   class?:      { name: string };
   subject?:    { name: string };
   teacher?:    { username: string };

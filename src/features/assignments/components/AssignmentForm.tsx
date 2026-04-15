@@ -117,18 +117,18 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import * as z from "zod";
 import { Button } from "@/core/components/ui/button";
 import {
-  Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
+  Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription,
 } from "@/core/components/ui/form";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/core/components/ui/select";
 import { Input } from "@/core/components/ui/input";
-import { Textarea } from "@/core/components/ui/textarea";
-import { Loader2, Save, PlusCircle } from "lucide-react";
+import { RichTextEditor } from "@/core/components/ui/rich-text-editor";
+import { Loader2, Save, PlusCircle, Upload, X, FileText } from "lucide-react";
 import { Assignment } from "../types/assignment.types";
 
 const schema = z.object({
@@ -139,6 +139,7 @@ const schema = z.object({
   classId:     z.string().min(1, "Please select a class"),
   subjectId:   z.string().min(1, "Please select a subject"),
   teacherId:   z.string().min(1, "Please select a teacher"),
+  fileUrl:     z.string().optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -163,6 +164,9 @@ export function AssignmentForm({
   const [classes,  setClasses]  = useState<ClassOption[]>([]);
   const [subjects, setSubjects] = useState<SubjectOption[]>([]);
   const [teachers, setTeachers] = useState<TeacherOption[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetch("/api/classes").then(r => r.json()).then(d => setClasses(Array.isArray(d) ? d : (d.classes ?? []))).catch(() => setClasses([]));
@@ -171,7 +175,7 @@ export function AssignmentForm({
   }, []);
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(schema) as any,
+    resolver: zodResolver(schema),
     defaultValues: {
       title:       initialValues?.title       ?? "",
       description: initialValues?.description ?? "",
@@ -182,6 +186,7 @@ export function AssignmentForm({
       classId:     initialValues?.classId     ?? "",
       subjectId:   initialValues?.subjectId   ?? "",
       teacherId:   initialValues?.teacherId   ?? "",
+      fileUrl:     initialValues?.fileUrl ?? "",
     },
   });
 
@@ -196,12 +201,48 @@ export function AssignmentForm({
       classId:     initialValues?.classId     ?? "",
       subjectId:   initialValues?.subjectId   ?? "",
       teacherId:   initialValues?.teacherId   ?? "",
+      fileUrl:     initialValues?.fileUrl ?? "",
     });
   }, [initialValues]);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setUploadError("");
+
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+
+      const res = await fetch("/api/assignments/upload", {
+        method: "POST",
+        body: fd,
+      });
+
+      const contentType = res.headers.get("content-type") ?? "";
+      if (!contentType.includes("application/json")) {
+        throw new Error("Upload route not found");
+      }
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Upload failed");
+
+      form.setValue("fileUrl", data.url, { shouldValidate: true });
+    } catch (err: any) {
+      setUploadError(err.message ?? "Upload failed");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   const handleSubmit = form.handleSubmit((values) => {
     onSubmit(values as AssignmentPayload, isEdit ? "put" : "create");
   });
+
+  const currentFileUrl = form.watch("fileUrl");
 
   return (
     <Form {...form}>
@@ -218,8 +259,15 @@ export function AssignmentForm({
           <FormItem>
             <FormLabel>Description</FormLabel>
             <FormControl>
-              <Textarea placeholder="Write assignment instructions here..." className="resize-none" rows={4} {...field} />
+              <RichTextEditor
+                value={field.value}
+                onChange={field.onChange}
+                placeholder="Write assignment instructions here... Use markdown for formatting."
+              />
             </FormControl>
+            <FormDescription className="text-xs">
+              Use the toolbar to format text. Supports bold, italic, headings, lists, and links.
+            </FormDescription>
             <FormMessage />
           </FormItem>
         )} />
@@ -240,7 +288,9 @@ export function AssignmentForm({
               <FormMessage />
             </FormItem>
           )} />
+        </div>
 
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <FormField control={form.control} name="classId" render={({ field }) => (
             <FormItem>
               <FormLabel>Class</FormLabel>
@@ -281,9 +331,86 @@ export function AssignmentForm({
           )} />
         </div>
 
+        {/* File Upload (Optional) */}
+        <FormField
+          control={form.control}
+          name="fileUrl"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Attachment (Optional)</FormLabel>
+              <FormControl>
+                <div className="space-y-2">
+                  {currentFileUrl && !uploadError ? (
+                    <div className="flex items-center gap-2 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm">
+                      <FileText className="h-4 w-4 text-green-600" />
+                      <a
+                        href={currentFileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 text-green-700 hover:underline truncate"
+                      >
+                        {currentFileUrl.split("/").pop()}
+                      </a>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive"
+                        onClick={() => {
+                          form.setValue("fileUrl", "", { shouldValidate: true });
+                          if (fileInputRef.current) fileInputRef.current.value = "";
+                        }}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <label className="cursor-pointer">
+                      <div
+                        className={`flex items-center gap-2 rounded-md border border-dashed px-4 py-3 text-sm transition-colors ${
+                          uploading
+                            ? "border-muted text-muted-foreground"
+                            : "border-gray-300 hover:border-gray-400 hover:bg-muted/30"
+                        }`}
+                      >
+                        {uploading ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Uploading...
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="h-4 w-4" />
+                            Click to upload file (PDF, DOC, etc.)
+                          </>
+                        )}
+                      </div>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".pdf,.doc,.docx,.ppt,.pptx,.xlsx,.xls"
+                        className="hidden"
+                        disabled={uploading}
+                        onChange={handleFileUpload}
+                      />
+                    </label>
+                  )}
+                  {uploadError && (
+                    <p className="text-xs text-destructive">{uploadError}</p>
+                  )}
+                </div>
+              </FormControl>
+              <FormDescription className="text-xs">
+                Upload supporting materials (PDF, Word, Excel, PowerPoint)
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <div className="flex gap-2 pt-2 justify-end">
           {onCancel && <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>}
-          <Button type="button" onClick={handleSubmit} disabled={loading}>
+          <Button type="button" onClick={handleSubmit} disabled={loading} className="bg-black hover:bg-gray-800">
             {loading ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : isEdit ? <Save className="mr-2 h-4 w-4" /> : <PlusCircle className="mr-2 h-4 w-4" />}
             {isEdit ? "Save All" : "Submit"}
           </Button>

@@ -690,6 +690,7 @@ model Assignment {
   description String
   dueDate     DateTime
   totalMarks  Float    @default(100)
+  fileUrl     String?
 
   classId   String
   class     Class   @relation(fields: [classId], references: [id])
@@ -709,7 +710,7 @@ model Grade {
   studentId    String
   student      Student    @relation(fields: [studentId], references: [id])
   assignmentId String
-  assignment   Assignment @relation(fields: [assignmentId], references: [id])
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
   score        Float
   remarks      String?
 

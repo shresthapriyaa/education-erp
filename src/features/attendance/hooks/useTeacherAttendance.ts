@@ -151,6 +151,13 @@ export function useTeacherAttendance() {
     );
   }
 
+  // Bypass location check and proceed anyway
+  async function continueAnyway() {
+    if (!activeClass) return;
+    setGeoState("success");
+    await loadStudents(activeClass);
+  }
+
   async function loadStudents(cls: ClassItem) {
     setStudentsLoading(true);
     setStudentsError(null);
@@ -238,6 +245,6 @@ export function useTeacherAttendance() {
     currentIndex, isComplete,
     geoState, geoError, geoDistance,
     saving, saved, saveError,
-    selectClass, markStudent, prevStudent, saveAttendance,
+    selectClass, markStudent, prevStudent, saveAttendance, continueAnyway,
   };
 }

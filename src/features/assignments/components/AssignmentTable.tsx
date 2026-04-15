@@ -4,11 +4,12 @@ import { useState } from "react";
 import { Button } from "@/core/components/ui/button";
 import { Input } from "@/core/components/ui/input";
 import { Badge } from "@/core/components/ui/badge";
+import { ScrollArea } from "@/core/components/ui/scroll-area";
 import {
   Table, TableBody, TableCell, TableHead,
   TableHeader, TableRow,
 } from "@/core/components/ui/table";
-import { Pencil, Trash2, PlusCircle, Search } from "lucide-react";
+import { Pencil, Trash2, PlusCircle, Search, FileText, ExternalLink } from "lucide-react";
 import { AssignmentDialog } from "./AssignmentDialog";
 import { SubmitMode } from "./AssignmentForm";
 import { ConfirmDeleteDialog } from "./ConfirmDelete";
@@ -22,6 +23,23 @@ interface AssignmentTableProps {
   onEdit: (id: string, values: AssignmentPayload, mode: SubmitMode) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
   loading?: boolean;
+}
+
+/** Clickable pill for attachment file */
+function AttachmentPill({ url }: { url: string }) {
+  const filename = url.split("/").pop() || "File";
+  return (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-medium text-blue-600 bg-blue-50 border-blue-200 hover:opacity-80 transition-opacity"
+    >
+      <FileText className="h-3 w-3" />
+      <span className="max-w-[100px] truncate">{filename}</span>
+      <ExternalLink className="h-2.5 w-2.5 shrink-0 opacity-60" />
+    </a>
+  );
 }
 
 export function AssignmentTable({
@@ -100,110 +118,140 @@ export function AssignmentTable({
       </div>
 
       {/* Desktop Table */}
-      <div className="hidden lg:block rounded-md border-b-4 border-t-4 overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="text-black font-semibold">Title</TableHead>
-              <TableHead className="text-black font-semibold">Description</TableHead>
-              <TableHead className="text-black font-semibold">Due Date</TableHead>
-              <TableHead className="text-black font-semibold">Status</TableHead>
-              <TableHead className="text-right text-black font-semibold">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
+      <div className="hidden lg:block rounded-md border-b-4 border-t-4 overflow-hidden">
+        <ScrollArea className="h-[600px]">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
-                  Loading...
-                </TableCell>
+                <TableHead className="text-black font-semibold">Title</TableHead>
+                <TableHead className="text-black font-semibold">Class</TableHead>
+                <TableHead className="text-black font-semibold">Subject</TableHead>
+                <TableHead className="text-black font-semibold">Teacher</TableHead>
+                <TableHead className="text-black font-semibold">Due Date</TableHead>
+                <TableHead className="text-black font-semibold">Marks</TableHead>
+                <TableHead className="text-black font-semibold">Attachment</TableHead>
+                <TableHead className="text-black font-semibold">Status</TableHead>
+                <TableHead className="text-right text-black font-semibold">Actions</TableHead>
               </TableRow>
-            ) : filtered.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
-                  No assignments found.
-                </TableCell>
-              </TableRow>
-            ) : (
-              filtered.map((assignment) => (
-                <TableRow key={assignment.id}>
-                  <TableCell className="font-medium text-black">{assignment.title}</TableCell>
-                  <TableCell className="text-sm text-black max-w-[250px] truncate">
-                    {assignment.description}
-                  </TableCell>
-                  <TableCell className="text-sm text-black">{formatDate(assignment.dueDate)}</TableCell>
-                  <TableCell>
-                    <Badge variant={isOverdue(assignment.dueDate) ? "destructive" : "default"}>
-                      {isOverdue(assignment.dueDate) ? "Overdue" : "Active"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost" size="icon"
-                        className="bg-white text-black border border-gray-300 hover:bg-gray-100"
-                        onClick={() => { setSelectedAssignment(assignment); setEditOpen(true); }}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost" size="icon"
-                        className="hover:bg-red-600 border border-gray-300 text-destructive"
-                        onClick={() => { setSelectedAssignment(assignment); setDeleteOpen(true); }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center py-10 text-muted-foreground">
+                    Loading...
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : filtered.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={9} className="text-center py-10 text-muted-foreground">
+                    No assignments found.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filtered.map((assignment) => (
+                  <TableRow key={assignment.id}>
+                    <TableCell className="font-medium text-black">{assignment.title}</TableCell>
+                    <TableCell className="text-sm text-black">
+                      {assignment.class?.name || <span className="text-muted-foreground">—</span>}
+                    </TableCell>
+                    <TableCell className="text-sm text-black">
+                      {assignment.subject?.name || <span className="text-muted-foreground">—</span>}
+                    </TableCell>
+                    <TableCell className="text-sm text-black">
+                      {assignment.teacher?.username || <span className="text-muted-foreground">—</span>}
+                    </TableCell>
+                    <TableCell className="text-sm text-black">{formatDate(assignment.dueDate)}</TableCell>
+                    <TableCell className="text-sm text-black font-medium">{assignment.totalMarks} pts</TableCell>
+                    <TableCell>
+                      {assignment.fileUrl ? (
+                        <AttachmentPill url={assignment.fileUrl} />
+                      ) : (
+                        <span className="text-xs text-muted-foreground">No file</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={isOverdue(assignment.dueDate) ? "destructive" : "default"}>
+                        {isOverdue(assignment.dueDate) ? "Overdue" : "Active"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="ghost" size="icon"
+                          className="bg-white text-black border border-gray-300 hover:bg-gray-100"
+                          onClick={() => { setSelectedAssignment(assignment); setEditOpen(true); }}
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost" size="icon"
+                          className="hover:bg-red-600 border border-gray-300 text-destructive"
+                          onClick={() => { setSelectedAssignment(assignment); setDeleteOpen(true); }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </ScrollArea>
       </div>
 
       {/* Mobile Cards */}
-      <div className="lg:hidden space-y-3">
-        {loading ? (
-          <p className="text-center py-10 text-muted-foreground text-sm">Loading...</p>
-        ) : filtered.length === 0 ? (
-          <p className="text-center py-10 text-muted-foreground text-sm">No assignments found.</p>
-        ) : (
-          filtered.map((assignment) => (
-            <div key={assignment.id} className="rounded-xl border bg-card p-4 shadow-sm space-y-3">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="font-semibold text-sm text-black">{assignment.title}</p>
-                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                    {assignment.description}
-                  </p>
+      <div className="lg:hidden">
+        <ScrollArea className="h-[600px]">
+          <div className="space-y-3 pr-4">
+            {loading ? (
+              <p className="text-center py-10 text-muted-foreground text-sm">Loading...</p>
+            ) : filtered.length === 0 ? (
+              <p className="text-center py-10 text-muted-foreground text-sm">No assignments found.</p>
+            ) : (
+              filtered.map((assignment) => (
+                <div key={assignment.id} className="rounded-xl border bg-card p-4 shadow-sm space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1">
+                      <p className="font-semibold text-sm text-black">{assignment.title}</p>
+                      <div className="mt-2 space-y-1 text-xs text-muted-foreground">
+                        <p>Class: <span className="text-foreground font-medium">{assignment.class?.name || "—"}</span></p>
+                        <p>Subject: <span className="text-foreground font-medium">{assignment.subject?.name || "—"}</span></p>
+                        <p>Teacher: <span className="text-foreground font-medium">{assignment.teacher?.username || "—"}</span></p>
+                        <p>Marks: <span className="text-foreground font-medium">{assignment.totalMarks} pts</span></p>
+                      </div>
+                      {assignment.fileUrl && (
+                        <AttachmentPill url={assignment.fileUrl} />
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <Button
+                        variant="ghost" size="icon"
+                        className="h-8 w-8 bg-white text-black border border-gray-300 hover:bg-gray-100"
+                        onClick={() => { setSelectedAssignment(assignment); setEditOpen(true); }}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost" size="icon"
+                        className="h-8 w-8 border border-gray-300 text-destructive hover:bg-red-50"
+                        onClick={() => { setSelectedAssignment(assignment); setDeleteOpen(true); }}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between pt-2 border-t">
+                    <p className="text-xs text-muted-foreground">Due: {formatDate(assignment.dueDate)}</p>
+                    <Badge variant={isOverdue(assignment.dueDate) ? "destructive" : "default"}>
+                      {isOverdue(assignment.dueDate) ? "Overdue" : "Active"}
+                    </Badge>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <Button
-                    variant="ghost" size="icon"
-                    className="h-8 w-8 bg-white text-black border border-gray-300 hover:bg-gray-100"
-                    onClick={() => { setSelectedAssignment(assignment); setEditOpen(true); }}
-                  >
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button
-                    variant="ghost" size="icon"
-                    className="h-8 w-8 border border-gray-300 text-destructive hover:bg-red-50"
-                    onClick={() => { setSelectedAssignment(assignment); setDeleteOpen(true); }}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-muted-foreground">Due: {formatDate(assignment.dueDate)}</p>
-                <Badge variant={isOverdue(assignment.dueDate) ? "destructive" : "default"}>
-                  {isOverdue(assignment.dueDate) ? "Overdue" : "Active"}
-                </Badge>
-              </div>
-            </div>
-          ))
-        )}
+              ))
+            )}
+          </div>
+        </ScrollArea>
       </div>
 
       <AssignmentDialog
