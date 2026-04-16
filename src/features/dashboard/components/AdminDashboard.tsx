@@ -121,25 +121,6 @@ export function AdminDashboard() {
     { name: "Girls", value: stats.studentGender.girls, color: "#ec4899" },
   ];
 
-  const filteredEvents = events
-    .map((e) => {
-      const eventDate = new Date(e.eventDate);
-      return { ...e, date: eventDate };
-    })
-    .filter((e) => {
-      if (!selectedDate) return false;
-      // Normalize both dates to compare only year, month, day
-      const eventYear = e.date.getFullYear();
-      const eventMonth = e.date.getMonth();
-      const eventDay = e.date.getDate();
-      
-      const selectedYear = selectedDate.getFullYear();
-      const selectedMonth = selectedDate.getMonth();
-      const selectedDay = selectedDate.getDate();
-      
-      return eventYear === selectedYear && eventMonth === selectedMonth && eventDay === selectedDay;
-    });
-
   if (loading) {
     return (
       <div className="space-y-6">
@@ -184,119 +165,106 @@ export function AdminDashboard() {
         ))}
       </div>
 
-      {/* Events Calendar & Announcements */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Calendar - Left Side */}
-        <Card className="lg:col-span-1 hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-lg">Calendar</CardTitle>
-          </CardHeader>
-          <CardContent className="flex justify-center">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={setSelectedDate}
-              className="rounded-lg border w-full"
-              modifiers={{
-                hasEvent: events.map(e => {
-                  const d = new Date(e.eventDate);
-                  d.setHours(0, 0, 0, 0);
-                  return d;
-                })
-              }}
-              modifiersStyles={{
-                hasEvent: { fontWeight: 'bold', textDecoration: 'underline', color: '#3b82f6' }
-              }}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Events & Announcements - Right Side */}
-        <Card className="lg:col-span-2 hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-lg">Events & Announcements</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {/* Selected Date Events */}
-              <div>
-                <h3 className="text-sm font-semibold text-black mb-2">
-                  {selectedDate 
-                    ? `Events on ${selectedDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`
-                    : "Select a date to view events"
+      {/* Events & Announcements */}
+      <Card className="hover:shadow-lg transition-shadow">
+        <CardHeader>
+          <CardTitle className="text-lg">Events & Announcements</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-6">
+            {/* Calendar */}
+            <div>
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={setSelectedDate}
+                className="rounded-lg border"
+                modifiers={{
+                  hasEvent: events.map(e => {
+                    const d = new Date(e.eventDate);
+                    d.setHours(0, 0, 0, 0);
+                    return d;
+                  })
+                }}
+                modifiersStyles={{
+                  hasEvent: { 
+                    fontWeight: 'bold', 
+                    textDecoration: 'underline',
+                    color: '#3b82f6'
                   }
-                </h3>
-                {filteredEvents.length > 0 ? (
-                  <div className="space-y-2">
-                    {filteredEvents.map((e, i) => (
-                      <div key={i} className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                        <div className="flex items-start gap-2">
-                          <span className="text-lg">📅</span>
-                          <div className="flex-1">
-                            <p className="text-sm font-semibold text-black">{e.title}</p>
-                            <p className="text-xs text-muted-foreground mt-1">{e.description}</p>
-                            <p className="text-xs text-blue-600 mt-1 font-medium">
-                              {e.date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground py-4">No events on this date</p>
-                )}
-              </div>
+                }}
+              />
+            </div>
 
-              {/* All Upcoming Events */}
-              <div className="pt-4 border-t">
-                <h3 className="text-sm font-semibold text-black mb-2">Upcoming Events</h3>
-                {events.length > 0 ? (
-                  <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                    {events
-                      .sort((a, b) => new Date(a.eventDate).getTime() - new Date(b.eventDate).getTime())
-                      .map((e, i) => {
-                        const eventDate = new Date(e.eventDate);
-                        const isToday = eventDate.toDateString() === new Date().toDateString();
-                        const isPast = eventDate < new Date() && !isToday;
-                        
-                        return (
+            {/* Events List */}
+            <div className="space-y-4">
+              {/* Today's Events */}
+              {selectedDate && (() => {
+                const todayEvents = events.filter(e => {
+                  const eventDate = new Date(e.eventDate);
+                  eventDate.setHours(0, 0, 0, 0);
+                  const selected = new Date(selectedDate);
+                  selected.setHours(0, 0, 0, 0);
+                  return eventDate.getTime() === selected.getTime();
+                });
+                
+                if (todayEvents.length > 0) {
+                  return (
+                    <div>
+                      <h3 className="text-lg font-semibold text-black mb-2">
+                        {selectedDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                      </h3>
+                      <div className="space-y-2">
+                        {todayEvents.map((e) => (
                           <div 
-                            key={i} 
-                            className={`p-3 rounded-lg border ${
-                              isPast 
-                                ? 'bg-gray-50 border-gray-200 opacity-60' 
-                                : isToday 
-                                  ? 'bg-green-50 border-green-200' 
-                                  : 'bg-muted border-gray-200'
-                            }`}
+                            key={e.id}
+                            className="p-3 bg-blue-50 rounded-lg border border-blue-200 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
                           >
-                            <div className="flex items-start gap-2">
-                              <span className="text-lg">{isToday ? '🔔' : isPast ? '✓' : '📌'}</span>
-                              <div className="flex-1">
-                                <p className="text-sm font-medium text-black">{e.title}</p>
-                                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{e.description}</p>
-                                <p className={`text-xs mt-1 font-medium ${
-                                  isToday ? 'text-green-600' : isPast ? 'text-gray-500' : 'text-blue-600'
-                                }`}>
-                                  {eventDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                                  {isToday && ' (Today)'}
-                                  {isPast && ' (Past)'}
-                                </p>
-                              </div>
-                            </div>
+                            <p className="text-sm font-medium text-black">{e.title}</p>
                           </div>
-                        );
-                      })}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground py-4">No upcoming events</p>
-                )}
+                        ))}
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
+
+              {/* Upcoming Events */}
+              <div>
+                <h3 className="text-lg font-semibold text-black mb-2">Upcoming</h3>
+                <div className="space-y-2">
+                  {events.slice(0, 3).map((e) => {
+                    const eventDate = new Date(e.eventDate);
+                    const eventIcon = e.title.toLowerCase().includes("sport") ? "🎯" : 
+                                    e.title.toLowerCase().includes("football") ? "🔔" :
+                                    e.title.toLowerCase().includes("exam") ? "📝" :
+                                    e.title.toLowerCase().includes("meeting") ? "👥" : "📅";
+                    
+                    return (
+                      <div 
+                        key={e.id}
+                        className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-xl">{eventIcon}</span>
+                          <span className="text-sm font-medium text-black">{e.title}</span>
+                        </div>
+                        <span className="text-sm font-semibold text-green-600">
+                          {eventDate.getDate()}/{eventDate.getMonth() + 1}
+                        </span>
+                      </div>
+                    );
+                  })}
+                  {events.length === 0 && (
+                    <p className="text-xs text-muted-foreground text-center py-4">No upcoming events</p>
+                  )}
+                </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Attendance Section */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

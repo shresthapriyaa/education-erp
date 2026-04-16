@@ -2,7 +2,7 @@
 import AppSideBar, { type MenuSectionConfig } from "@/core/components/app-sidebar";
 import {
   LayoutDashboard, UserCheck,
-  CalendarDays, BookOpen, GraduationCap, Users, ClipboardList,
+  CalendarDays, BookOpen, GraduationCap, Users, ClipboardList, MessageSquare,
 } from "lucide-react";
 
 export default function TeacherLayout({ children }: { children: React.ReactNode }) {
@@ -16,6 +16,7 @@ export default function TeacherLayout({ children }: { children: React.ReactNode 
         { label: "Routine",    href: "/teacher/routine",    icon: <CalendarDays    className="w-5 h-5" /> },
         { label: "Lessons",    href: "/teacher/lessons",    icon: <BookOpen        className="w-5 h-5" /> },
         { label: "Assignments", href: "/teacher/assignments", icon: <ClipboardList   className="w-5 h-5" /> },
+        { label: "Messages",   href: "/teacher/messages",   icon: <MessageSquare   className="w-5 h-5" /> },
       ],
     },
   ];

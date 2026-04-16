@@ -28,7 +28,7 @@ import {
   CollapsibleTrigger,
 } from "@/core/components/ui/collapsible";
 import { cn } from "@/core/lib/utils";
-import { Avatar, AvatarFallback } from "@/core/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/core/components/ui/avatar";
 
 /* ================= TYPES ================= */
 
@@ -109,6 +109,7 @@ export default function AppSideBar({
   const [collapsed, setCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [openMenus, setOpenMenus] = useState<string[]>([]);
+  const [userImage, setUserImage] = useState<string | null>(null);
 
   const rootHref = "/" + settingsHref.split("/")[1];
   const breadcrumbs = useBreadcrumbs(pathname, menu, rootHref);
@@ -159,6 +160,28 @@ export default function AppSideBar({
       router.replace("/");
     }
   }, [status, session, router, allowedRole]);
+
+  /* ================= FETCH USER IMAGE ================= */
+
+  useEffect(() => {
+    async function fetchUserImage() {
+      if (status === "authenticated" && session?.user?.role === "TEACHER") {
+        try {
+          const res = await fetch("/api/teachers?email=" + session.user.email);
+          if (res.ok) {
+            const data = await res.json();
+            const teachers = Array.isArray(data) ? data : (data.teachers || []);
+            if (teachers.length > 0 && teachers[0].img) {
+              setUserImage(teachers[0].img);
+            }
+          }
+        } catch (error) {
+          console.error("Failed to fetch teacher image:", error);
+        }
+      }
+    }
+    fetchUserImage();
+  }, [status, session]);
 
   if (status === "loading") {
     return (
@@ -287,6 +310,7 @@ export default function AppSideBar({
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="w-full justify-start gap-3 ">
                 <Avatar className="h-8 w-8 ">
+                  {userImage && <AvatarImage src={userImage} alt={session?.user?.name || fallbackName} />}
                   <AvatarFallback>{userInitials}</AvatarFallback>
                 </Avatar>
                 {!collapsed && (

@@ -129,6 +129,7 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = req.nextUrl;
     const status = searchParams.get("status") ?? undefined;
+    const date = searchParams.get("date") ?? undefined;
     const from = searchParams.get("from") ?? undefined;
     const to = searchParams.get("to") ?? undefined;
     const classId = searchParams.get("classId") ?? undefined;
@@ -142,12 +143,21 @@ export async function GET(req: NextRequest) {
     if (status && status !== "ALL") {
       where.status = status as Prisma.EnumAttendanceStatusFilter;
     }
-    if (from || to) {
+    
+    // Support single date query for edit mode
+    if (date) {
+      const targetDate = new Date(date);
+      where.date = {
+        gte: new Date(targetDate.setHours(0, 0, 0, 0)),
+        lte: new Date(targetDate.setHours(23, 59, 59, 999)),
+      };
+    } else if (from || to) {
       where.date = {
         ...(from ? { gte: new Date(from) } : {}),
         ...(to ? { lte: new Date(new Date(to).setHours(23, 59, 59, 999)) } : {}),
       };
     }
+    
     if (classId) {
       where.student = { classId };
     }

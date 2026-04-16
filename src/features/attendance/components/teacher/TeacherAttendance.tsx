@@ -6,9 +6,23 @@ import StudentSwiper  from "./StudentSwiper";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/core/components/ui/card";
 import { Button } from "@/core/components/ui/button";
 import { Alert, AlertDescription } from "@/core/components/ui/alert";
-import { Loader2 } from "lucide-react";
+import { Loader2, Edit, Calendar as CalendarIcon } from "lucide-react";
+import { useState, useEffect } from "react";
+import { format } from "date-fns";
+
+type AttendanceRecord = {
+  date: string;
+  present: number;
+  absent: number;
+  total: number;
+};
 
 export default function TeacherAttendance() {
+  const [editMode, setEditMode] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [attendanceHistory, setAttendanceHistory] = useState<AttendanceRecord[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  
   const {
     classes, classesLoading, classesError,
     activeClass, resetClass,
@@ -16,12 +30,78 @@ export default function TeacherAttendance() {
     currentIndex, isComplete,
     geoState, geoError, geoDistance,
     saving, saved, saveError,
-    selectClass, markStudent, prevStudent, saveAttendance, continueAnyway,
-  } = useTeacherAttendance();
+    selectClass, markStudent, toggleStudentStatus, prevStudent, saveAttendance, continueAnyway,
+  } = useTeacherAttendance(selectedDate || undefined);
+
+  // Load attendance history when a class is selected in edit mode
+  useEffect(() => {
+    if (editMode && activeClass && !selectedDate) {
+      loadAttendanceHistory(activeClass.id);
+    }
+  }, [editMode, activeClass, selectedDate]);
+
+  async function loadAttendanceHistory(classId: string) {
+    setHistoryLoading(true);
+    try {
+      const res = await fetch(`/api/attendance?classId=${classId}&pageSize=50`);
+      if (res.ok) {
+        const data = await res.json();
+        const records = data.records || [];
+        
+        // Group by date
+        const dateMap = new Map<string, { present: number; absent: number; total: number }>();
+        records.forEach((r: any) => {
+          const dateStr = new Date(r.date).toISOString().split("T")[0];
+          if (!dateMap.has(dateStr)) {
+            dateMap.set(dateStr, { present: 0, absent: 0, total: 0 });
+          }
+          const stats = dateMap.get(dateStr)!;
+          stats.total++;
+          if (r.status === "PRESENT") stats.present++;
+          if (r.status === "ABSENT") stats.absent++;
+        });
+
+        const history = Array.from(dateMap.entries())
+          .map(([date, stats]) => ({ date, ...stats }))
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        
+        setAttendanceHistory(history);
+      }
+    } catch (e) {
+      console.error("Failed to load attendance history:", e);
+    } finally {
+      setHistoryLoading(false);
+    }
+  }
 
   // Helper to retry location for the same class
   const retryLocation = () => {
     if (activeClass) selectClass(activeClass);
+  };
+
+  const toggleEditMode = () => {
+    const newEditMode = !editMode;
+    setEditMode(newEditMode);
+    setSelectedDate(null);
+    setAttendanceHistory([]);
+    if (newEditMode && activeClass) {
+      // Stay on class but show history
+      loadAttendanceHistory(activeClass.id);
+    } else {
+      // Exit edit mode
+      resetClass();
+    }
+  };
+
+  const handleEditDate = (date: string) => {
+    setSelectedDate(new Date(date));
+  };
+
+  const handleBackFromEdit = () => {
+    setSelectedDate(null);
+    if (activeClass) {
+      loadAttendanceHistory(activeClass.id);
+    }
   };
 
   return (
@@ -41,18 +121,49 @@ export default function TeacherAttendance() {
               {activeClass ? `${activeClass.name}` : "My Classes"}
             </h1>
             {activeClass && (
-              <p className="text-sm text-gray-600 mt-1">Mark attendance for your students</p>
+              <p className="text-sm text-gray-600 mt-1">
+                {editMode && selectedDate 
+                  ? `Editing attendance for ${format(selectedDate, "MMMM d, yyyy")}`
+                  : editMode 
+                  ? "Select a date to edit attendance"
+                  : "Mark attendance for your students"}
+              </p>
             )}
           </div>
-          {activeClass && (
-            <Button 
-              onClick={resetClass}
-              variant="outline"
-              size="sm"
-            >
-              ← Back
-            </Button>
-          )}
+          <div className="flex gap-2">
+            {activeClass && (
+              <>
+                {selectedDate ? (
+                  <Button 
+                    onClick={handleBackFromEdit}
+                    variant="outline"
+                    size="sm"
+                  >
+                    ← Back to History
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={toggleEditMode}
+                    variant={editMode ? "default" : "outline"}
+                    size="sm"
+                    className={editMode ? "bg-blue-600 hover:bg-blue-700" : ""}
+                  >
+                    <Edit className="mr-2 h-4 w-4" />
+                    {editMode ? "Mark New" : "Edit Past"}
+                  </Button>
+                )}
+              </>
+            )}
+            {activeClass && !selectedDate && (
+              <Button 
+                onClick={resetClass}
+                variant="outline"
+                size="sm"
+              >
+                ← Back to Classes
+              </Button>
+            )}
+          </div>
         </div>
 
         {classesError && (
@@ -100,8 +211,70 @@ export default function TeacherAttendance() {
           </div>
         )}
 
-        {/* Geofence states */}
-        {activeClass && geoState === "requesting" && (
+        {/* Attendance History List - Show when in edit mode and no date selected */}
+        {editMode && activeClass && !selectedDate && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Attendance History</CardTitle>
+              <CardDescription>Select a date to edit attendance records</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {historyLoading ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                </div>
+              ) : attendanceHistory.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <CalendarIcon className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                  <p className="text-sm">No attendance records found</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {attendanceHistory.map((record) => (
+                    <div
+                      key={record.date}
+                      className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center">
+                          <CalendarIcon className="w-5 h-5 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-gray-900">
+                            {format(new Date(record.date), "EEEE, MMMM d, yyyy")}
+                          </p>
+                          <div className="flex gap-4 mt-1 text-xs">
+                            <span className="text-green-600 font-medium">
+                              ✓ {record.present} Present
+                            </span>
+                            <span className="text-red-600 font-medium">
+                              ✗ {record.absent} Absent
+                            </span>
+                            <span className="text-gray-500">
+                              Total: {record.total}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={() => handleEditDate(record.date)}
+                        size="sm"
+                        variant="outline"
+                        className="gap-2"
+                      >
+                        <Edit className="w-4 h-4" />
+                        Edit
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Geofence states - Only for new attendance, not edit mode */}
+        {!editMode && activeClass && geoState === "requesting" && (
           <Card className="border-indigo-200 shadow-sm max-w-2xl mx-auto">
             <CardHeader className="bg-indigo-50 border-b border-indigo-100 pb-4">
               <div className="flex items-center gap-3">
@@ -123,7 +296,7 @@ export default function TeacherAttendance() {
           </Card>
         )}
 
-        {activeClass && geoState === "verifying" && (
+        {!editMode && activeClass && geoState === "verifying" && (
           <Card className="border-cyan-200 shadow-sm max-w-2xl mx-auto">
             <CardHeader className="bg-cyan-50 border-b border-cyan-100 pb-4">
               <div className="flex items-center gap-3">
@@ -145,7 +318,7 @@ export default function TeacherAttendance() {
           </Card>
         )}
 
-        {activeClass && geoState === "failed" && (
+        {!editMode && activeClass && geoState === "failed" && (
           <Card className="border-red-200 shadow-md max-w-xl mx-auto">
             <CardHeader className="bg-red-50 border-b border-red-100 pb-3 pt-4">
               <div className="flex items-center gap-2.5">
@@ -212,8 +385,29 @@ export default function TeacherAttendance() {
           </Card>
         )}
 
-        {/* Attendance taking */}
-        {activeClass && geoState === "success" && (
+        {/* Attendance taking - Skip geofence in edit mode */}
+        {activeClass && selectedDate && (editMode || geoState === "success") && (
+          <StudentSwiper
+            cls={activeClass}
+            students={students}
+            loading={studentsLoading}
+            error={studentsError}
+            currentIndex={currentIndex}
+            isComplete={isComplete}
+            saving={saving}
+            saved={saved}
+            saveError={saveError}
+            geoDistance={editMode ? null : geoDistance}
+            editDate={editMode ? selectedDate : null}
+            onMark={markStudent}
+            onPrev={prevStudent}
+            onSave={saveAttendance}
+            onToggleStatus={toggleStudentStatus}
+          />
+        )}
+
+        {/* Normal attendance taking - not in edit mode */}
+        {activeClass && !editMode && geoState === "success" && (
           <StudentSwiper
             cls={activeClass}
             students={students}
@@ -225,9 +419,11 @@ export default function TeacherAttendance() {
             saved={saved}
             saveError={saveError}
             geoDistance={geoDistance}
+            editDate={null}
             onMark={markStudent}
             onPrev={prevStudent}
             onSave={saveAttendance}
+            onToggleStatus={toggleStudentStatus}
           />
         )}
       </div>

@@ -311,6 +311,7 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const search     = searchParams.get("search")     || "";
+    const email      = searchParams.get("email")      || "";
     const sex        = searchParams.get("sex")        || "";
     const bloodGroup = searchParams.get("bloodGroup") || "";
     const classId    = searchParams.get("classId")    || "";
@@ -318,6 +319,7 @@ export async function GET(req: NextRequest) {
 
     const students = await prisma.student.findMany({
       where: {
+        ...(email && { email: { equals: email, mode: "insensitive" } }),
         ...(search && {
           OR: [
             { username: { contains: search, mode: "insensitive" } },

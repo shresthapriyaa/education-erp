@@ -3,6 +3,8 @@
 import { CheckCircle2, XCircle, ChevronLeft, Save, MapPin } from "lucide-react";
 import type { ClassItem, StudentRow } from "../../hooks/useTeacherAttendance";
 import type { AttendanceStatus } from "../../types/attendance.types";
+import { Button } from "@/core/components/ui/button";
+import { Badge } from "@/core/components/ui/badge";
 
 interface Props {
   cls:          ClassItem;
@@ -15,16 +17,18 @@ interface Props {
   saved:        boolean;
   saveError:    string | null;
   geoDistance:  number | null;
+  editDate?:    Date | null;
   onMark:       (status: AttendanceStatus) => void;
   onPrev:       () => void;
   onSave:       () => void;
+  onToggleStatus: (studentId: string, newStatus: AttendanceStatus) => void;
 }
 
 export default function StudentSwiper({
   cls, students, loading, error,
   currentIndex, isComplete,
-  saving, saved, saveError, geoDistance,
-  onMark, onPrev, onSave,
+  saving, saved, saveError, geoDistance, editDate,
+  onMark, onPrev, onSave, onToggleStatus,
 }: Props) {
 
   const total   = students.length;
@@ -35,9 +39,9 @@ export default function StudentSwiper({
 
   if (loading) {
     return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <div className="flex flex-col gap-3">
         {[...Array(3)].map((_, i) => (
-          <div key={i} style={{ height: 80, background: "#f3f4f6", borderRadius: 12 }} />
+          <div key={i} className="h-20 bg-muted rounded-lg animate-pulse" />
         ))}
       </div>
     );
@@ -45,7 +49,7 @@ export default function StudentSwiper({
 
   if (error) {
     return (
-      <div style={{ background: "#fee2e2", border: "1px solid #fca5a5", borderRadius: 8, padding: "14px 18px", fontSize: 13, color: "#dc2626" }}>
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-sm text-red-800">
         ⚠ {error}
       </div>
     );
@@ -53,8 +57,8 @@ export default function StudentSwiper({
 
   if (total === 0) {
     return (
-      <div style={{ textAlign: "center", padding: 64, color: "#9ca3af" }}>
-        <p style={{ fontSize: 16, fontWeight: 600 }}>No students in this class</p>
+      <div className="text-center py-16 text-muted-foreground">
+        <p className="text-base font-semibold">No students in this class</p>
       </div>
     );
   }
@@ -62,39 +66,36 @@ export default function StudentSwiper({
   return (
     <div>
       {/* Info bar */}
-      <div style={{
-        background: "#f0fdf4", border: "1.5px solid #bbf7d0",
-        borderRadius: 10, padding: "12px 18px", marginBottom: 20,
-        display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8,
-      }}>
-        <div style={{ display: "flex", gap: 16, fontSize: 13, color: "#374151", flexWrap: "wrap" }}>
-          <span><b>Class:</b> {cls.name}</span>
-          <span><b>Date:</b> {new Date().toLocaleDateString("en-GB")}</span>
+      <div className="bg-muted/50 border rounded-lg p-3 mb-5 flex justify-between items-center flex-wrap gap-2">
+        <div className="flex gap-4 text-sm text-muted-foreground flex-wrap">
+          <span><span className="font-semibold text-foreground">Class:</span> {cls.name}</span>
+          <span><span className="font-semibold text-foreground">Date:</span> {editDate ? editDate.toLocaleDateString("en-GB") : new Date().toLocaleDateString("en-GB")}</span>
           {geoDistance !== null && (
-            <span style={{ display: "flex", alignItems: "center", gap: 4, color: "#16a34a" }}>
-              <MapPin size={12} /> {geoDistance}m from school
+            <span className="flex items-center gap-1 text-foreground">
+              <MapPin className="w-3 h-3" /> {geoDistance}m from school
             </span>
           )}
         </div>
-        <span style={{ fontSize: 12, fontWeight: 700, color: "#16a34a" }}>● Location Verified</span>
+        <Badge variant={editDate ? "default" : "secondary"}>
+          {editDate ? "Edit Mode" : "Location Verified"}
+        </Badge>
       </div>
 
       {/* Progress bar */}
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-          <span style={{ fontSize: 12, fontWeight: 600, color: "#374151" }}>
+      <div className="mb-5">
+        <div className="flex justify-between mb-2 text-sm">
+          <span className="font-semibold text-foreground">
             Progress: {marked} / {total} students
           </span>
-          <span style={{ fontSize: 12, color: "#6b7280" }}>
-            ✅ {present} present · ❌ {absent} absent
+          <span className="text-muted-foreground">
+            {present} present · {absent} absent
           </span>
         </div>
-        <div style={{ height: 8, background: "#e5e7eb", borderRadius: 8, overflow: "hidden" }}>
-          <div style={{
-            height: "100%", borderRadius: 8,
-            width: `${total > 0 ? (marked / total) * 100 : 0}%`,
-            background: "#16a34a", transition: "width 0.3s ease",
-          }} />
+        <div className="h-2 bg-muted rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-foreground rounded-full transition-all duration-300"
+            style={{ width: `${total > 0 ? (marked / total) * 100 : 0}%` }}
+          />
         </div>
       </div>
 
@@ -110,102 +111,82 @@ export default function StudentSwiper({
           onSave={onSave}
           onPrev={onPrev}
           currentIndex={currentIndex}
+          onToggleStatus={onToggleStatus}
         />
       ) : current ? (
         <div>
           {/* Navigation hint */}
           {currentIndex > 0 && (
-            <button onClick={onPrev} style={{
-              display: "flex", alignItems: "center", gap: 4,
-              background: "none", border: "none", cursor: "pointer",
-              fontSize: 12, color: "#6b7280", marginBottom: 12, padding: 0,
-            }}>
-              <ChevronLeft size={14} /> Back to previous student
-            </button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={onPrev}
+              className="mb-3 px-0 h-auto text-muted-foreground hover:text-foreground"
+            >
+              <ChevronLeft className="w-4 h-4 mr-1" /> Back to previous student
+            </Button>
           )}
 
           {/* Student card */}
-          <div style={{
-            background: "#fff", border: "2px solid #e5e7eb",
-            borderRadius: 20, padding: "40px 32px",
-            textAlign: "center", maxWidth: 480, margin: "0 auto",
-            boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
-          }}>
+          <div className="bg-card border rounded-xl p-8 text-center max-w-md mx-auto shadow-sm">
             {/* Avatar */}
-            <div style={{
-              width: 80, height: 80, borderRadius: "50%",
-              background: "#f3f4f6", margin: "0 auto 16px",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 32, fontWeight: 800, color: "#374151",
-            }}>
+            <div className="w-20 h-20 rounded-full bg-muted mx-auto mb-4 flex items-center justify-center text-3xl font-bold text-foreground">
               {current.username.charAt(0).toUpperCase()}
             </div>
 
-            <p style={{ margin: "0 0 4px", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#9ca3af" }}>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
               Student {currentIndex + 1} of {total}
             </p>
-            <h2 style={{ margin: "0 0 6px", fontSize: 24, fontWeight: 900, color: "#111827" }}>
+            <h2 className="text-2xl font-bold text-foreground mb-1">
               {current.username}
             </h2>
-            <p style={{ margin: "0 0 32px", fontSize: 13, color: "#6b7280" }}>
+            <p className="text-sm text-muted-foreground mb-6">
               {current.email}
             </p>
 
+            {/* Current status indicator */}
+            {current.status && (
+              <div className="mb-6">
+                <p className="text-xs text-muted-foreground mb-2">Current Status:</p>
+                <Badge variant="outline">
+                  {current.status}
+                </Badge>
+              </div>
+            )}
+
             {/* Present / Absent buttons */}
-            <div style={{ display: "flex", gap: 16, justifyContent: "center" }}>
-              <button
+            <div className="flex gap-3">
+              <Button
                 onClick={() => onMark("PRESENT")}
-                style={{
-                  display: "flex", alignItems: "center", gap: 8,
-                  padding: "14px 32px", borderRadius: 12, border: "none",
-                  background: "#16a34a", color: "#fff",
-                  fontSize: 16, fontWeight: 800, cursor: "pointer",
-                  transition: "transform 0.1s, background 0.15s",
-                  flex: 1, justifyContent: "center",
-                }}
-                onMouseEnter={e => (e.currentTarget.style.background = "#15803d")}
-                onMouseLeave={e => (e.currentTarget.style.background = "#16a34a")}
+                variant="outline"
+                className="flex-1"
+                size="lg"
               >
-                <CheckCircle2 size={20} /> Present
-              </button>
-              <button
+                <CheckCircle2 className="w-5 h-5 mr-2" /> Present
+              </Button>
+              <Button
                 onClick={() => onMark("ABSENT")}
-                style={{
-                  display: "flex", alignItems: "center", gap: 8,
-                  padding: "14px 32px", borderRadius: 12, border: "none",
-                  background: "#dc2626", color: "#fff",
-                  fontSize: 16, fontWeight: 800, cursor: "pointer",
-                  transition: "transform 0.1s, background 0.15s",
-                  flex: 1, justifyContent: "center",
-                }}
-                onMouseEnter={e => (e.currentTarget.style.background = "#b91c1c")}
-                onMouseLeave={e => (e.currentTarget.style.background = "#dc2626")}
+                variant="outline"
+                className="flex-1"
+                size="lg"
               >
-                <XCircle size={20} /> Absent
-              </button>
+                <XCircle className="w-5 h-5 mr-2" /> Absent
+              </Button>
             </div>
           </div>
 
           {/* Mini roster below */}
           {students.filter(s => s.status !== null).length > 0 && (
-            <div style={{ marginTop: 24, border: "1px solid #e5e7eb", borderRadius: 10, overflow: "hidden" }}>
-              <div style={{ background: "#f9fafb", padding: "8px 14px", fontSize: 11, fontWeight: 700, textTransform: "uppercase", color: "#9ca3af" }}>
+            <div className="mt-6 border rounded-lg overflow-hidden">
+              <div className="bg-muted px-4 py-2 text-xs font-semibold uppercase text-muted-foreground">
                 Marked so far
               </div>
               {students.filter(s => s.status !== null).map((s, i) => (
-                <div key={s.studentId} style={{
-                  display: "flex", justifyContent: "space-between", alignItems: "center",
-                  padding: "9px 14px", borderTop: i > 0 ? "1px solid #f3f4f6" : "none",
-                  background: "#fff",
-                }}>
-                  <span style={{ fontSize: 13, color: "#374151" }}>{s.username}</span>
-                  <span style={{
-                    fontSize: 11, fontWeight: 700, padding: "2px 10px", borderRadius: 20,
-                    background: s.status === "PRESENT" ? "#dcfce7" : "#fee2e2",
-                    color:      s.status === "PRESENT" ? "#16a34a"  : "#dc2626",
-                  }}>
+                <div key={s.studentId} className="flex justify-between items-center px-4 py-2 border-t">
+                  <span className="text-sm text-foreground">{s.username}</span>
+                  <Badge variant="outline" className="text-xs">
                     {s.status}
-                  </span>
+                  </Badge>
                 </div>
               ))}
             </div>
@@ -216,92 +197,96 @@ export default function StudentSwiper({
   );
 }
 
-function CompletionScreen({ students, present, absent, saving, saved, saveError, onSave, onPrev, currentIndex }: {
+function CompletionScreen({ students, present, absent, saving, saved, saveError, onSave, onPrev, currentIndex, onToggleStatus }: {
   students: StudentRow[];
   present: number; absent: number;
   saving: boolean; saved: boolean; saveError: string | null;
   onSave: () => void; onPrev: () => void; currentIndex: number;
+  onToggleStatus: (studentId: string, newStatus: AttendanceStatus) => void;
 }) {
   return (
-    <div>
-      <div style={{
-        background: "#f0fdf4", border: "2px solid #bbf7d0",
-        borderRadius: 20, padding: "40px 32px", textAlign: "center",
-        maxWidth: 480, margin: "0 auto 24px",
-      }}>
-        <div style={{ fontSize: 48, marginBottom: 12 }}>🎉</div>
-        <h2 style={{ margin: "0 0 8px", fontSize: 22, fontWeight: 900, color: "#111827" }}>All Students Marked!</h2>
-        <p style={{ margin: "0 0 24px", fontSize: 14, color: "#6b7280" }}>
-          Review the summary below and save attendance.
+    <div className="space-y-6">
+      {/* Summary */}
+      <div className="bg-card border rounded-lg p-6 text-center max-w-md mx-auto">
+        <div className="text-4xl mb-3">✓</div>
+        <h2 className="text-xl font-bold text-foreground mb-2">All Students Marked</h2>
+        <p className="text-sm text-muted-foreground mb-6">
+          Review and edit attendance below, then save.
         </p>
-        <div style={{ display: "flex", gap: 16, justifyContent: "center", marginBottom: 24 }}>
-          <div style={{ background: "#dcfce7", borderRadius: 12, padding: "14px 24px" }}>
-            <p style={{ margin: 0, fontSize: 28, fontWeight: 900, color: "#16a34a" }}>{present}</p>
-            <p style={{ margin: "4px 0 0", fontSize: 12, color: "#15803d", fontWeight: 600 }}>Present</p>
+        
+        <div className="flex gap-4 justify-center mb-6">
+          <div className="bg-muted rounded-lg px-6 py-3 min-w-[100px]">
+            <p className="text-2xl font-bold text-foreground">{present}</p>
+            <p className="text-xs text-muted-foreground uppercase font-semibold mt-1">Present</p>
           </div>
-          <div style={{ background: "#fee2e2", borderRadius: 12, padding: "14px 24px" }}>
-            <p style={{ margin: 0, fontSize: 28, fontWeight: 900, color: "#dc2626" }}>{absent}</p>
-            <p style={{ margin: "4px 0 0", fontSize: 12, color: "#b91c1c", fontWeight: 600 }}>Absent</p>
+          <div className="bg-muted rounded-lg px-6 py-3 min-w-[100px]">
+            <p className="text-2xl font-bold text-foreground">{absent}</p>
+            <p className="text-xs text-muted-foreground uppercase font-semibold mt-1">Absent</p>
           </div>
         </div>
 
         {saveError && (
-          <div style={{ background: "#fee2e2", border: "1px solid #fca5a5", borderRadius: 8, padding: "10px 14px", marginBottom: 16, fontSize: 13, color: "#dc2626" }}>
-            ⚠ {saveError}
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-sm text-red-800">
+            ⚠️ {saveError}
           </div>
         )}
 
         {saved ? (
-          <div style={{ background: "#dcfce7", borderRadius: 10, padding: "14px", fontSize: 15, fontWeight: 700, color: "#16a34a" }}>
+          <div className="bg-muted border rounded-lg p-3 text-sm text-foreground font-semibold">
             ✓ Attendance saved successfully
           </div>
         ) : (
-          <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
-            <button onClick={onPrev} style={{
-              padding: "11px 20px", borderRadius: 8,
-              border: "1.5px solid #e5e7eb", background: "#fff",
-              fontSize: 13, fontWeight: 600, cursor: "pointer", color: "#374151",
-            }}>
-              <ChevronLeft size={14} style={{ display: "inline", marginRight: 4 }} />
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={onPrev} className="flex-1">
+              <ChevronLeft className="w-4 h-4 mr-1" />
               Edit Last
-            </button>
-            <button onClick={onSave} disabled={saving} style={{
-              display: "flex", alignItems: "center", gap: 8,
-              padding: "11px 28px", borderRadius: 8, border: "none",
-              background: saving ? "#d1d5db" : "#111827", color: "#fff",
-              fontSize: 14, fontWeight: 700, cursor: saving ? "not-allowed" : "pointer",
-            }}>
-              <Save size={15} />
-              {saving ? "Saving..." : "Save Attendance"}
-            </button>
+            </Button>
+            <Button onClick={onSave} disabled={saving} className="flex-1">
+              <Save className="w-4 h-4 mr-2" />
+              {saving ? "Saving..." : "Save"}
+            </Button>
           </div>
         )}
       </div>
 
-      {/* Full roster */}
-      <div style={{ border: "1px solid #e5e7eb", borderRadius: 12, overflow: "hidden" }}>
-        <div style={{ background: "#f9fafb", padding: "10px 16px", fontSize: 12, fontWeight: 700, textTransform: "uppercase", color: "#9ca3af" }}>
-          Full Attendance List ({students.length})
+      {/* Student list with toggles */}
+      <div className="border rounded-lg overflow-hidden bg-card">
+        <div className="bg-muted px-4 py-3 border-b">
+          <h3 className="text-sm font-semibold text-foreground">
+            Attendance List ({students.length})
+          </h3>
         </div>
-        {students.map((s, i) => (
-          <div key={s.studentId} style={{
-            display: "flex", justifyContent: "space-between", alignItems: "center",
-            padding: "11px 16px", borderTop: "1px solid #f3f4f6",
-            background: i % 2 === 0 ? "#fff" : "#fafafa",
-          }}>
-            <div>
-              <p style={{ margin: 0, fontWeight: 700, fontSize: 13, color: "#111827" }}>{s.username}</p>
-              <p style={{ margin: "2px 0 0", fontSize: 11, color: "#9ca3af" }}>{s.email}</p>
+        <div className="divide-y">
+          {students.map((s) => (
+            <div key={s.studentId} className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
+              <div className="flex-1">
+                <p className="font-semibold text-sm text-foreground">{s.username}</p>
+                <p className="text-xs text-muted-foreground">{s.email}</p>
+              </div>
+              
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant={s.status === "PRESENT" ? "default" : "ghost"}
+                  onClick={() => onToggleStatus(s.studentId, "PRESENT")}
+                  className="min-w-[90px]"
+                >
+                  <CheckCircle2 className="w-3 h-3 mr-1" />
+                  Present
+                </Button>
+                <Button
+                  size="sm"
+                  variant={s.status === "ABSENT" ? "default" : "ghost"}
+                  onClick={() => onToggleStatus(s.studentId, "ABSENT")}
+                  className="min-w-[90px]"
+                >
+                  <XCircle className="w-3 h-3 mr-1" />
+                  Absent
+                </Button>
+              </div>
             </div>
-            <span style={{
-              fontSize: 11, fontWeight: 800, padding: "3px 12px", borderRadius: 20,
-              background: s.status === "PRESENT" ? "#dcfce7" : "#fee2e2",
-              color:      s.status === "PRESENT" ? "#16a34a"  : "#dc2626",
-            }}>
-              {s.status ?? "—"}
-            </span>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );

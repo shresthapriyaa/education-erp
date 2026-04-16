@@ -32,7 +32,7 @@ export type GeofenceState =
   | "success"
   | "failed";
 
-export function useTeacherAttendance() {
+export function useTeacherAttendance(editDate?: Date) {
   const [classes,        setClasses]        = useState<ClassItem[]>([]);
   const [classesLoading, setClassesLoading] = useState(true);
   const [classesError,   setClassesError]   = useState<string | null>(null);
@@ -55,6 +55,8 @@ export function useTeacherAttendance() {
   const [saved,     setSaved]     = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
+  const isEditMode = !!editDate;
+
   // Fetch teacher's classes
   useEffect(() => {
     async function load() {
@@ -74,16 +76,25 @@ export function useTeacherAttendance() {
     load();
   }, []);
 
-  // Step 1: teacher clicks "Take Attendance" → verify location
+  // Step 1: teacher clicks "Take Attendance" → verify location (skip in edit mode)
   async function selectClass(cls: ClassItem) {
     setActiveClass(cls);
-    setGeoState("requesting");
-    setGeoError(null);
-    setGeoDistance(null);
     setSaved(false);
     setSaveError(null);
     setCurrentIndex(0);
     setStudents([]);
+
+    // Skip geofence in edit mode
+    if (isEditMode) {
+      setGeoState("success");
+      await loadStudents(cls);
+      return;
+    }
+
+    // Normal mode - verify location
+    setGeoState("requesting");
+    setGeoError(null);
+    setGeoDistance(null);
 
     if (!navigator.geolocation) {
       setGeoState("failed");
@@ -171,6 +182,38 @@ export function useTeacherAttendance() {
         email:     s.email,
         status:    null,
       }));
+
+      // If in edit mode, load existing attendance
+      if (isEditMode && editDate) {
+        const dateStr = editDate.toISOString().split("T")[0];
+        console.log("🔍 Edit mode: Loading attendance for", dateStr, "classId:", cls.id);
+        try {
+          const attRes = await fetch(`/api/attendance?classId=${cls.id}&date=${dateStr}`);
+          if (attRes.ok) {
+            const attData = await attRes.json();
+            console.log("📊 Attendance data received:", attData);
+            // API returns {records: [...], stats: {...}, total: number}
+            const records = attData.records || [];
+            console.log("📝 Found", records.length, "attendance records");
+            if (records.length > 0) {
+              // Map existing attendance to students
+              const attMap = new Map(records.map((a: any) => [a.studentId, a.status]));
+              list.forEach((student: StudentRow) => {
+                const existingStatus = attMap.get(student.studentId);
+                if (existingStatus) {
+                  student.status = existingStatus;
+                  console.log("✅ Loaded status for", student.username, ":", existingStatus);
+                }
+              });
+            }
+          } else {
+            console.log("⚠️ Attendance API returned error:", attRes.status);
+          }
+        } catch (e) {
+          console.error("❌ Failed to load existing attendance:", e);
+        }
+      }
+
       setStudents(list);
       setCurrentIndex(0);
     } catch (e: any) {
@@ -189,6 +232,14 @@ export function useTeacherAttendance() {
     setSaved(false);
   }
 
+  // Toggle status for a specific student (for edit mode)
+  function toggleStudentStatus(studentId: string, newStatus: AttendanceStatus) {
+    setStudents(prev =>
+      prev.map(s => s.studentId === studentId ? { ...s, status: newStatus } : s)
+    );
+    setSaved(false);
+  }
+
   // Go back to previous student
   function prevStudent() {
     if (currentIndex > 0) setCurrentIndex(prev => prev - 1);
@@ -201,7 +252,10 @@ export function useTeacherAttendance() {
     setSaving(true);
     setSaveError(null);
     try {
-      const today = new Date().toISOString().split("T")[0];
+      const dateToSave = isEditMode && editDate 
+        ? editDate.toISOString().split("T")[0]
+        : new Date().toISOString().split("T")[0];
+      
       const marked = students.filter(s => s.status !== null);
 
       const attRes = await fetch("/api/attendance", {
@@ -209,7 +263,7 @@ export function useTeacherAttendance() {
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({
           classId: activeClass.id,
-          date:    today,
+          date:    dateToSave,
           records: marked.map(({ studentId, status }) => ({ studentId, status })),
         }),
       });
@@ -245,6 +299,6 @@ export function useTeacherAttendance() {
     currentIndex, isComplete,
     geoState, geoError, geoDistance,
     saving, saved, saveError,
-    selectClass, markStudent, prevStudent, saveAttendance, continueAnyway,
+    selectClass, markStudent, toggleStudentStatus, prevStudent, saveAttendance, continueAnyway,
   };
 }
