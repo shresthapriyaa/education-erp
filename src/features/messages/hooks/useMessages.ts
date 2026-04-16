@@ -38,6 +38,21 @@ export function useMessages() {
     }
   };
 
+  const editMessage = async (id: string, data: { receiverId: string; content: string }) => {
+    setLoading(true);
+    try {
+      await messageApi.update(id, data);
+      toast.success("Message updated successfully");
+      await fetchMessages();
+      return true;
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Failed to update message");
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const deleteMessage = async (id: string) => {
     setLoading(true);
     try {
@@ -59,6 +74,7 @@ export function useMessages() {
     error,
     fetchMessages,
     sendMessage,
+    editMessage,
     deleteMessage,
   };
 }

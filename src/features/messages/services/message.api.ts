@@ -17,6 +17,10 @@ export const messageApi = {
     const res = await axios.post("/api/messages", data);
     return res.data;
   },
+  update: async (id: string, data: MessagePayload) => {
+    const res = await axios.put(`/api/messages/${id}`, data);
+    return res.data;
+  },
   delete: async (id: string) => {
     const res = await axios.delete(`/api/messages/${id}`);
     return res.data;

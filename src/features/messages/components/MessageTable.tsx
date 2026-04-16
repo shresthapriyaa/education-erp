@@ -8,7 +8,7 @@ import {
   Table, TableBody, TableCell, TableHead,
   TableHeader, TableRow,
 } from "@/core/components/ui/table";
-import { Trash2, Send, Search } from "lucide-react";
+import { Trash2, Send, Search, Edit } from "lucide-react";
 import { MessageDialog } from "./MessageDialog";
 import { ConfirmDeleteDialog } from "./ConfirmDelete";
 import { Message } from "../types/message.types";
@@ -16,6 +16,7 @@ import { Message } from "../types/message.types";
 interface MessageTableProps {
   messages: Message[];
   onSend: (values: { receiverId: string; content: string }) => Promise<void>;
+  onEdit?: (id: string, values: { receiverId: string; content: string }) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
   loading?: boolean;
 }
@@ -28,10 +29,11 @@ const roleColor = (role: string) => {
 };
 
 export function MessageTable({
-  messages, onSend, onDelete, loading = false,
+  messages, onSend, onEdit, onDelete, loading = false,
 }: MessageTableProps) {
   const [search, setSearch] = useState("");
   const [sendOpen, setSendOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
@@ -48,6 +50,18 @@ export function MessageTable({
     try {
       await onSend(values);
       setSendOpen(false);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleEdit = async (values: { receiverId: string; content: string }) => {
+    if (!selectedMessage || !onEdit) return;
+    setActionLoading(true);
+    try {
+      await onEdit(selectedMessage.id, values);
+      setEditOpen(false);
+      setSelectedMessage(null);
     } finally {
       setActionLoading(false);
     }
@@ -100,6 +114,7 @@ export function MessageTable({
               <TableHead className="text-black font-semibold">From</TableHead>
               <TableHead className="text-black font-semibold">To</TableHead>
               <TableHead className="text-black font-semibold">Message</TableHead>
+              <TableHead className="text-black font-semibold">Sent By</TableHead>
               <TableHead className="text-black font-semibold">Date</TableHead>
               <TableHead className="text-right text-black font-semibold">Actions</TableHead>
             </TableRow>
@@ -107,13 +122,13 @@ export function MessageTable({
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
+                <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
                   Loading...
                 </TableCell>
               </TableRow>
             ) : filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-10 text-muted-foreground">
+                <TableCell colSpan={6} className="text-center py-10 text-muted-foreground">
                   No messages found.
                 </TableCell>
               </TableRow>
@@ -139,15 +154,29 @@ export function MessageTable({
                   <TableCell className="text-sm text-black max-w-[300px] truncate">
                     {message.content}
                   </TableCell>
+                  <TableCell>
+                    <Badge variant={roleColor(message.sender?.role ?? "")} className="text-xs">
+                      Sent by {message.sender?.role ?? "Unknown"}
+                    </Badge>
+                  </TableCell>
                   <TableCell className="text-sm text-black">{formatDate(message.createdAt)}</TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost" size="icon"
-                      className="hover:bg-red-600 border border-gray-300 text-destructive"
-                      onClick={() => { setSelectedMessage(message); setDeleteOpen(true); }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex items-center justify-end gap-2">
+                      <Button
+                        variant="ghost" size="icon"
+                        className="hover:bg-blue-50 border border-gray-300 text-blue-600"
+                        onClick={() => { setSelectedMessage(message); setEditOpen(true); }}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost" size="icon"
+                        className="hover:bg-red-50 border border-gray-300 text-destructive"
+                        onClick={() => { setSelectedMessage(message); setDeleteOpen(true); }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
@@ -181,14 +210,28 @@ export function MessageTable({
                       {message.receiver?.role ?? "—"}
                     </Badge>
                   </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={roleColor(message.sender?.role ?? "")} className="text-xs">
+                      Sent by {message.sender?.role ?? "Unknown"}
+                    </Badge>
+                  </div>
                 </div>
-                <Button
-                  variant="ghost" size="icon"
-                  className="h-8 w-8 border border-gray-300 text-destructive hover:bg-red-50 shrink-0"
-                  onClick={() => { setSelectedMessage(message); setDeleteOpen(true); }}
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </Button>
+                <div className="flex gap-2 shrink-0">
+                  <Button
+                    variant="ghost" size="icon"
+                    className="h-8 w-8 border border-gray-300 text-blue-600 hover:bg-blue-50"
+                    onClick={() => { setSelectedMessage(message); setEditOpen(true); }}
+                  >
+                    <Edit className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost" size="icon"
+                    className="h-8 w-8 border border-gray-300 text-destructive hover:bg-red-50"
+                    onClick={() => { setSelectedMessage(message); setDeleteOpen(true); }}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
               </div>
               <p className="text-sm text-black line-clamp-2">{message.content}</p>
               <p className="text-xs text-muted-foreground">{formatDate(message.createdAt)}</p>
@@ -202,6 +245,16 @@ export function MessageTable({
         onOpenChange={setSendOpen}
         onSubmit={handleSend}
         loading={actionLoading}
+      />
+      <MessageDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        onSubmit={handleEdit}
+        loading={actionLoading}
+        initialData={selectedMessage ? {
+          receiverId: selectedMessage.receiverId,
+          content: selectedMessage.content,
+        } : undefined}
       />
       <ConfirmDeleteDialog
         open={deleteOpen}

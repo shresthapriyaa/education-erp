@@ -5,17 +5,49 @@ import { authOptions } from "@/core/lib/auth";
 
 export async function GET(req: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Get current user from database
+    const currentUser = await prisma.user.findUnique({
+      where: { email: session.user.email as string },
+    });
+
+    if (!currentUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search") || "";
 
-    const messages = await prisma.message.findMany({
-      where: search ? {
-        OR: [
-          { sender: { username: { contains: search, mode: "insensitive" } } },
-          { receiver: { username: { contains: search, mode: "insensitive" } } },
-          { content: { contains: search, mode: "insensitive" } },
+    // Build where clause based on user role
+    let whereClause: any = {
+      OR: [
+        { senderId: currentUser.id },    // Messages sent by user
+        { receiverId: currentUser.id },  // Messages received by user
+      ],
+    };
+
+    // Add search filter if provided
+    if (search) {
+      whereClause = {
+        AND: [
+          whereClause,
+          {
+            OR: [
+              { sender: { username: { contains: search, mode: "insensitive" } } },
+              { receiver: { username: { contains: search, mode: "insensitive" } } },
+              { content: { contains: search, mode: "insensitive" } },
+            ],
+          },
         ],
-      } : undefined,
+      };
+    }
+
+    const messages = await prisma.message.findMany({
+      where: whereClause,
       select: {
         id: true,
         senderId: true,

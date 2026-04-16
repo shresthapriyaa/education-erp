@@ -109,6 +109,7 @@ export default function AppSideBar({
   const [collapsed, setCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [openMenus, setOpenMenus] = useState<string[]>([]);
+  const [openSections, setOpenSections] = useState<string[]>([""]); // Open the main section (empty string for admin)
   const [userImage, setUserImage] = useState<string | null>(null);
 
   const rootHref = "/" + settingsHref.split("/")[1];
@@ -199,6 +200,12 @@ export default function AppSideBar({
     );
   };
 
+  const toggleSection = (section: string) => {
+    setOpenSections((prev) =>
+      prev.includes(section) ? prev.filter((s) => s !== section) : [...prev, section],
+    );
+  };
+
   /* ================= MENU ITEM RENDER ================= */
 
   const renderMenuItem = (item: MenuItemConfig) => {
@@ -218,12 +225,12 @@ export default function AppSideBar({
             <Button
               variant="ghost"
               className={cn(
-                "w-full justify-start gap-3 h-10 px-3",
+                "w-full justify-start gap-3 h-10 px-3 font-semibold text-gray-700",
                 isActive && "bg-primary text-primary-foreground",
               )}
             >
               {item.icon}
-              <span className="flex-1 text-left font-semibold">{item.label}</span>
+              <span className="flex-1 text-left">{item.label}</span>
               <ChevronDown
                 className={cn(
                   "w-4 h-4 transition-transform",
@@ -259,12 +266,12 @@ export default function AppSideBar({
         variant="ghost"
         onClick={() => router.push(item.href)}
         className={cn(
-          "w-full justify-start gap-3 h-10 px-3",
+          "w-full justify-start gap-3 h-10 px-3 font-semibold text-gray-700",
           isActive && "bg-primary text-primary-foreground",
         )}
       >
         {item.icon}
-        {!collapsed && <span className="font-semibold">{item.label}</span>}
+        {!collapsed && <span>{item.label}</span>}
       </Button>
     );
   };
@@ -288,19 +295,40 @@ export default function AppSideBar({
 
         {/* MENU */}
         <ScrollArea className="flex-1 min-h-0 px-2 py-4 ">
-          <nav className="space-y-4">
-            {filteredMenu.map((section) => (
-              <div key={section.section}>
-                {!collapsed && section.section && (
-                  <p className="px-3 text-xs font-bold text-foreground uppercase mb-2 tracking-wide">
-                    {section.section}
-                  </p>
-                )}
-                <div className="space-y-1">
-                  {section.items.map((item) => renderMenuItem(item))}
-                </div>
-              </div>
-            ))}
+          <nav className="space-y-2">
+            {filteredMenu.map((section) => {
+              const isSectionOpen = openSections.includes(section.section);
+              
+              return (
+                <Collapsible
+                  key={section.section}
+                  open={isSectionOpen}
+                  onOpenChange={() => toggleSection(section.section)}
+                  className="w-full"
+                >
+                  {!collapsed && section.section && (
+                    <CollapsibleTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-between px-3 h-8 text-xs font-bold text-muted-foreground uppercase tracking-wide hover:bg-transparent"
+                      >
+                        {section.section}
+                        <ChevronDown
+                          className={cn(
+                            "w-3 h-3 transition-transform",
+                            isSectionOpen && "rotate-180",
+                          )}
+                        />
+                      </Button>
+                    </CollapsibleTrigger>
+                  )}
+                  
+                  <CollapsibleContent className="space-y-1 mt-1">
+                    {section.items.map((item) => renderMenuItem(item))}
+                  </CollapsibleContent>
+                </Collapsible>
+              );
+            })}
           </nav>
         </ScrollArea>
 

@@ -45,24 +45,26 @@ interface MessageDialogProps {
   onOpenChange: (open: boolean) => void;
   onSubmit: (values: { receiverId: string; content: string }) => void;
   loading?: boolean;
+  initialData?: { receiverId: string; content: string };
 }
 
 export function MessageDialog({
-  open, onOpenChange, onSubmit, loading = false,
+  open, onOpenChange, onSubmit, loading = false, initialData,
 }: MessageDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Send Message</DialogTitle>
+          <DialogTitle>{initialData ? "Edit Message" : "Send Message"}</DialogTitle>
           <DialogDescription>
-            Compose and send a message to a recipient.
+            {initialData ? "Update the message content." : "Compose and send a message to a recipient."}
           </DialogDescription>
         </DialogHeader>
         <MessageForm
           onSubmit={onSubmit}
           loading={loading}
           onCancel={() => onOpenChange(false)}
+          initialData={initialData}
         />
       </DialogContent>
     </Dialog>

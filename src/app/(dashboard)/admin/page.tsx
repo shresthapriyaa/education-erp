@@ -1,13 +1,5 @@
-import React from 'react'
-import Admin from '@/features/admin/components/dashboard/admin'
+import { AdminDashboard } from '@/features/dashboard/components/AdminDashboard'
 
-const page = () => {
-  return (
-    <div className="h-full overflow-auto">
-      <Admin/>
-    </div>
-  )
+export default function AdminPage() {
+  return <AdminDashboard />
 }
-
-export default page
-

@@ -7,7 +7,7 @@ import { MessageTable } from "@/features/messages/components/MessageTable";
 export default function MessagesPage() {
   const {
     messages, loading, fetchMessages,
-    sendMessage, deleteMessage,
+    sendMessage, editMessage, deleteMessage,
   } = useMessages();
 
   useEffect(() => {
@@ -16,6 +16,10 @@ export default function MessagesPage() {
 
   const handleSend = async (values: { receiverId: string; content: string }) => {
     await sendMessage(values);
+  };
+
+  const handleEdit = async (id: string, values: { receiverId: string; content: string }) => {
+    await editMessage(id, values);
   };
 
   const handleDelete = async (id: string) => {
@@ -34,6 +38,7 @@ export default function MessagesPage() {
         messages={messages}
         loading={loading}
         onSend={handleSend}
+        onEdit={handleEdit}
         onDelete={handleDelete}
       />
     </div>

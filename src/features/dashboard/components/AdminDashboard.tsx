@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/core/components/ui/card";
 import { Calendar } from "@/core/components/ui/calendar";
 import { Users, GraduationCap, BookOpen, ClipboardList, TrendingUp, TrendingDown, UserCheck, Wallet } from "lucide-react";
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 
 interface DashboardStats {
   totalStudents: number;
@@ -165,192 +165,225 @@ export function AdminDashboard() {
         ))}
       </div>
 
-      {/* Events & Announcements */}
-      <Card className="hover:shadow-lg transition-shadow">
-        <CardHeader>
-          <CardTitle className="text-lg">Events & Announcements</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-6">
-            {/* Calendar */}
-            <div>
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={setSelectedDate}
-                className="rounded-lg border"
-                modifiers={{
-                  hasEvent: events.map(e => {
-                    const d = new Date(e.eventDate);
-                    d.setHours(0, 0, 0, 0);
-                    return d;
-                  })
-                }}
-                modifiersStyles={{
-                  hasEvent: { 
-                    fontWeight: 'bold', 
-                    textDecoration: 'underline',
-                    color: '#3b82f6'
-                  }
-                }}
-              />
-            </div>
+      {/* Top Row: Gender Distribution + Events */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Student Gender Distribution - Smaller Card */}
+        <Card className="lg:col-span-1 hover:shadow-lg transition-shadow">
+          <CardHeader>
+            <CardTitle className="text-base">Student Gender Distribution</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {genderData[0].value === 0 && genderData[1].value === 0 ? (
+              <div className="h-[250px] flex items-center justify-center text-muted-foreground">
+                <p className="text-sm">No data</p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie
+                    data={genderData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    label={({ name, percent }) => `${name}: ${(percent! * 100).toFixed(0)}%`}
+                  >
+                    {genderData.map((entry, index) => (
+                      <Cell key={index} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
 
-            {/* Events List */}
-            <div className="space-y-4">
-              {/* Today's Events */}
-              {selectedDate && (() => {
-                const todayEvents = events.filter(e => {
-                  const eventDate = new Date(e.eventDate);
-                  eventDate.setHours(0, 0, 0, 0);
-                  const selected = new Date(selectedDate);
-                  selected.setHours(0, 0, 0, 0);
-                  return eventDate.getTime() === selected.getTime();
-                });
-                
-                if (todayEvents.length > 0) {
-                  return (
-                    <div>
-                      <h3 className="text-lg font-semibold text-black mb-2">
-                        {selectedDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                      </h3>
-                      <div className="space-y-2">
-                        {todayEvents.map((e) => (
-                          <div 
-                            key={e.id}
-                            className="p-3 bg-blue-50 rounded-lg border border-blue-200 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
-                          >
-                            <p className="text-sm font-medium text-black">{e.title}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                }
-                return null;
-              })()}
-
-              {/* Upcoming Events */}
+        {/* Events & Announcements */}
+        <Card className="lg:col-span-2 hover:shadow-lg transition-shadow">
+          <CardHeader>
+            <CardTitle className="text-base">Events & Announcements</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Calendar */}
               <div>
-                <h3 className="text-lg font-semibold text-black mb-2">Upcoming</h3>
-                <div className="space-y-2">
-                  {events.slice(0, 3).map((e) => {
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  className="rounded-lg border"
+                  modifiers={{
+                    hasEvent: events.map(e => {
+                      const d = new Date(e.eventDate);
+                      d.setHours(0, 0, 0, 0);
+                      return d;
+                    })
+                  }}
+                  modifiersStyles={{
+                    hasEvent: { 
+                      fontWeight: 'bold', 
+                      textDecoration: 'underline',
+                      color: '#3b82f6'
+                    }
+                  }}
+                />
+              </div>
+
+              {/* Events List */}
+              <div className="space-y-4">
+                {/* Today's Events */}
+                {selectedDate && (() => {
+                  const todayEvents = events.filter(e => {
                     const eventDate = new Date(e.eventDate);
-                    const eventIcon = e.title.toLowerCase().includes("sport") ? "🎯" : 
-                                    e.title.toLowerCase().includes("football") ? "🔔" :
-                                    e.title.toLowerCase().includes("exam") ? "📝" :
-                                    e.title.toLowerCase().includes("meeting") ? "👥" : "📅";
-                    
+                    eventDate.setHours(0, 0, 0, 0);
+                    const selected = new Date(selectedDate);
+                    selected.setHours(0, 0, 0, 0);
+                    return eventDate.getTime() === selected.getTime();
+                  });
+                  
+                  if (todayEvents.length > 0) {
                     return (
-                      <div 
-                        key={e.id}
-                        className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
-                      >
-                        <div className="flex items-center gap-3">
-                          <span className="text-xl">{eventIcon}</span>
-                          <span className="text-sm font-medium text-black">{e.title}</span>
+                      <div>
+                        <h3 className="text-sm font-semibold text-black mb-2">
+                          {selectedDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                        </h3>
+                        <div className="space-y-2">
+                          {todayEvents.map((e) => (
+                            <div 
+                              key={e.id}
+                              className="p-2 bg-blue-50 rounded-lg border border-blue-200 cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
+                            >
+                              <p className="text-xs font-medium text-black">{e.title}</p>
+                            </div>
+                          ))}
                         </div>
-                        <span className="text-sm font-semibold text-green-600">
-                          {eventDate.getDate()}/{eventDate.getMonth() + 1}
-                        </span>
                       </div>
                     );
-                  })}
-                  {events.length === 0 && (
-                    <p className="text-xs text-muted-foreground text-center py-4">No upcoming events</p>
-                  )}
+                  }
+                  return null;
+                })()}
+
+                {/* Upcoming Events */}
+                <div>
+                  <h3 className="text-sm font-semibold text-black mb-2">Upcoming</h3>
+                  <div className="space-y-2">
+                    {events.slice(0, 3).map((e) => {
+                      const eventDate = new Date(e.eventDate);
+                      const eventIcon = e.title.toLowerCase().includes("sport") ? "🎯" : 
+                                      e.title.toLowerCase().includes("football") ? "🔔" :
+                                      e.title.toLowerCase().includes("exam") ? "📝" :
+                                      e.title.toLowerCase().includes("meeting") ? "👥" : "📅";
+                      
+                      return (
+                        <div 
+                          key={e.id}
+                          className="flex items-center justify-between p-2 bg-muted/50 rounded-lg border cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-md active:scale-95"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="text-base">{eventIcon}</span>
+                            <span className="text-xs font-medium text-black">{e.title}</span>
+                          </div>
+                          <span className="text-xs font-semibold text-green-600">
+                            {eventDate.getDate()}/{eventDate.getMonth() + 1}
+                          </span>
+                        </div>
+                      );
+                    })}
+                    {events.length === 0 && (
+                      <p className="text-xs text-muted-foreground text-center py-4">No upcoming events</p>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
 
-      {/* Attendance Section */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Attendance Rate Card */}
+      {/* Bottom Row: Attendance Rate + Weekly Attendance */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Attendance Rate Card - Smaller */}
         <Card className="lg:col-span-1 hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-lg">Attendance Rate</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm">Attendance Rate</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-center">
-              <div className="relative w-40 h-40">
+              <div className="relative w-32 h-32">
                 <svg className="w-full h-full transform -rotate-90">
-                  <circle cx="80" cy="80" r="70" stroke="#e5e7eb" strokeWidth="12" fill="none" />
+                  <circle cx="64" cy="64" r="56" stroke="#e5e7eb" strokeWidth="10" fill="none" />
                   <circle
-                    cx="80" cy="80" r="70" stroke="#10b981" strokeWidth="12" fill="none"
-                    strokeDasharray={`${2 * Math.PI * 70}`}
-                    strokeDashoffset={`${2 * Math.PI * 70 * (1 - stats.attendanceRate / 100)}`}
+                    cx="64" cy="64" r="56" stroke="#10b981" strokeWidth="10" fill="none"
+                    strokeDasharray={`${2 * Math.PI * 56}`}
+                    strokeDashoffset={`${2 * Math.PI * 56 * (1 - stats.attendanceRate / 100)}`}
                     strokeLinecap="round"
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-3xl font-bold text-black">{stats.attendanceRate}%</span>
+                  <span className="text-2xl font-bold text-black">{stats.attendanceRate}%</span>
                   <span className="text-xs text-muted-foreground">This Week</span>
                 </div>
               </div>
             </div>
-            <div className="flex items-center justify-center gap-2 mt-4">
+            <div className="flex items-center justify-center gap-2 mt-3">
               {stats.attendanceTrend === "up" ? (
                 <>
-                  <TrendingUp className="h-4 w-4 text-green-600" />
-                  <span className="text-sm text-green-600 font-medium">Trending up</span>
+                  <TrendingUp className="h-3 w-3 text-green-600" />
+                  <span className="text-xs text-green-600 font-medium">Trending up</span>
                 </>
               ) : (
                 <>
-                  <TrendingDown className="h-4 w-4 text-red-600" />
-                  <span className="text-sm text-red-600 font-medium">Trending down</span>
+                  <TrendingDown className="h-3 w-3 text-red-600" />
+                  <span className="text-xs text-red-600 font-medium">Trending down</span>
                 </>
               )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Weekly Attendance Chart */}
+        {/* Weekly Attendance Chart - Bar Chart */}
         <Card className="lg:col-span-2 hover:shadow-lg transition-shadow">
-          <CardHeader>
-            <CardTitle className="text-lg">Weekly Attendance</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm">Weekly Attendance</CardTitle>
           </CardHeader>
           <CardContent>
-            <AttendanceBarChart data={attendanceData} />
+            {attendanceData.length === 0 ? (
+              <div className="flex items-center justify-center h-[200px] text-muted-foreground text-sm">
+                No attendance data available
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={attendanceData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis 
+                    dataKey="date" 
+                    tick={{ fontSize: 11 }}
+                    stroke="#888"
+                  />
+                  <YAxis 
+                    tick={{ fontSize: 11 }}
+                    stroke="#888"
+                  />
+                  <Tooltip 
+                    contentStyle={{ fontSize: 12 }}
+                    cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }}
+                  />
+                  <Legend 
+                    wrapperStyle={{ fontSize: 11 }}
+                    iconSize={10}
+                  />
+                  <Bar dataKey="present" fill="#10b981" name="Present" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="late" fill="#f59e0b" name="Late" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="absent" fill="#ef4444" name="Absent" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
       </div>
-
-      {/* Gender Distribution */}
-      <Card className="hover:shadow-lg transition-shadow">
-        <CardHeader>
-          <CardTitle className="text-lg">Student Gender Distribution</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {genderData[0].value === 0 && genderData[1].value === 0 ? (
-            <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-              <p>No student data available</p>
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={genderData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={100}
-                  label={({ name, percent }) => `${name}: ${(percent! * 100).toFixed(0)}%`}
-                >
-                  {genderData.map((entry, index) => (
-                    <Cell key={index} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          )}
-        </CardContent>
-      </Card>
 
       {/* Quick Actions */}
       <Card className="hover:shadow-lg transition-shadow">
@@ -378,76 +411,6 @@ export function AdminDashboard() {
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
-}
-
-function AttendanceBarChart({ data }: { data: AttendanceData[] }) {
-  if (!data || data.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-64 text-muted-foreground">
-        No attendance data available
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      {data.map((day, index) => {
-        const total = day.present + day.absent + day.late;
-        const presentPercent = total > 0 ? (day.present / total) * 100 : 0;
-        const absentPercent = total > 0 ? (day.absent / total) * 100 : 0;
-        const latePercent = total > 0 ? (day.late / total) * 100 : 0;
-
-        return (
-          <div key={index} className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="font-medium text-black">{day.date}</span>
-              <span className="text-muted-foreground">{total} students</span>
-            </div>
-            <div className="flex h-8 w-full overflow-hidden rounded-full bg-gray-100">
-              {day.present > 0 && (
-                <div
-                  className="bg-green-500 flex items-center justify-center text-xs text-white font-medium"
-                  style={{ width: `${presentPercent}%` }}
-                >
-                  {presentPercent > 10 && `${day.present}`}
-                </div>
-              )}
-              {day.late > 0 && (
-                <div
-                  className="bg-yellow-500 flex items-center justify-center text-xs text-white font-medium"
-                  style={{ width: `${latePercent}%` }}
-                >
-                  {latePercent > 10 && `${day.late}`}
-                </div>
-              )}
-              {day.absent > 0 && (
-                <div
-                  className="bg-red-500 flex items-center justify-center text-xs text-white font-medium"
-                  style={{ width: `${absentPercent}%` }}
-                >
-                  {absentPercent > 10 && `${day.absent}`}
-                </div>
-              )}
-            </div>
-          </div>
-        );
-      })}
-      <div className="flex items-center justify-center gap-6 pt-4 border-t">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-green-500" />
-          <span className="text-xs text-muted-foreground">Present</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-yellow-500" />
-          <span className="text-xs text-muted-foreground">Late</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-red-500" />
-          <span className="text-xs text-muted-foreground">Absent</span>
-        </div>
-      </div>
     </div>
   );
 }

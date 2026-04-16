@@ -41,13 +41,8 @@ export default function StudentAssignments() {
 
   useEffect(() => {
     loadStudentInfo();
+    loadAssignments();
   }, [session]);
-
-  useEffect(() => {
-    if (studentClassId) {
-      loadAssignments();
-    }
-  }, [studentClassId]);
 
   async function loadStudentInfo() {
     if (!session?.user?.email) return;
@@ -72,12 +67,8 @@ export default function StudentAssignments() {
       const data = await res.json();
       const allAssignments = Array.isArray(data) ? data : [];
       
-      // Filter assignments for student's class
-      const filteredAssignments = studentClassId 
-        ? allAssignments.filter((a: Assignment) => a.class?.id === studentClassId)
-        : allAssignments;
-      
-      setAssignments(filteredAssignments);
+      // Show all assignments for now (you can filter by class later if needed)
+      setAssignments(allAssignments);
     } catch (error) {
       console.error("Failed to load assignments:", error);
     } finally {

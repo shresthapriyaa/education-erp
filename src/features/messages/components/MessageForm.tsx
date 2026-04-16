@@ -34,12 +34,14 @@ interface MessageFormProps {
   onSubmit: (values: FormValues) => void;
   loading?: boolean;
   onCancel?: () => void;
+  initialData?: { receiverId: string; content: string };
 }
 
 export function MessageForm({
   onSubmit,
   loading = false,
   onCancel,
+  initialData,
 }: MessageFormProps) {
   const [users, setUsers] = useState<UserOption[]>([]);
 
@@ -52,7 +54,7 @@ export function MessageForm({
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: {
+    defaultValues: initialData || {
       receiverId: "",
       content: "",
     },
@@ -105,7 +107,7 @@ export function MessageForm({
           )}
           <Button type="button" onClick={handleSubmit} disabled={loading}>
             {loading ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : <Send className="mr-2 h-4 w-4" />}
-            Send
+            {initialData ? "Update" : "Send"}
           </Button>
         </div>
       </form>
