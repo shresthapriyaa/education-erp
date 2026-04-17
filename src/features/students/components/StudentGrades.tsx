@@ -17,18 +17,25 @@ interface Grade {
   createdAt: string;
 }
 
-export default function StudentGrades() {
+interface StudentGradesProps {
+  studentEmail?: string; // Optional: if provided, fetch for this student; otherwise use session
+}
+
+export default function StudentGrades({ studentEmail }: StudentGradesProps = {}) {
   const [grades, setGrades] = useState<Grade[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadGrades();
-  }, []);
+  }, [studentEmail]);
 
   async function loadGrades() {
     setLoading(true);
     try {
-      const res = await fetch("/api/grades");
+      const url = studentEmail 
+        ? `/api/grades?studentEmail=${studentEmail}`
+        : "/api/grades";
+      const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         setGrades(Array.isArray(data) ? data : []);

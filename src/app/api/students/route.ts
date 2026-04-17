@@ -315,6 +315,7 @@ export async function GET(req: NextRequest) {
     const sex        = searchParams.get("sex")        || "";
     const bloodGroup = searchParams.get("bloodGroup") || "";
     const classId    = searchParams.get("classId")    || "";
+    const parentId   = searchParams.get("parentId")   || "";
     const pageSize   = searchParams.get("pageSize")   ? parseInt(searchParams.get("pageSize")!) : undefined;
 
     const students = await prisma.student.findMany({
@@ -329,6 +330,7 @@ export async function GET(req: NextRequest) {
         ...(sex        && sex        !== "all" && { sex: sex as any }),
         ...(bloodGroup && bloodGroup !== "all" && { bloodGroup }),
         ...(classId    && { classId }),
+        ...(parentId   && { parentId }),
       },
       ...(pageSize ? { take: pageSize } : {}),
       select: {

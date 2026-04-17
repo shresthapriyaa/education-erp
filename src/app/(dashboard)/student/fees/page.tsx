@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/core/components/ui/card";
 import { Wallet, CheckCircle, XCircle, Clock, DollarSign } from "lucide-react";
 import { Badge } from "@/core/components/ui/badge";
+import { ScrollArea } from "@/core/components/ui/scroll-area";
 
 interface Fee {
   id: string;

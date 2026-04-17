@@ -13,7 +13,11 @@ interface AttendanceRecord {
   status: "PRESENT" | "ABSENT" | "LATE";
 }
 
-export default function StudentAttendance() {
+interface StudentAttendanceProps {
+  studentEmail?: string; // Optional: if provided, fetch for this student; otherwise use session
+}
+
+export default function StudentAttendance({ studentEmail }: StudentAttendanceProps = {}) {
   const { data: session } = useSession();
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
@@ -25,14 +29,18 @@ export default function StudentAttendance() {
     rate: 0,
   });
 
+  const emailToUse = studentEmail || session?.user?.email;
+
   useEffect(() => {
-    loadAttendance();
-  }, []);
+    if (emailToUse) {
+      loadAttendance();
+    }
+  }, [emailToUse]);
 
   async function loadAttendance() {
     setLoading(true);
     try {
-      // Mock data - replace with actual API call
+      // Mock data - replace with actual API call using emailToUse
       const mockRecords: AttendanceRecord[] = [
         { id: "1", date: "2026-04-15", status: "PRESENT" },
         { id: "2", date: "2026-04-14", status: "PRESENT" },

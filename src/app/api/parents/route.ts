@@ -6,9 +6,12 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search") || "";
+    const email = searchParams.get("email") || "";
 
     const parents = await prisma.parent.findMany({
-      where: search ? {
+      where: email ? {
+        email: { equals: email, mode: "insensitive" },
+      } : search ? {
         OR: [
           { username: { contains: search, mode: "insensitive" } },
           { email: { contains: search, mode: "insensitive" } },
