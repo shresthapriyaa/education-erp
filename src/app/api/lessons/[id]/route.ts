@@ -128,9 +128,13 @@ import prisma from "@/core/lib/prisma";
 
 const lessonInclude = {
   materials: true,
-  class:     { select: { id: true, name: true } },
-  subject:   { select: { id: true, name: true } },
-  teacher:   { select: { id: true, username: true } },
+  classSubject: {
+    include: {
+      class: { select: { id: true, name: true, grade: true, section: true } },
+      subject: { select: { id: true, name: true, code: true } },
+      teacher: { select: { id: true, username: true, email: true } },
+    }
+  },
 };
 
 export async function GET(
@@ -166,13 +170,11 @@ export async function PUT(
     const lesson = await prisma.lesson.update({
       where: { id },
       data: {
-        title:       body.title?.trim(),
-        content:     body.content?.trim(),
-        isPublished: body.isPublished ?? existing.isPublished,
-        classId:     body.classId    ?? existing.classId,
-        subjectId:   body.subjectId  ?? existing.subjectId,
-        teacherId:   body.teacherId  ?? existing.teacherId,
-        materials:   body.materials?.length
+        title:           body.title?.trim(),
+        content:         body.content?.trim(),
+        isPublished:     body.isPublished ?? existing.isPublished,
+        classSubjectId:  body.classSubjectId ?? existing.classSubjectId,
+        materials:       body.materials?.length
           ? {
               create: body.materials.map((m: any) => ({
                 title: m.title.trim(),
@@ -204,12 +206,10 @@ export async function PATCH(
     if (!existing) return NextResponse.json({ error: "Lesson not found" }, { status: 404 });
 
     const data: any = {};
-    if (body.title       !== undefined) data.title       = body.title.trim();
-    if (body.content     !== undefined) data.content     = body.content.trim();
-    if (body.isPublished !== undefined) data.isPublished = body.isPublished;
-    if (body.classId     !== undefined) data.classId     = body.classId;
-    if (body.subjectId   !== undefined) data.subjectId   = body.subjectId;
-    if (body.teacherId   !== undefined) data.teacherId   = body.teacherId;
+    if (body.title           !== undefined) data.title           = body.title.trim();
+    if (body.content         !== undefined) data.content         = body.content.trim();
+    if (body.isPublished     !== undefined) data.isPublished     = body.isPublished;
+    if (body.classSubjectId  !== undefined) data.classSubjectId  = body.classSubjectId;
 
     if (body.materials !== undefined) {
       await prisma.material.deleteMany({ where: { lessonId: id } });

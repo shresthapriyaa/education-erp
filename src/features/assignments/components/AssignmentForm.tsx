@@ -15,6 +15,7 @@ import { Input } from "@/core/components/ui/input";
 import { RichTextEditor } from "@/core/components/ui/rich-text-editor";
 import { Loader2, Save, PlusCircle, Trash2, UploadCloud, FileText, File } from "lucide-react";
 import { Assignment } from "../types/assignment.types";
+import { ClassSubjectSelector } from "@/core/components/ClassSubjectSelector";
 
 const materialSchema = z.object({
   title: z.string().min(1, "Title required"),
@@ -23,14 +24,12 @@ const materialSchema = z.object({
 });
 
 const schema = z.object({
-  title:       z.string().min(2, "Minimum 2 characters"),
-  description: z.string().min(5, "Minimum 5 characters"),
-  dueDate:     z.string().min(1, "Please select a due date"),
-  totalMarks:  z.coerce.number().min(1, "Total marks required"),
-  classId:     z.string().min(1, "Please select a class"),
-  subjectId:   z.string().min(1, "Please select a subject"),
-  teacherId:   z.string().min(1, "Please select a teacher"),
-  materials:   z.array(materialSchema).optional(),
+  title:           z.string().min(2, "Minimum 2 characters"),
+  description:     z.string().min(5, "Minimum 5 characters"),
+  dueDate:         z.string().min(1, "Please select a due date"),
+  totalMarks:      z.coerce.number().min(1, "Total marks required"),
+  classSubjectId:  z.string().min(1, "Please select a class and subject"),
+  materials:       z.array(materialSchema).optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -145,10 +144,6 @@ function MaterialRow({ index, control, onRemove, setValue }: MaterialRowProps) {
   );
 }
 
-interface ClassOption   { id: string; name: string }
-interface SubjectOption { id: string; name: string }
-interface TeacherOption { id: string; username: string }
-
 interface AssignmentFormProps {
   initialValues?: Partial<Assignment>;
   onSubmit: (values: AssignmentPayload, mode: SubmitMode) => void;
@@ -160,42 +155,56 @@ interface AssignmentFormProps {
 export function AssignmentForm({
   initialValues, onSubmit, loading = false, isEdit = false, onCancel,
 }: AssignmentFormProps) {
-  const [classes,  setClasses]  = useState<ClassOption[]>([]);
-  const [subjects, setSubjects] = useState<SubjectOption[]>([]);
-  const [teachers, setTeachers] = useState<TeacherOption[]>([]);
+  const [selectedClass, setSelectedClass] = useState("");
+  const [selectedSubject, setSelectedSubject] = useState("");
+  const [classSubjectId, setClassSubjectId] = useState<string | null>(null);
 
+  // Load initial class/subject from classSubjectId if editing
   useEffect(() => {
-    fetch("/api/classes").then(r => r.json()).then(d => setClasses(Array.isArray(d) ? d : (d.classes ?? []))).catch(() => setClasses([]));
-    fetch("/api/subjects").then(r => r.json()).then(d => setSubjects(Array.isArray(d) ? d : (d.subjects ?? []))).catch(() => setSubjects([]));
-    fetch("/api/teachers").then(r => r.json()).then(d => setTeachers(Array.isArray(d) ? d : (d.teachers ?? []))).catch(() => setTeachers([]));
-  }, []);
+    if (initialValues?.classSubjectId) {
+      // In edit mode, we need to fetch the class and subject from the classSubjectId
+      fetch(`/api/class-subject/${initialValues.classSubjectId}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.class && data.subject) {
+            setSelectedClass(data.class.id);
+            setSelectedSubject(data.subject.id);
+            setClassSubjectId(data.id);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [initialValues?.classSubjectId]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema) as any,
     defaultValues: {
-      title:       initialValues?.title       ?? "",
-      description: initialValues?.description ?? "",
-      dueDate:     initialValues?.dueDate ? new Date(initialValues.dueDate).toISOString().split("T")[0] : "",
-      totalMarks:  initialValues?.totalMarks  ?? 100,
-      classId:     initialValues?.classId     ?? "",
-      subjectId:   initialValues?.subjectId   ?? "",
-      teacherId:   initialValues?.teacherId   ?? "",
-      materials:   initialValues?.materials?.map(m => ({ title: m.title, type: m.type, url: m.url })) ?? [],
+      title:           initialValues?.title       ?? "",
+      description:     initialValues?.description ?? "",
+      dueDate:         initialValues?.dueDate ? new Date(initialValues.dueDate).toISOString().split("T")[0] : "",
+      totalMarks:      initialValues?.totalMarks  ?? 100,
+      classSubjectId:  initialValues?.classSubjectId ?? "",
+      materials:       initialValues?.materials?.map(m => ({ title: m.title, type: m.type, url: m.url })) ?? [],
     },
   });
 
   useEffect(() => {
     form.reset({
-      title:       initialValues?.title       ?? "",
-      description: initialValues?.description ?? "",
-      dueDate:     initialValues?.dueDate ? new Date(initialValues.dueDate).toISOString().split("T")[0] : "",
-      totalMarks:  initialValues?.totalMarks  ?? 100,
-      classId:     initialValues?.classId     ?? "",
-      subjectId:   initialValues?.subjectId   ?? "",
-      teacherId:   initialValues?.teacherId   ?? "",
-      materials:   initialValues?.materials?.map(m => ({ title: m.title, type: m.type, url: m.url })) ?? [],
+      title:           initialValues?.title       ?? "",
+      description:     initialValues?.description ?? "",
+      dueDate:         initialValues?.dueDate ? new Date(initialValues.dueDate).toISOString().split("T")[0] : "",
+      totalMarks:      initialValues?.totalMarks  ?? 100,
+      classSubjectId:  initialValues?.classSubjectId ?? "",
+      materials:       initialValues?.materials?.map(m => ({ title: m.title, type: m.type, url: m.url })) ?? [],
     });
   }, [initialValues]);
+
+  // Update form when classSubjectId changes
+  useEffect(() => {
+    if (classSubjectId) {
+      form.setValue("classSubjectId", classSubjectId, { shouldValidate: true });
+    }
+  }, [classSubjectId, form]);
 
   const { fields, append, remove } = useFieldArray({ control: form.control, name: "materials" });
 
@@ -245,45 +254,28 @@ export function AssignmentForm({
           )} />
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <FormField control={form.control} name="classId" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Class</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl><SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger></FormControl>
-                <SelectContent position="popper" className="z-[9999]">
-                  {classes.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )} />
-
-          <FormField control={form.control} name="subjectId" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Subject</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl><SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger></FormControl>
-                <SelectContent position="popper" className="z-[9999]">
-                  {subjects.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )} />
-
-          <FormField control={form.control} name="teacherId" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Teacher</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl><SelectTrigger><SelectValue placeholder="Select teacher" /></SelectTrigger></FormControl>
-                <SelectContent position="popper" className="z-[9999]">
-                  {teachers.map(t => <SelectItem key={t.id} value={t.id}>{t.username}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )} />
+        {/* Class and Subject Selection */}
+        <div className="space-y-4">
+          <FormField 
+            control={form.control} 
+            name="classSubjectId" 
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Class & Subject Assignment</FormLabel>
+                <FormControl>
+                  <ClassSubjectSelector
+                    selectedClass={selectedClass}
+                    selectedSubject={selectedSubject}
+                    onClassChange={setSelectedClass}
+                    onSubjectChange={setSelectedSubject}
+                    onClassSubjectChange={setClassSubjectId}
+                    required
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
         <div className="space-y-3">

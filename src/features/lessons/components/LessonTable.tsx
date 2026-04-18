@@ -763,9 +763,9 @@ export function LessonTable({ lessons, onAdd, onEdit, onDelete, loading = false 
               filtered.map((lesson) => (
                 <TableRow key={lesson.id}>
                   <TableCell className="font-medium text-black">{lesson.title}</TableCell>
-                  <TableCell className="text-sm text-black">{lesson.class?.name ?? "—"}</TableCell>
-                  <TableCell className="text-sm text-black">{lesson.subject?.name ?? "—"}</TableCell>
-                  <TableCell className="text-sm text-black">{lesson.teacher?.username ?? "—"}</TableCell>
+                  <TableCell className="text-sm text-black">{lesson.classSubject?.class?.name ?? "—"}</TableCell>
+                  <TableCell className="text-sm text-black">{lesson.classSubject?.subject?.name ?? "—"}</TableCell>
+                  <TableCell className="text-sm text-black">{lesson.classSubject?.teacher?.username ?? "—"}</TableCell>
                   <TableCell className="max-w-[200px]"><MaterialSummary materials={lesson.materials} /></TableCell>
                   <TableCell>
                     {lesson.isPublished
@@ -806,7 +806,7 @@ export function LessonTable({ lessons, onAdd, onEdit, onDelete, loading = false 
                 <div>
                   <p className="font-semibold text-sm text-black">{lesson.title}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    {lesson.class?.name ?? "—"} · {lesson.subject?.name ?? "—"} · {lesson.teacher?.username ?? "—"}
+                    {lesson.classSubject?.class?.name ?? "—"} · {lesson.classSubject?.subject?.name ?? "—"} · {lesson.classSubject?.teacher?.username ?? "—"}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{lesson.content}</p>
                 </div>

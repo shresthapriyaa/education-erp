@@ -1,67 +1,106 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/core/lib/prisma";
 
-type Params = { params: Promise<{ id: string }> };
-
-// GET /api/classes/[id]/subjects - Get all subjects for a class
-export async function GET(_req: NextRequest, { params }: Params) {
-  const { id } = await params;
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
+    const { id: classId } = await params;
+
     const classSubjects = await prisma.classSubject.findMany({
-      where: { classId: id },
+      where: { classId },
       include: {
-        subject: { select: { id: true, name: true, code: true } },
-        teacher: { select: { id: true, username: true, email: true } },
-      },
-      orderBy: { subject: { name: "asc" } },
+        subject: {
+          select: {
+            id: true,
+            name: true,
+            code: true
+          }
+        },
+        teacher: {
+          select: {
+            id: true,
+            username: true,
+            email: true
+          }
+        }
+      }
     });
 
     return NextResponse.json(classSubjects);
   } catch (error: any) {
-    console.error("[CLASS_SUBJECTS_GET]", error.message);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    console.error("[CLASS_SUBJECTS_GET]", error);
+    return NextResponse.json(
+      { error: "Failed to fetch class subjects", details: error.message },
+      { status: 500 }
+    );
   }
 }
 
-// POST /api/classes/[id]/subjects - Add subject to class
-export async function POST(req: NextRequest, { params }: Params) {
-  const { id } = await params;
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
+    const { id: classId } = await params;
     const body = await req.json();
 
+    console.log('[CLASS_SUBJECTS_POST] classId:', classId);
+    console.log('[CLASS_SUBJECTS_POST] body:', body);
+
+    if (!classId) {
+      return NextResponse.json(
+        { error: "classId is required" },
+        { status: 400 }
+      );
+    }
+
     if (!body.subjectId) {
-      return NextResponse.json({ error: "Missing: subjectId" }, { status: 400 });
+      return NextResponse.json(
+        { error: "subjectId is required" },
+        { status: 400 }
+      );
     }
 
-    // Check if already exists
-    const existing = await prisma.classSubject.findUnique({
-      where: {
-        classId_subjectId: {
-          classId: id,
-          subjectId: body.subjectId,
-        },
-      },
-    });
-
-    if (existing) {
-      return NextResponse.json({ error: "Subject already added to this class" }, { status: 409 });
-    }
-
+    // Create ClassSubject record directly (let database handle duplicates)
     const classSubject = await prisma.classSubject.create({
       data: {
-        classId: id,
+        classId,
         subjectId: body.subjectId,
-        teacherId: body.teacherId || null,
+        teacherId: body.teacherId || null
       },
       include: {
-        subject: { select: { id: true, name: true, code: true } },
-        teacher: { select: { id: true, username: true, email: true } },
-      },
+        subject: {
+          select: {
+            id: true,
+            name: true,
+            code: true
+          }
+        },
+        teacher: {
+          select: {
+            id: true,
+            username: true,
+            email: true
+          }
+        }
+      }
     });
 
+    console.log('[CLASS_SUBJECTS_POST] Created:', classSubject);
     return NextResponse.json(classSubject, { status: 201 });
   } catch (error: any) {
-    console.error("[CLASS_SUBJECTS_POST]", error.message);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("[CLASS_SUBJECTS_POST] Error:", error);
+    if (error.code === "P2002") {
+      return NextResponse.json(
+        { error: "This subject is already assigned to this class" },
+        { status: 409 }
+      );
+    }
+    return NextResponse.json(
+      { error: "Failed to assign subject to class", details: error.message },
+      { status: 500 }
+    );
   }
 }

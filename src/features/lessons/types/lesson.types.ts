@@ -34,13 +34,21 @@ export interface Material {
 }
 
 export interface Lesson {
-  id:          string;
-  title:       string;
-  content:     string;
-  isPublished: boolean;
-  classId:     string;
-  subjectId:   string;
-  teacherId:   string;
+  id:             string;
+  title:          string;
+  content:        string;
+  isPublished:    boolean;
+  classSubjectId: string;
+  classSubject?:  {
+    id: string;
+    class: { id: string; name: string; grade: string; section: string };
+    subject: { id: string; name: string; code?: string };
+    teacher: { id: string; username: string; email: string } | null;
+  };
+  // Legacy fields for backward compatibility
+  classId?:    string;
+  subjectId?:  string;
+  teacherId?:  string;
   class?:      { id: string; name: string };
   subject?:    { id: string; name: string };
   teacher?:    { id: string; username: string };

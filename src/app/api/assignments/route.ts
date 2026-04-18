@@ -14,9 +14,13 @@ export async function GET(req: NextRequest) {
         ],
       } : undefined,
       include: {
-        class:     { select: { name: true } },
-        subject:   { select: { name: true } },
-        teacher:   { select: { username: true } },
+        classSubject: {
+          include: {
+            class: { select: { name: true, grade: true, section: true } },
+            subject: { select: { name: true, code: true } },
+            teacher: { select: { username: true, email: true } },
+          }
+        },
         materials: true,
       },
       orderBy: { dueDate: "asc" },
@@ -32,22 +36,37 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    if (!body.title || !body.description || !body.dueDate || !body.classId || !body.subjectId || !body.teacherId) {
+    if (!body.title || !body.description || !body.dueDate || !body.classSubjectId) {
       return NextResponse.json(
-        { error: "Missing: title, description, dueDate, classId, subjectId, teacherId" },
+        { error: "Missing: title, description, dueDate, classSubjectId" },
+        { status: 400 }
+      );
+    }
+
+    // Verify that the classSubject exists
+    const classSubject = await prisma.classSubject.findUnique({
+      where: { id: body.classSubjectId },
+      include: {
+        class: { select: { name: true } },
+        subject: { select: { name: true } },
+        teacher: { select: { username: true } },
+      }
+    });
+
+    if (!classSubject) {
+      return NextResponse.json(
+        { error: "Invalid class-subject assignment" },
         { status: 400 }
       );
     }
 
     const assignment = await prisma.assignment.create({
       data: {
-        title:       body.title.trim(),
-        description: body.description.trim(),
-        dueDate:     new Date(body.dueDate),
-        totalMarks:  body.totalMarks ? parseFloat(body.totalMarks) : 100,
-        classId:     body.classId,
-        subjectId:   body.subjectId,
-        teacherId:   body.teacherId,
+        title:           body.title.trim(),
+        description:     body.description.trim(),
+        dueDate:         new Date(body.dueDate),
+        totalMarks:      body.totalMarks ? parseFloat(body.totalMarks) : 100,
+        classSubjectId:  body.classSubjectId,
         materials: body.materials?.length ? {
           create: body.materials.map((m: any) => ({
             title: m.title,
@@ -57,9 +76,13 @@ export async function POST(req: NextRequest) {
         } : undefined,
       },
       include: {
-        class:     { select: { name: true } },
-        subject:   { select: { name: true } },
-        teacher:   { select: { username: true } },
+        classSubject: {
+          include: {
+            class: { select: { name: true, grade: true, section: true } },
+            subject: { select: { name: true, code: true } },
+            teacher: { select: { username: true, email: true } },
+          }
+        },
         materials: true,
       },
     });

@@ -10,20 +10,26 @@ export async function GET(req: NextRequest) {
 
     const routines = await prisma.routine.findMany({
       where: {
-        ...(classId && { classId }),
-        ...(day     && { day: day as any }),
-        ...(search  && {
+        ...(classId && { 
+          classSubject: { classId } 
+        }),
+        ...(day && { day: day as any }),
+        ...(search && {
           OR: [
-            { subject: { name: { contains: search, mode: "insensitive" } } },
-            { class:   { name: { contains: search, mode: "insensitive" } } },
-            { room:    { contains: search, mode: "insensitive" } },
+            { classSubject: { subject: { name: { contains: search, mode: "insensitive" } } } },
+            { classSubject: { class: { name: { contains: search, mode: "insensitive" } } } },
+            { room: { contains: search, mode: "insensitive" } },
           ],
         }),
       },
       include: {
-        class:   { select: { id: true, name: true } },
-        subject: { select: { id: true, name: true } },
-        teacher: { select: { id: true, username: true } },
+        classSubject: {
+          include: {
+            class: { select: { id: true, name: true, grade: true, section: true } },
+            subject: { select: { id: true, name: true, code: true } },
+            teacher: { select: { id: true, username: true, email: true } },
+          }
+        },
       },
       orderBy: [{ day: "asc" }, { startTime: "asc" }],
     });
@@ -38,27 +44,41 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    if (!body.classId || !body.subjectId || !body.day || !body.startTime || !body.endTime) {
+    if (!body.classSubjectId || !body.day || !body.startTime || !body.endTime) {
       return NextResponse.json(
-        { error: "Missing: classId, subjectId, day, startTime, endTime" },
+        { error: "Missing: classSubjectId, day, startTime, endTime" },
+        { status: 400 }
+      );
+    }
+
+    // Verify that the classSubject exists
+    const classSubject = await prisma.classSubject.findUnique({
+      where: { id: body.classSubjectId }
+    });
+
+    if (!classSubject) {
+      return NextResponse.json(
+        { error: "Invalid class-subject assignment" },
         { status: 400 }
       );
     }
 
     const routine = await prisma.routine.create({
       data: {
-        classId:   body.classId,
-        subjectId: body.subjectId,
-        teacherId: body.teacherId || null,
-        day:       body.day,
-        startTime: body.startTime,
-        endTime:   body.endTime,
-        room:      body.room || null,
+        classSubjectId: body.classSubjectId,
+        day:            body.day,
+        startTime:      body.startTime,
+        endTime:        body.endTime,
+        room:           body.room || null,
       },
       include: {
-        class:   { select: { id: true, name: true } },
-        subject: { select: { id: true, name: true } },
-        teacher: { select: { id: true, username: true } },
+        classSubject: {
+          include: {
+            class: { select: { id: true, name: true, grade: true, section: true } },
+            subject: { select: { id: true, name: true, code: true } },
+            teacher: { select: { id: true, username: true, email: true } },
+          }
+        },
       },
     });
 
@@ -67,7 +87,7 @@ export async function POST(req: NextRequest) {
     console.error("[ROUTINES_POST]", error.message);
     if (error.code === "P2002") {
       return NextResponse.json(
-        { error: "A routine already exists for this class, day and time" },
+        { error: "A routine already exists for this class-subject, day and time" },
         { status: 409 }
       );
     }

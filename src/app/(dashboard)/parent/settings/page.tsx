@@ -79,7 +79,7 @@ export default function ParentSettingsPage() {
     setSaving(true);
     try {
       const res = await fetch(`/api/parents/${profile.id}`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           username: profile.username,
@@ -89,13 +89,17 @@ export default function ParentSettingsPage() {
       });
 
       if (!res.ok) {
-        throw new Error('Failed to update profile');
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to update profile');
       }
 
+      const updatedProfile = await res.json();
+      setProfile(updatedProfile);
+      
       alert("Profile updated successfully!");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to save profile:", error);
-      alert("Failed to update profile. Please try again.");
+      alert(error.message || "Failed to update profile. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -105,7 +109,7 @@ export default function ParentSettingsPage() {
     const file = event.target.files?.[0];
     if (!file || !profile) return;
 
-    console.log("Starting photo upload:", file.name, file.size, file.type);
+    console.log("[PHOTO_UPLOAD] Starting photo upload:", file.name, file.size, file.type);
 
     // Validate file size (2MB max)
     if (file.size > 2 * 1024 * 1024) {
@@ -125,56 +129,54 @@ export default function ParentSettingsPage() {
       formData.append('file', file);
       formData.append('folder', 'parents');
 
-      console.log("Uploading to /api/upload...");
+      console.log("[PHOTO_UPLOAD] Uploading to /api/upload...");
 
       const uploadRes = await fetch('/api/upload', {
         method: 'POST',
         body: formData,
       });
 
-      console.log("Upload response status:", uploadRes.status);
+      console.log("[PHOTO_UPLOAD] Upload response status:", uploadRes.status);
 
       if (!uploadRes.ok) {
         const error = await uploadRes.json();
-        console.error("Upload failed:", error);
+        console.error("[PHOTO_UPLOAD] Upload failed:", error);
         throw new Error(error.error || 'Failed to upload photo');
       }
 
       const uploadData = await uploadRes.json();
-      console.log("Upload successful:", uploadData);
+      console.log("[PHOTO_UPLOAD] Upload successful:", uploadData);
       const { url } = uploadData;
 
-      console.log("Updating parent profile with new photo URL:", url);
+      console.log("[PHOTO_UPLOAD] Updating parent profile with new photo URL:", url);
 
-      // Update profile with new photo URL
+      // Update profile with new photo URL using PATCH method
       const updateRes = await fetch(`/api/parents/${profile.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ img: url }),
       });
 
-      console.log("Profile update response status:", updateRes.status);
+      console.log("[PHOTO_UPLOAD] Profile update response status:", updateRes.status);
 
       if (!updateRes.ok) {
         const error = await updateRes.json();
-        console.error("Profile update failed:", error);
+        console.error("[PHOTO_UPLOAD] Profile update failed:", error);
         throw new Error('Failed to update profile photo');
       }
 
       const updatedProfile = await updateRes.json();
-      console.log("Profile updated successfully:", updatedProfile);
+      console.log("[PHOTO_UPLOAD] Profile updated successfully:", updatedProfile);
 
       // Update local state to show new photo immediately
       setProfile(prev => prev ? { ...prev, img: url } : null);
       
-      alert("Profile photo updated successfully! The page will reload.");
+      alert("Profile photo updated successfully!");
       
-      // Reload the page to refresh all instances of the photo
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      // Reload profile data to ensure consistency
+      await loadProfile();
     } catch (error: any) {
-      console.error("Failed to upload photo:", error);
+      console.error("[PHOTO_UPLOAD] Failed to upload photo:", error);
       alert(error.message || "Failed to upload photo. Please try again.");
     } finally {
       setUploadingPhoto(false);
@@ -184,13 +186,16 @@ export default function ParentSettingsPage() {
   async function handleSaveNotifications() {
     setSavingNotifications(true);
     try {
-      // In a real app, you would save to database
-      // For now, we'll just save to localStorage
+      // Save to localStorage
       localStorage.setItem('notificationPreferences', JSON.stringify(notifications));
+      
+      // In a real app, you would also save to database
+      // For now, we'll just save to localStorage
+      console.log("[NOTIFICATIONS] Saved preferences:", notifications);
       
       alert("Notification preferences saved successfully!");
     } catch (error) {
-      console.error("Failed to save notifications:", error);
+      console.error("[NOTIFICATIONS] Failed to save notifications:", error);
       alert("Failed to save notification preferences. Please try again.");
     } finally {
       setSavingNotifications(false);
@@ -218,8 +223,23 @@ export default function ParentSettingsPage() {
 
     setChangingPassword(true);
     try {
-      console.log("Changing password for parent:", profile.id);
+      console.log("[PASSWORD_CHANGE] Changing password for parent:", profile.id);
       
+      // First verify current password by attempting to sign in
+      const verifyRes = await fetch('/api/auth/callback/credentials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: profile.email,
+          password: passwords.current,
+        }),
+      });
+
+      if (!verifyRes.ok) {
+        throw new Error('Current password is incorrect');
+      }
+
+      // Update password
       const res = await fetch(`/api/parents/${profile.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -229,21 +249,21 @@ export default function ParentSettingsPage() {
       });
 
       const data = await res.json();
-      console.log("Password change response:", data);
+      console.log("[PASSWORD_CHANGE] Password change response:", data);
 
       if (!res.ok) {
         throw new Error(data.error || 'Failed to change password');
       }
 
-      alert("Password changed successfully! Please login again with your new password.");
+      alert("Password changed successfully! You will be signed out and need to login with your new password.");
       setPasswords({ current: '', new: '', confirm: '' });
       
       // Sign out after password change
       setTimeout(() => {
-        window.location.href = '/api/auth/signout';
+        window.location.href = '/api/auth/signout?callbackUrl=/auth/login';
       }, 2000);
     } catch (error: any) {
-      console.error("Failed to change password:", error);
+      console.error("[PASSWORD_CHANGE] Failed to change password:", error);
       alert(error.message || "Failed to change password. Please try again.");
     } finally {
       setChangingPassword(false);

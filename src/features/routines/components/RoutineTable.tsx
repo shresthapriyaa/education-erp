@@ -150,9 +150,9 @@ export function RoutineTable({ routines, onAdd, onEdit, onDelete, loading = fals
                     <TableCell className="text-sm text-black font-mono">
                       {r.startTime} — {r.endTime}
                     </TableCell>
-                    <TableCell className="text-sm text-black">{r.class?.name ?? "—"}</TableCell>
-                    <TableCell className="text-sm text-black">{r.subject?.name ?? "—"}</TableCell>
-                    <TableCell className="text-sm text-black">{r.teacher?.username ?? <span className="text-muted-foreground">Unassigned</span>}</TableCell>
+                    <TableCell className="text-sm text-black">{r.classSubject?.class?.name ?? "—"}</TableCell>
+                    <TableCell className="text-sm text-black">{r.classSubject?.subject?.name ?? "—"}</TableCell>
+                    <TableCell className="text-sm text-black">{r.classSubject?.teacher?.username ?? <span className="text-muted-foreground">Unassigned</span>}</TableCell>
                     <TableCell className="text-sm text-black">{r.room ?? <span className="text-muted-foreground">—</span>}</TableCell>
                     {!readOnly && (
                       <TableCell className="text-right">

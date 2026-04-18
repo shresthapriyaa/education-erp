@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/core/lib/prisma";
 
 const routineInclude = {
-  class:   { select: { id: true, name: true } },
-  subject: { select: { id: true, name: true } },
-  teacher: { select: { id: true, username: true } },
+  classSubject: {
+    include: {
+      class: { select: { id: true, name: true, grade: true, section: true } },
+      subject: { select: { id: true, name: true, code: true } },
+      teacher: { select: { id: true, username: true, email: true } },
+    }
+  },
 };
 
 export async function GET(
@@ -35,13 +39,11 @@ export async function PUT(
     const routine = await prisma.routine.update({
       where: { id },
       data: {
-        classId:   body.classId   ?? existing.classId,
-        subjectId: body.subjectId ?? existing.subjectId,
-        teacherId: body.teacherId ?? existing.teacherId,
-        day:       body.day       ?? existing.day,
-        startTime: body.startTime ?? existing.startTime,
-        endTime:   body.endTime   ?? existing.endTime,
-        room:      body.room !== undefined ? body.room || null : existing.room,
+        classSubjectId: body.classSubjectId ?? existing.classSubjectId,
+        day:            body.day            ?? existing.day,
+        startTime:      body.startTime      ?? existing.startTime,
+        endTime:        body.endTime        ?? existing.endTime,
+        room:           body.room !== undefined ? body.room || null : existing.room,
       },
       include: routineInclude,
     });

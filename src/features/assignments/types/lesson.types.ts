@@ -1,9 +1,8 @@
-export interface Assignment {
+export interface Lesson {
   id:             string;
   title:          string;
-  description:    string;
-  dueDate:        string;
-  totalMarks:     number;
+  content:        string;
+  isPublished:    boolean;
   classSubjectId: string;
   materials?:     Array<{ id: string; title: string; type: string; url: string }>;
   classSubject?:  {
@@ -19,7 +18,6 @@ export interface Assignment {
   class?:         { name: string };
   subject?:       { name: string };
   teacher?:       { username: string };
-  fileUrl?:       string; // For backward compatibility
   createdAt:      string;
   updatedAt:      string;
 }

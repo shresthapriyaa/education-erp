@@ -4,397 +4,7 @@
 // // // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
 // // // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
-// generator client {
-//   provider        = "prisma-client"
-//   output          = "../src/generated/prisma"
-  
-// }
-// datasource db {
-//   provider = "postgresql"
-//   url      = env("DATABASE_URL")
-// }
 
-// enum Role {
-//   ADMIN
-//   TEACHER
-//   STUDENT
-//   ACCOUNTANT
-//   PARENT
-// }
-
-// enum Usersex {
-//   MALE
-//   FEMALE
-  
-// }
-
-// enum AttendanceStatus {
-//   PRESENT
-//   ABSENT
-//   LATE
-//   EXCUSED
-// }
-
-// enum Day {
-//   MONDAY
-//   TUESDAY
-//   WEDNESDAY
-//   THURSDAY
-//   FRIDAY
-//   SATURDAY
-//   SUNDAY
-// }
-
-
-
-// model User {
-//   id        String      @id @default(cuid())
-//   username  String
-//   email     String      @unique
-//   password  String?
-//   role      Role        @default(STUDENT)
-//   isVerified Boolean    @default(false)
-
-//   student    Student?
-//   teacher    Teacher?
-//   parent     Parent?
-//   accountant Accountant?
-
-//   sentMessages     Message[] @relation("SentMessages")
-//   receivedMessages Message[] @relation("ReceivedMessages")
-
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-// }
-
-// model Student {
-//   id        String   @id @default(cuid())
-//   username  String   @unique
-//   userId    String   @unique
-//   user      User     @relation(fields: [userId], references: [id])
-//   email     String   @unique
- 
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-//   phone     String?
-//   address   String?
-//   img       String?
-//   bloodGroup String?
-//   sex       Usersex
-//   dateOfBirth DateTime?
-
-//   parentId  String?
-//   parent    Parent?  @relation(fields: [parentId], references: [id])
-
-//   grades    Grade[]
-//   attendance Attendance[]
-//   fees      Fee[]
-//   results   Result[]
-//   classId  String?
-//   class    Class?  @relation(fields: [classId], references: [id])
-// }
-
-// model Parent {
-//   id        String    @id @default(cuid())
-//   username  String    @unique
-//   email     String    @unique
-//   userId    String    @unique
-//   user      User      @relation(fields: [userId], references: [id])
-//   createdAt DateTime  @default(now())
-//   updatedAt DateTime  @updatedAt
-//   phone     String?
-//   address   String?
-//   img       String?
-//   students  Student[]
-// }
-
-// model Teacher {
-//   id             String         @id @default(cuid())
-//   username       String         @unique
-//   email          String         @unique
-//   userId         String         @unique
-//   user           User           @relation(fields: [userId], references: [id])
-//   createdAt      DateTime       @default(now())
-//   updatedAt      DateTime       @updatedAt
-//   phone          String?
-//   address        String?
-//   img            String?
-//   classTeacherFor Class[]       @relation("ClassTeacher")
-//   classSubjects  ClassSubject[]
-//   routines       Routine[]
-// }
-
-// model Accountant {
-//   id        String   @id @default(cuid())
-//   username  String   @unique
-//   email     String   @unique
-//   userId    String   @unique
-//   user      User     @relation(fields: [userId], references: [id])
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-//   phone     String?
-//   address   String?
-//   img       String?
-// }
-
-// model Lesson {
-//   id        String   @id @default(cuid())
-//   title     String
-//   content   String
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-//   materials Material[]
-// }
-// model Material {
-//   id        String    @id @default(cuid())
-//   lessonId  String
-//   lesson    Lesson    @relation(fields: [lessonId], references: [id])
-//   title     String    
-//   type      String    
-//   url       String    
-//   createdAt DateTime  @default(now())
-//   updatedAt DateTime  @updatedAt
-// }
-
-// model Assignment {
-//   id          String   @id @default(cuid())
-//   title       String
-//   description String
-//   dueDate     DateTime
-//   createdAt   DateTime @default(now())
-//   updatedAt   DateTime @updatedAt
-
-//   grades      Grade[]
-// }
-
-// model Grade {
-//   id           String     @id @default(cuid())
-//   studentId    String
-//   assignmentId String
-//   student      Student    @relation(fields: [studentId], references: [id])
-//   assignment   Assignment @relation(fields: [assignmentId], references: [id])
-//   score        Float
-//   createdAt    DateTime @default(now())
-//   updatedAt    DateTime @updatedAt
-// }
-
-
-
-// model Event {
-//   id          String   @id @default(cuid())
-//   title       String
-//   description String
-//   eventDate   DateTime
-//   createdAt   DateTime @default(now())
-//   updatedAt   DateTime @updatedAt
-// }
-
-// model Notice {
-//   id        String   @id @default(cuid())
-//   title     String
-//   content   String
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-// }
-
-// model Fee {
-//   id        String   @id @default(cuid())
-//   studentId String
-//   amount    Float
-//   dueDate   DateTime
-//   paid      Boolean  @default(false)
-//   student   Student  @relation(fields: [studentId], references: [id])
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-// }
-
-// model Subject {
-//   id            String         @id @default(cuid())
-//   name          String
-//   code          String?        @unique
-//   description   String?
-//   createdAt     DateTime       @default(now())
-//   updatedAt     DateTime       @updatedAt
-//   classSubjects ClassSubject[]
-//   routines      Routine[]
-//   results       Result[]
-//   exams         Exam[]
-// }
-
-// model Class {
-//   id             String   @id @default(cuid())
-//   name           String   // Display name like "Grade 10 - A"
-//   grade          String   // Grade 10, Grade 11, etc.
-//   section        String   // A, B, C, etc.
-//   academicYear   String   // 2024-2025, 2025-2026, etc.
-//   classTeacherId String?
-//   classTeacher   Teacher? @relation("ClassTeacher", fields: [classTeacherId], references: [id])
-//   schoolId       String?
-//   school         School?  @relation(fields: [schoolId], references: [id])
-//   students       Student[]
-//   subjects       ClassSubject[]
-//   routines       Routine[]
-//   createdAt      DateTime @default(now())
-//   updatedAt      DateTime @updatedAt
-  
-//   @@unique([grade, section, academicYear, schoolId])
-// }
-
-// model ClassSubject {
-//   id        String   @id @default(cuid())
-//   classId   String
-//   class     Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
-//   subjectId String
-//   subject   Subject  @relation(fields: [subjectId], references: [id])
-//   teacherId String?
-//   teacher   Teacher? @relation(fields: [teacherId], references: [id])
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-  
-//   @@unique([classId, subjectId])
-// }
-
-// model Routine {
-//   id        String   @id @default(cuid())
-//   classId   String
-//   class     Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
-//   subjectId String
-//   subject   Subject  @relation(fields: [subjectId], references: [id])
-//   teacherId String?
-//   teacher   Teacher? @relation(fields: [teacherId], references: [id])
-//   day       Day
-//   startTime String   // Format: "09:00"
-//   endTime   String   // Format: "10:00"
-//   room      String?
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-  
-//   @@unique([classId, day, startTime])
-// }
-
-// model Schedule {
-//   id        String   @id @default(cuid())
-//   classId   String
-//   subjectId String
-//   day       Day
-//   startTime DateTime
-//   endTime   DateTime
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-// }
-
-// model Result {
-//   id        String   @id @default(cuid())
-//   studentId String
-//   subjectId String
-//   grade     String
-//   student   Student @relation(fields: [studentId], references: [id])
-//   subject   Subject @relation(fields: [subjectId], references: [id])
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-// }
-
-// model Announcement {
-//   id        String   @id @default(cuid())
-//   title     String
-//   content   String
-//    publishDate DateTime? 
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-// }
-
-// model LibraryBook {
-//   id            String   @id @default(cuid())
-//   title         String
-//   author        String
-//   isbn          String   @unique
-//   publishedDate DateTime
-//   createdAt     DateTime @default(now())
-//   updatedAt     DateTime @updatedAt
-// }
-
-// model Exam {
-//   id        String   @id @default(cuid())
-//   title     String
-//   subjectId String
-//   subject   Subject  @relation(fields: [subjectId], references: [id])
-//   date      DateTime
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-// }
-
-// model Message {
-//   id         String   @id @default(cuid())
-//   senderId   String
-//   receiverId String
-//   content    String
-//   sender     User @relation("SentMessages", fields: [senderId], references: [id])
-//   receiver   User @relation("ReceivedMessages", fields: [receiverId], references: [id])
-//   createdAt  DateTime @default(now())
-//   updatedAt  DateTime @updatedAt
-// }
-
-
-
-
-// model School {
-//   id           String       @id @default(cuid())
-//   name         String
-//   address      String?
-//   latitude     Float
-//   longitude    Float
-//   radiusMeters Float        @default(200)
-//   zones        SchoolZone[]
-//   classes      Class[] 
-//   minRadiusMeters  Float    @default(50)   
-//   maxRadiusMeters  Float    @default(500)  
-//   lateThresholdMin Int      @default(10)   
-//   createdAt    DateTime     @default(now())
-//   updatedAt    DateTime     @updatedAt
-// }
-
-// model SchoolZone {
-//   id           String       @id @default(cuid())
-//   schoolId     String
-//   school       School       @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-//   name         String
-//   description  String?
-//   latitude     Float
-//   longitude    Float
-//   radiusMeters Float        @default(100)
-//   color        String?
-//   isActive     Boolean      @default(true)
-//   attendances  Attendance[]
-//   createdAt    DateTime     @default(now())
-//   updatedAt    DateTime     @updatedAt
-// }
-
-// model Attendance {
-//   id        String           @id @default(cuid())
-//   studentId String
-//   student   Student          @relation(fields: [studentId], references: [id])
-//   classId   String?
-//   date      DateTime
-//   status    AttendanceStatus
-
-//   markedLatitude     Float?
-//   markedLongitude    Float?
-//   distanceFromCenter Float?
-//   distanceFromZone   Float?
-
-//   detectedZoneId     String?
-//   detectedZone       SchoolZone? @relation(fields: [detectedZoneId], references: [id])
-
-//   withinSchool       Boolean     @default(false)
-//   gpsAccuracy        Float?
-//   deviceInfo         String?
-//   ipAddress          String?
-
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-
-//   @@unique([studentId, date, classId])
-// }
 
 
 
@@ -537,9 +147,6 @@ model Teacher {
 
   classTeacherFor Class[]        @relation("ClassTeacher")
   classSubjects   ClassSubject[]
-  routines        Routine[]
-  lessons         Lesson[]
-  assignments     Assignment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -589,9 +196,6 @@ model Class {
 
   students    Student[]
   subjects    ClassSubject[]
-  routines    Routine[]
-  lessons     Lesson[]
-  assignments Assignment[]
   exams       Exam[]
   results     Result[]
 
@@ -608,9 +212,6 @@ model Subject {
   description String?
 
   classSubjects ClassSubject[]
-  routines      Routine[]
-  lessons       Lesson[]
-  assignments   Assignment[]
   exams         Exam[]
   examResults   ExamResult[]
   results       Result[]
@@ -628,6 +229,11 @@ model ClassSubject {
   teacherId String?
   teacher   Teacher? @relation(fields: [teacherId], references: [id])
 
+  // Relations to modules that use this ClassSubject
+  routines    Routine[]
+  lessons     Lesson[]
+  assignments Assignment[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -635,36 +241,27 @@ model ClassSubject {
 }
 
 model Routine {
-  id        String   @id @default(cuid())
-  classId   String
-  class     Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
-  subjectId String
-  subject   Subject  @relation(fields: [subjectId], references: [id])
-  teacherId String?
-  teacher   Teacher? @relation(fields: [teacherId], references: [id])
-  day       Day
-  startTime String
-  endTime   String
-  room      String?
+  id             String       @id @default(cuid())
+  classSubjectId String
+  classSubject   ClassSubject @relation(fields: [classSubjectId], references: [id], onDelete: Cascade)
+  day            Day
+  startTime      String
+  endTime        String
+  room           String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([classId, day, startTime])
+  @@unique([classSubjectId, day, startTime])
 }
 
 model Lesson {
-  id          String  @id @default(cuid())
-  title       String
-  content     String
-  isPublished Boolean @default(false)
-
-  classId   String
-  class     Class   @relation(fields: [classId], references: [id])
-  subjectId String
-  subject   Subject @relation(fields: [subjectId], references: [id])
-  teacherId String
-  teacher   Teacher @relation(fields: [teacherId], references: [id])
+  id             String       @id @default(cuid())
+  title          String
+  content        String
+  isPublished    Boolean      @default(false)
+  classSubjectId String
+  classSubject   ClassSubject @relation(fields: [classSubjectId], references: [id], onDelete: Cascade)
 
   materials Material[]
 
@@ -685,18 +282,13 @@ model Material {
 }
 
 model Assignment {
-  id          String   @id @default(cuid())
-  title       String
-  description String
-  dueDate     DateTime
-  totalMarks  Float    @default(100)
-
-  classId   String
-  class     Class   @relation(fields: [classId], references: [id])
-  subjectId String
-  subject   Subject @relation(fields: [subjectId], references: [id])
-  teacherId String
-  teacher   Teacher @relation(fields: [teacherId], references: [id])
+  id             String       @id @default(cuid())
+  title          String
+  description    String
+  dueDate        DateTime
+  totalMarks     Float        @default(100)
+  classSubjectId String
+  classSubject   ClassSubject @relation(fields: [classSubjectId], references: [id], onDelete: Cascade)
 
   materials AssignmentMaterial[]
   grades    Grade[]

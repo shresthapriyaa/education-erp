@@ -1,59 +1,137 @@
+// import { NextRequest, NextResponse } from "next/server";
+// import prisma from "@/core/lib/prisma";
+
+// export async function DELETE(
+//   req: NextRequest,
+//   { params }: { params: { id: string; subjectId: string } }
+// ) {
+//   try {
+//     const classId = params.id;
+//     const subjectId = params.subjectId;
+
+//     // Find and delete the ClassSubject record
+//     const deleted = await prisma.classSubject.delete({
+//       where: {
+//         classId_subjectId: {
+//           classId,
+//           subjectId
+//         }
+//       }
+//     });
+
+//     return NextResponse.json({ success: true, deleted });
+//   } catch (error: any) {
+//     console.error("[CLASS_SUBJECT_DELETE]", error);
+//     if (error.code === "P2025") {
+//       return NextResponse.json(
+//         { error: "Class-subject assignment not found" },
+//         { status: 404 }
+//       );
+//     }
+//     return NextResponse.json(
+//       { error: "Failed to remove subject from class", details: error.message },
+//       { status: 500 }
+//     );
+//   }
+// }
+
+// export async function PATCH(
+//   req: NextRequest,
+//   { params }: { params: { id: string; subjectId: string } }
+// ) {
+//   try {
+//     const classId = params.id;
+//     const subjectId = params.subjectId;
+//     const body = await req.json();
+
+//     // Update the teacher for this class-subject assignment
+//     const updated = await prisma.classSubject.update({
+//       where: {
+//         classId_subjectId: {
+//           classId,
+//           subjectId
+//         }
+//       },
+//       data: {
+//         teacherId: body.teacherId || null
+//       },
+//       include: {
+//         subject: {
+//           select: {
+//             id: true,
+//             name: true,
+//             code: true
+//           }
+//         },
+//         teacher: {
+//           select: {
+//             id: true,
+//             username: true,
+//             email: true
+//           }
+//         }
+//       }
+//     });
+
+//     return NextResponse.json(updated);
+//   } catch (error: any) {
+//     console.error("[CLASS_SUBJECT_PATCH]", error);
+//     if (error.code === "P2025") {
+//       return NextResponse.json(
+//         { error: "Class-subject assignment not found" },
+//         { status: 404 }
+//       );
+//     }
+//     return NextResponse.json(
+//       { error: "Failed to update teacher assignment", details: error.message },
+//       { status: 500 }
+//     );
+//   }
+// }
+
+
+
+
+
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/core/lib/prisma";
 
-type Params = { params: Promise<{ id: string; subjectId: string }> };
-
-// PATCH /api/classes/[id]/subjects/[subjectId] - Update teacher for a subject
-export async function PATCH(req: NextRequest, { params }: Params) {
-  const { id, subjectId } = await params;
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string; subjectId: string }> }
+) {
   try {
-    const body = await req.json();
-
-    const classSubject = await prisma.classSubject.update({
-      where: {
-        classId_subjectId: {
-          classId: id,
-          subjectId: subjectId,
-        },
-      },
-      data: {
-        teacherId: body.teacherId || null,
-      },
-      include: {
-        subject: { select: { id: true, name: true, code: true } },
-        teacher: { select: { id: true, username: true, email: true } },
-      },
+    const { id: classId, subjectId } = await params;
+    const deleted = await prisma.classSubject.delete({
+      where: { classId_subjectId: { classId, subjectId } }
     });
-
-    return NextResponse.json(classSubject);
+    return NextResponse.json({ success: true, deleted });
   } catch (error: any) {
-    console.error("[CLASS_SUBJECT_PATCH]", error.message);
-    if (error.code === "P2025") {
-      return NextResponse.json({ error: "Subject not found in this class" }, { status: 404 });
-    }
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("[CLASS_SUBJECT_DELETE]", error);
+    if (error.code === "P2025") return NextResponse.json({ error: "Class-subject assignment not found" }, { status: 404 });
+    return NextResponse.json({ error: "Failed to remove subject from class", details: error.message }, { status: 500 });
   }
 }
 
-// DELETE /api/classes/[id]/subjects/[subjectId] - Remove subject from class
-export async function DELETE(_req: NextRequest, { params }: Params) {
-  const { id, subjectId } = await params;
+export async function PATCH(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string; subjectId: string }> }
+) {
   try {
-    await prisma.classSubject.delete({
-      where: {
-        classId_subjectId: {
-          classId: id,
-          subjectId: subjectId,
-        },
-      },
+    const { id: classId, subjectId } = await params;
+    const body = await req.json();
+    const updated = await prisma.classSubject.update({
+      where: { classId_subjectId: { classId, subjectId } },
+      data: { teacherId: body.teacherId || null },
+      include: {
+        subject: { select: { id: true, name: true, code: true } },
+        teacher: { select: { id: true, username: true, email: true } }
+      }
     });
-
-    return NextResponse.json({ success: true });
+    return NextResponse.json(updated);
   } catch (error: any) {
-    console.error("[CLASS_SUBJECT_DELETE]", error.message);
-    if (error.code === "P2025") {
-      return NextResponse.json({ error: "Subject not found in this class" }, { status: 404 });
-    }
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("[CLASS_SUBJECT_PATCH]", error);
+    if (error.code === "P2025") return NextResponse.json({ error: "Class-subject assignment not found" }, { status: 404 });
+    return NextResponse.json({ error: "Failed to update teacher assignment", details: error.message }, { status: 500 });
   }
 }

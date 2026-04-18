@@ -137,11 +137,18 @@ export async function PATCH(
     }
     if (body.phone !== undefined) data.phone = body.phone?.trim() || null;
     if (body.address !== undefined) data.address = body.address?.trim() || null;
-    if (body.img !== undefined) data.img = body.img?.trim() || null;
+    if (body.img !== undefined) {
+      data.img = body.img?.trim() || null;
+      console.log("[PARENT_PATCH] Updating image to:", data.img);
+      console.log("[PARENT_PATCH] Image URL length:", data.img?.length || 0);
+    }
+
+    console.log("[PARENT_PATCH] Data to update:", data);
 
     // Update parent record only if there's data to update
+    let parent;
     if (Object.keys(data).length > 0) {
-      const parent = await prisma.parent.update({
+      parent = await prisma.parent.update({
         where: { id },
         data,
         include: {
@@ -150,11 +157,10 @@ export async function PATCH(
         },
       });
 
-      console.log("[PARENT_PATCH] Update successful");
-      return NextResponse.json(parent);
+      console.log("[PARENT_PATCH] Update successful, new img:", parent.img);
     } else {
       // If only password was updated, fetch and return the parent
-      const parent = await prisma.parent.findUnique({
+      parent = await prisma.parent.findUnique({
         where: { id },
         include: {
           students: { select: { id: true, username: true, email: true } },
@@ -162,8 +168,9 @@ export async function PATCH(
         },
       });
       console.log("[PARENT_PATCH] Password update successful");
-      return NextResponse.json(parent);
     }
+
+    return NextResponse.json(parent);
   } catch (error: any) {
     console.error("[PARENT_PATCH] Error:", error.message);
     console.error("[PARENT_PATCH] Stack:", error.stack);

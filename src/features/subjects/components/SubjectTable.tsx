@@ -143,14 +143,14 @@ export function SubjectTable({
                   <TableCell className="text-sm text-black">{formatDate(subject.createdAt)}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button
+                      {/* <Button
                         variant="ghost" size="icon"
                         className="bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100"
                         onClick={() => router.push(`/admin/subjects/${subject.id}`)}
                         title="View lessons & assignments"
                       >
                         <Eye className="h-4 w-4" />
-                      </Button>
+                      </Button> */}
                       <Button
                         variant="ghost" size="icon"
                         className="bg-white text-black border border-gray-300 hover:bg-gray-100"
@@ -198,13 +198,13 @@ export function SubjectTable({
                   </p>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
-                  <Button
+                  {/* <Button
                     variant="ghost" size="icon"
                     className="h-8 w-8 bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100"
                     onClick={() => router.push(`/admin/subjects/${subject.id}`)}
                   >
                     <Eye className="h-3.5 w-3.5" />
-                  </Button>
+                  </Button> */}
                   <Button
                     variant="ghost" size="icon"
                     className="h-8 w-8 bg-white text-black border border-gray-300 hover:bg-gray-100"

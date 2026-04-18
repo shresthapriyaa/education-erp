@@ -112,7 +112,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/core/lib/db";
 import bcrypt from "bcryptjs";
-import { Role } from "@prisma/client";
+import { $Enums } from "@/generated/prisma/client";
 
 export async function GET(req: Request) {
   try {
@@ -131,7 +131,7 @@ export async function GET(req: Request) {
     }
 
     if (role && role !== "all") {
-      where.role = role as Role;
+      where.role = role as $Enums.Role;
     }
 
     if (isVerified && isVerified !== "all") {
@@ -213,7 +213,7 @@ export async function POST(req: Request) {
         username,
         email,
         password: hashedPassword,
-        role: role as Role,
+        role: role as $Enums.Role,
         isVerified: isVerified ?? false,
         ...relatedData, // ✅ was missing before!
       },

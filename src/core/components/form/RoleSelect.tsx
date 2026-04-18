@@ -7,12 +7,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/core/components/ui/select";
-import { Role } from "@prisma/client";
+import { $Enums } from "@/generated/prisma/client";
 import { cn } from "@/core/lib/utils"; // assuming you have cn helper
 
 interface RoleSelectProps {
-  value?: Role | null;
-  onChange?: (value: Role) => void;
+  value?: $Enums.Role | null;
+  onChange?: (value: $Enums.Role) => void;
   placeholder?: string;
   disabled?: boolean;
   className?: string;
@@ -20,12 +20,12 @@ interface RoleSelectProps {
   error?: boolean; // for red border when form field has error
 }
 
-const roleOptions: Array<{ label: string; value: Role }> = [
-  { label: "Admin", value: Role.ADMIN },
-  { label: "Teacher", value: Role.TEACHER },
-  { label: "Student", value: Role.STUDENT },
-  { label: "Parent", value: Role.PARENT },
-  { label: "Accountant", value: Role.ACCOUNTANT },
+const roleOptions: Array<{ label: string; value: $Enums.Role }> = [
+  { label: "Admin", value: $Enums.Role.ADMIN },
+  { label: "Teacher", value: $Enums.Role.TEACHER },
+  { label: "Student", value: $Enums.Role.STUDENT },
+  { label: "Parent", value: $Enums.Role.PARENT },
+  { label: "Accountant", value: $Enums.Role.ACCOUNTANT },
 ];
 
 export function RoleSelect({
@@ -40,7 +40,7 @@ export function RoleSelect({
   return (
     <Select
       value={value ?? undefined}
-      onValueChange={(val) => onChange?.(val as Role)}
+      onValueChange={(val) => onChange?.(val as $Enums.Role)}
       disabled={disabled}
     >
       <SelectTrigger

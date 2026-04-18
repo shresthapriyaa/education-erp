@@ -197,10 +197,10 @@ export function useTeacherAttendance(editDate?: Date) {
             console.log("📝 Found", records.length, "attendance records");
             if (records.length > 0) {
               // Map existing attendance to students
-              const attMap = new Map(records.map((a: any) => [a.studentId, a.status]));
+              const attMap = new Map<string, AttendanceStatus>(records.map((a: any) => [a.studentId, a.status as AttendanceStatus]));
               list.forEach((student: StudentRow) => {
                 const existingStatus = attMap.get(student.studentId);
-                if (existingStatus) {
+                if (existingStatus !== undefined) {
                   student.status = existingStatus;
                   console.log("✅ Loaded status for", student.username, ":", existingStatus);
                 }

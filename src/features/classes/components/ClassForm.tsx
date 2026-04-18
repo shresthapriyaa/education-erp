@@ -568,6 +568,7 @@ export function ClassForm({
         .then((r) => r.json())
         .then((data) => {
           const subs = Array.isArray(data) ? data : [];
+          console.log('[LOAD_SUBJECTS] Loaded subjects for class:', subs);
           setClassSubjects(subs);
           setOriginalClassSubjects(subs);
         })
@@ -583,6 +584,11 @@ export function ClassForm({
     setSelectedTeacher("none");
   }, [isEdit, initialValues?.id]);
 
+  // Debug: Log whenever classSubjects changes
+  useEffect(() => {
+    console.log('[STATE] classSubjects updated:', classSubjects);
+  }, [classSubjects]);
+
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -597,6 +603,9 @@ export function ClassForm({
   });
 
   const handlePut = form.handleSubmit(async (values) => {
+    console.log('[SUBMIT] Form values:', values);
+    console.log('[SUBMIT] classSubjects:', classSubjects);
+    
     try {
       // FIX: strip the "none" sentinel before sending to the API
       const cleanedValues: ClassPayload = {
@@ -607,10 +616,21 @@ export function ClassForm({
             : values.classTeacherId,
       };
 
+      console.log('[SUBMIT] Cleaned values:', cleanedValues);
+
       if (isEdit) {
+        console.log('[SUBMIT] Edit mode - updating class');
         await onSubmit(cleanedValues, "put");
         if (initialValues?.id) {
-          await saveSubjectChanges();
+          console.log('[SUBMIT] Saving subject changes');
+          try {
+            await saveSubjectChanges();
+            // Only reload on success
+            window.location.reload();
+          } catch (error) {
+            console.error('[SUBMIT] Failed to save subject changes:', error);
+            // Don't reload on error so user can see what went wrong
+          }
         }
       } else {
         const classData: ClassPayload = {
@@ -620,93 +640,127 @@ export function ClassForm({
             teacherId: cs.teacher?.id || null,
           })),
         };
+        console.log('[SUBMIT] Create mode - creating class with data:', classData);
         await onSubmit(classData, "create");
       }
     } catch (error: any) {
-      console.error("Error in handlePut:", error);
+      console.error("[SUBMIT] Error in handlePut:", error);
       toast.error("Failed to save changes");
     }
   });
 
   async function saveSubjectChanges() {
-    if (!initialValues?.id) return;
+    if (!initialValues?.id) {
+      console.error('[SAVE_SUBJECTS] No class ID available');
+      return;
+    }
+
+    console.log('[SAVE_SUBJECTS] Class ID:', initialValues.id);
+    console.log('[SAVE_SUBJECTS] Current classSubjects:', classSubjects);
+    console.log('[SAVE_SUBJECTS] Original classSubjects:', originalClassSubjects);
 
     try {
+      // Find subjects to add (temp IDs)
       const toAdd = classSubjects.filter(
-        (cs) => !cs.id || cs.id.startsWith("temp-")
+        (cs) => cs.id && cs.id.startsWith("temp-")
       );
+
+      // Find subjects to remove (not in current classSubjects)
       const toRemove = originalClassSubjects.filter(
         (orig) => !classSubjects.some((cs) => cs.subject.id === orig.subject.id)
       );
-      const toUpdate = classSubjects.filter((cs) => {
-        if (!cs.id || cs.id.startsWith("temp-")) return false;
-        const orig = originalClassSubjects.find(
-          (o) => o.subject.id === cs.subject.id
-        );
-        return orig && orig.teacher?.id !== cs.teacher?.id;
-      });
 
-      const results = await Promise.allSettled([
-        ...toAdd.map((cs) =>
-          fetch(`/api/classes/${initialValues.id}/subjects`, {
+      console.log('[SAVE_SUBJECTS] Adding subjects:', toAdd);
+      console.log('[SAVE_SUBJECTS] Removing subjects:', toRemove);
+
+      // Add new subjects
+      for (const cs of toAdd) {
+        try {
+          const response = await fetch(`/api/classes/${initialValues.id}/subjects`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               subjectId: cs.subject.id,
               teacherId: cs.teacher?.id || null,
             }),
-          }).then((res) => {
-            if (!res.ok) throw new Error("Failed to add subject");
-            return res.json();
-          })
-        ),
-        ...toRemove.map((cs) =>
-          fetch(
-            `/api/classes/${initialValues.id}/subjects/${cs.subject.id}`,
-            { method: "DELETE" }
-          ).then((res) => {
-            if (!res.ok) throw new Error("Failed to remove subject");
-            return res.json();
-          })
-        ),
-        ...toUpdate.map((cs) =>
-          fetch(
-            `/api/classes/${initialValues.id}/subjects/${cs.subject.id}`,
-            {
-              method: "PATCH",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ teacherId: cs.teacher?.id || null }),
-            }
-          ).then((res) => {
-            if (!res.ok) throw new Error("Failed to update teacher");
-            return res.json();
-          })
-        ),
-      ]);
+          });
 
-      const failed = results.filter((r) => r.status === "rejected");
-      if (failed.length > 0) {
-        console.error("Some subject changes failed:", failed);
-        toast.error(`${failed.length} subject change(s) failed`);
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`Failed to add subject ${cs.subject.name}:`, errorText);
+            throw new Error(`Failed to add ${cs.subject.name}: ${errorText}`);
+          }
+
+          console.log(`Successfully added subject: ${cs.subject.name}`);
+        } catch (error) {
+          console.error(`Error adding subject ${cs.subject.name}:`, error);
+          throw error;
+        }
+      }
+
+      // Remove deleted subjects
+      for (const cs of toRemove) {
+        try {
+          console.log(`[SAVE_SUBJECTS] Removing subject:`, {
+            classId: initialValues.id,
+            subjectId: cs.subject.id,
+            subjectName: cs.subject.name,
+            fullRecord: cs
+          });
+
+          const response = await fetch(`/api/classes/${initialValues.id}/subjects/${cs.subject.id}`, {
+            method: "DELETE",
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`Failed to remove subject ${cs.subject.name}:`, errorText);
+            throw new Error(`Failed to remove ${cs.subject.name}: ${errorText}`);
+          }
+
+          console.log(`Successfully removed subject: ${cs.subject.name}`);
+        } catch (error) {
+          console.error(`Error removing subject ${cs.subject.name}:`, error);
+          throw error;
+        }
+      }
+
+      if (toAdd.length > 0 || toRemove.length > 0) {
+        toast.success(`${toAdd.length} subjects added, ${toRemove.length} subjects removed`);
       } else {
-        toast.success("Class and subjects saved successfully");
+        toast.success("No changes to save");
       }
     } catch (error: any) {
       console.error("Error saving subject changes:", error);
-      toast.error("Failed to save subject changes");
+      toast.error("Failed to save subject changes: " + error.message);
       throw error;
     }
   }
 
   function handleAddSubject() {
-    if (!selectedSubject) return;
+    console.log('[ADD_SUBJECT] Button clicked');
+    console.log('[ADD_SUBJECT] selectedSubject:', selectedSubject);
+    console.log('[ADD_SUBJECT] selectedTeacher:', selectedTeacher);
+    
+    if (!selectedSubject) {
+      console.log('[ADD_SUBJECT] No subject selected, returning');
+      return;
+    }
+
     const subject = subjects.find((s) => s.id === selectedSubject);
-    if (!subject) return;
+    console.log('[ADD_SUBJECT] Found subject:', subject);
+    
+    if (!subject) {
+      console.log('[ADD_SUBJECT] Subject not found in subjects array');
+      return;
+    }
 
     const teacher =
       selectedTeacher !== "none"
         ? teachers.find((t) => t.id === selectedTeacher)
         : null;
+    
+    console.log('[ADD_SUBJECT] Found teacher:', teacher);
 
     const newSubject: ClassSubject = {
       id: `temp-${Date.now()}`,
@@ -714,9 +768,16 @@ export function ClassForm({
       teacher: teacher ? { id: teacher.id, username: teacher.username } : null,
     };
 
+    console.log('[ADD_SUBJECT] New subject to add:', newSubject);
+    console.log('[ADD_SUBJECT] Current classSubjects:', classSubjects);
+    
     setClassSubjects([...classSubjects, newSubject]);
+    console.log('[ADD_SUBJECT] Updated classSubjects');
+    
     setSelectedSubject("");
     setSelectedTeacher("none");
+    
+    toast.success(`Added ${subject.name} to class`);
   }
 
   function handleUpdateTeacher(subjectId: string, teacherId: string) {
@@ -866,7 +927,10 @@ export function ClassForm({
             </div>
             <Button
               type="button"
-              onClick={handleAddSubject}
+              onClick={() => {
+                console.log('[BUTTON] Add Subject button clicked!');
+                handleAddSubject();
+              }}
               disabled={!selectedSubject}
               size="sm"
               className="w-full"

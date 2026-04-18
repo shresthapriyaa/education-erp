@@ -22,6 +22,7 @@ export interface Class {
   }>;
   _count?: {
     students: number;
+    subjects: number;
   };
   createdAt: string;
   updatedAt: string;

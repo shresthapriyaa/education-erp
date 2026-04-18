@@ -75,9 +75,13 @@ export async function GET(req: NextRequest) {
       } : undefined,
       include: {
         materials: true,
-        class:     { select: { id: true, name: true } },
-        subject:   { select: { id: true, name: true } },
-        teacher:   { select: { id: true, username: true } },
+        classSubject: {
+          include: {
+            class: { select: { id: true, name: true, grade: true, section: true } },
+            subject: { select: { id: true, name: true, code: true } },
+            teacher: { select: { id: true, username: true, email: true } },
+          }
+        },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -92,22 +96,32 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    if (!body.title || !body.content || !body.classId || !body.subjectId || !body.teacherId) {
+    if (!body.title || !body.content || !body.classSubjectId) {
       return NextResponse.json(
-        { error: "Missing: title, content, classId, subjectId, teacherId" },
+        { error: "Missing: title, content, classSubjectId" },
+        { status: 400 }
+      );
+    }
+
+    // Verify that the classSubject exists
+    const classSubject = await prisma.classSubject.findUnique({
+      where: { id: body.classSubjectId }
+    });
+
+    if (!classSubject) {
+      return NextResponse.json(
+        { error: "Invalid class-subject assignment" },
         { status: 400 }
       );
     }
 
     const lesson = await prisma.lesson.create({
       data: {
-        title:       body.title.trim(),
-        content:     body.content.trim(),
-        isPublished: body.isPublished ?? false,
-        classId:     body.classId,
-        subjectId:   body.subjectId,
-        teacherId:   body.teacherId,
-        materials:   body.materials?.length
+        title:           body.title.trim(),
+        content:         body.content.trim(),
+        isPublished:     body.isPublished ?? false,
+        classSubjectId:  body.classSubjectId,
+        materials:       body.materials?.length
           ? {
               create: body.materials.map((m: any) => ({
                 title: m.title.trim(),
@@ -119,9 +133,13 @@ export async function POST(req: NextRequest) {
       },
       include: {
         materials: true,
-        class:     { select: { id: true, name: true } },
-        subject:   { select: { id: true, name: true } },
-        teacher:   { select: { id: true, username: true } },
+        classSubject: {
+          include: {
+            class: { select: { id: true, name: true, grade: true, section: true } },
+            subject: { select: { id: true, name: true, code: true } },
+            teacher: { select: { id: true, username: true, email: true } },
+          }
+        },
       },
     });
 

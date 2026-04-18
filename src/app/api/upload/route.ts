@@ -31,22 +31,30 @@ export async function POST(req: NextRequest) {
     const originalName = file.name.replace(/\s+/g, "_");
     const filename = `${timestamp}-${originalName}`;
 
-    // Create upload directory path
+    // Create upload directory path - use existing structure
     const uploadDir = path.join(process.cwd(), "public", "uploads", folder);
+    
+    console.log("[UPLOAD] Upload directory:", uploadDir);
+    console.log("[UPLOAD] Folder parameter:", folder);
     
     // Ensure directory exists
     try {
       await mkdir(uploadDir, { recursive: true });
     } catch (error) {
       // Directory might already exist, ignore error
+      console.log("[UPLOAD] Directory already exists or created");
     }
 
     // Write file
     const filepath = path.join(uploadDir, filename);
     await writeFile(filepath, buffer);
+    
+    console.log("[UPLOAD] File saved to:", filepath);
 
-    // Return public URL
+    // Return public URL - should be /uploads/parents/filename.jpg
     const url = `/uploads/${folder}/${filename}`;
+    
+    console.log("[UPLOAD] Public URL:", url);
 
     return NextResponse.json({ url, filename }, { status: 200 });
   } catch (error: any) {
