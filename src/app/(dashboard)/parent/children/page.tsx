@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/core/components/ui/card";
-import { Users, Mail, Phone } from "lucide-react";
+import { Users, Mail, Phone, UserCheck, Award, Bell } from "lucide-react";
 import { ScrollArea } from "@/core/components/ui/scroll-area";
 
 interface Child {
@@ -80,43 +80,87 @@ export default function ChildrenPage() {
         </Card>
       ) : (
         <ScrollArea className="h-[calc(100vh-200px)]">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pr-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 pr-4">
             {children.map((child) => (
-              <Card key={child.id} className="hover:shadow-md transition-all">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+              <Card key={child.id} className="hover:shadow-lg transition-all duration-300 border">
+                <CardContent className="p-4">
+                  {/* Child Profile - Compact */}
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-12 h-12 rounded-full shrink-0">
                       {child.img ? (
-                        <img src={child.img} alt={child.username || "Child"} className="w-12 h-12 rounded-full object-cover" />
+                        <img 
+                          src={child.img} 
+                          alt={child.username || "Child"} 
+                          className="w-12 h-12 rounded-full object-cover border-2 border-blue-100" 
+                        />
                       ) : (
-                        <span className="text-lg font-bold text-blue-600">
-                          {child.username?.charAt(0)?.toUpperCase() || "?"}
-                        </span>
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center border-2 border-blue-100">
+                          <span className="text-lg font-bold text-white">
+                            {child.username?.charAt(0)?.toUpperCase() || "?"}
+                          </span>
+                        </div>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <CardTitle className="text-base text-black">
+                      <h3 className="text-sm font-bold text-black truncate">
                         {child.username || "Unknown"}
-                      </CardTitle>
-                      <p className="text-xs text-muted-foreground">
-                        Class: {child.class?.name || "N/A"}
+                      </h3>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {child.class?.name || "No class"}
                       </p>
                     </div>
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  {child.email && (
-                    <div className="flex items-center gap-2 text-xs">
-                      <Mail className="h-3 w-3 text-muted-foreground" />
-                      <span className="text-muted-foreground truncate">{child.email}</span>
+
+                  {/* Contact Information - Compact */}
+                  {(child.email || child.phone) && (
+                    <div className="space-y-1 mb-3 pb-3 border-b">
+                      {child.email && (
+                        <div className="flex items-center gap-1.5 text-xs">
+                          <Mail className="h-3 w-3 text-muted-foreground shrink-0" />
+                          <span className="text-muted-foreground truncate">{child.email}</span>
+                        </div>
+                      )}
+                      {child.phone && (
+                        <div className="flex items-center gap-1.5 text-xs">
+                          <Phone className="h-3 w-3 text-muted-foreground shrink-0" />
+                          <span className="text-muted-foreground">{child.phone}</span>
+                        </div>
+                      )}
                     </div>
                   )}
-                  {child.phone && (
-                    <div className="flex items-center gap-2 text-xs">
-                      <Phone className="h-3 w-3 text-muted-foreground" />
-                      <span className="text-muted-foreground">{child.phone}</span>
-                    </div>
-                  )}
+
+                  {/* Quick Actions - Compact */}
+                  <div className="space-y-1.5">
+                    <a
+                      href={`/parent/attendance?childEmail=${encodeURIComponent(child.username)}`}
+                      className="flex items-center gap-2 p-1.5 rounded hover:bg-green-50 transition-colors group"
+                    >
+                      <UserCheck className="h-3.5 w-3.5 text-green-600" />
+                      <span className="text-xs font-medium text-gray-700 group-hover:text-green-700">
+                        Attendance
+                      </span>
+                    </a>
+
+                    <a
+                      href={`/parent/grades?childEmail=${encodeURIComponent(child.username)}`}
+                      className="flex items-center gap-2 p-1.5 rounded hover:bg-blue-50 transition-colors group"
+                    >
+                      <Award className="h-3.5 w-3.5 text-blue-600" />
+                      <span className="text-xs font-medium text-gray-700 group-hover:text-blue-700">
+                        Academic
+                      </span>
+                    </a>
+
+                    <a
+                      href={`/parent/messages?childId=${child.id}`}
+                      className="flex items-center gap-2 p-1.5 rounded hover:bg-purple-50 transition-colors group"
+                    >
+                      <Bell className="h-3.5 w-3.5 text-purple-600" />
+                      <span className="text-xs font-medium text-gray-700 group-hover:text-purple-700">
+                        Messages
+                      </span>
+                    </a>
+                  </div>
                 </CardContent>
               </Card>
             ))}

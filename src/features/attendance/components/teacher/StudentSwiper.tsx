@@ -91,9 +91,9 @@ export default function StudentSwiper({
             {present} present · {absent} absent
           </span>
         </div>
-        <div className="h-2 bg-muted rounded-full overflow-hidden">
+        <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
           <div 
-            className="h-full bg-foreground rounded-full transition-all duration-300"
+            className="h-full bg-gradient-to-r from-green-500 to-emerald-600 rounded-full transition-all duration-300"
             style={{ width: `${total > 0 ? (marked / total) * 100 : 0}%` }}
           />
         </div>
@@ -158,16 +158,14 @@ export default function StudentSwiper({
             <div className="flex gap-3">
               <Button
                 onClick={() => onMark("PRESENT")}
-                variant="outline"
-                className="flex-1"
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white border-0"
                 size="lg"
               >
                 <CheckCircle2 className="w-5 h-5 mr-2" /> Present
               </Button>
               <Button
                 onClick={() => onMark("ABSENT")}
-                variant="outline"
-                className="flex-1"
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white border-0"
                 size="lg"
               >
                 <XCircle className="w-5 h-5 mr-2" /> Absent
@@ -184,7 +182,16 @@ export default function StudentSwiper({
               {students.filter(s => s.status !== null).map((s, i) => (
                 <div key={s.studentId} className="flex justify-between items-center px-4 py-2 border-t">
                   <span className="text-sm text-foreground">{s.username}</span>
-                  <Badge variant="outline" className="text-xs">
+                  <Badge 
+                    className={
+                      s.status === "PRESENT" 
+                        ? "bg-green-100 text-green-700 border-green-300 text-xs" 
+                        : s.status === "ABSENT"
+                        ? "bg-red-100 text-red-700 border-red-300 text-xs"
+                        : "text-xs"
+                    }
+                    variant="outline"
+                  >
                     {s.status}
                   </Badge>
                 </div>
@@ -215,13 +222,13 @@ function CompletionScreen({ students, present, absent, saving, saved, saveError,
         </p>
         
         <div className="flex gap-4 justify-center mb-6">
-          <div className="bg-muted rounded-lg px-6 py-3 min-w-[100px]">
-            <p className="text-2xl font-bold text-foreground">{present}</p>
-            <p className="text-xs text-muted-foreground uppercase font-semibold mt-1">Present</p>
+          <div className="bg-green-50 border border-green-200 rounded-lg px-6 py-3 min-w-[100px]">
+            <p className="text-2xl font-bold text-green-700">{present}</p>
+            <p className="text-xs text-green-600 uppercase font-semibold mt-1">Present</p>
           </div>
-          <div className="bg-muted rounded-lg px-6 py-3 min-w-[100px]">
-            <p className="text-2xl font-bold text-foreground">{absent}</p>
-            <p className="text-xs text-muted-foreground uppercase font-semibold mt-1">Absent</p>
+          <div className="bg-red-50 border border-red-200 rounded-lg px-6 py-3 min-w-[100px]">
+            <p className="text-2xl font-bold text-red-700">{absent}</p>
+            <p className="text-xs text-red-600 uppercase font-semibold mt-1">Absent</p>
           </div>
         </div>
 
@@ -232,16 +239,16 @@ function CompletionScreen({ students, present, absent, saving, saved, saveError,
         )}
 
         {saved ? (
-          <div className="bg-muted border rounded-lg p-3 text-sm text-foreground font-semibold">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-700 font-semibold">
             ✓ Attendance saved successfully
           </div>
         ) : (
           <div className="flex gap-3">
-            <Button variant="outline" onClick={onPrev} className="flex-1">
+            <Button variant="outline" onClick={onPrev} className="flex-1 border-gray-300 hover:bg-gray-50">
               <ChevronLeft className="w-4 h-4 mr-1" />
               Edit Last
             </Button>
-            <Button onClick={onSave} disabled={saving} className="flex-1">
+            <Button onClick={onSave} disabled={saving} className="flex-1 bg-black hover:bg-gray-800 text-white">
               <Save className="w-4 h-4 mr-2" />
               {saving ? "Saving..." : "Save"}
             </Button>
@@ -267,18 +274,16 @@ function CompletionScreen({ students, present, absent, saving, saved, saveError,
               <div className="flex gap-2">
                 <Button
                   size="sm"
-                  variant={s.status === "PRESENT" ? "default" : "ghost"}
+                  className={s.status === "PRESENT" ? "bg-green-600 hover:bg-green-700 text-white min-w-[90px]" : "bg-gray-100 hover:bg-gray-200 text-gray-700 min-w-[90px]"}
                   onClick={() => onToggleStatus(s.studentId, "PRESENT")}
-                  className="min-w-[90px]"
                 >
                   <CheckCircle2 className="w-3 h-3 mr-1" />
                   Present
                 </Button>
                 <Button
                   size="sm"
-                  variant={s.status === "ABSENT" ? "default" : "ghost"}
+                  className={s.status === "ABSENT" ? "bg-red-600 hover:bg-red-700 text-white min-w-[90px]" : "bg-gray-100 hover:bg-gray-200 text-gray-700 min-w-[90px]"}
                   onClick={() => onToggleStatus(s.studentId, "ABSENT")}
-                  className="min-w-[90px]"
                 >
                   <XCircle className="w-3 h-3 mr-1" />
                   Absent

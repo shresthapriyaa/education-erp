@@ -35,26 +35,43 @@ export default function StudentAttendance({ studentEmail }: StudentAttendancePro
     if (emailToUse) {
       loadAttendance();
     }
-  }, [emailToUse]);
+  }, [emailToUse, studentEmail]); // Re-fetch when studentEmail changes
 
   async function loadAttendance() {
+    if (!emailToUse) {
+      console.log("No email to fetch attendance for");
+      return;
+    }
+    
     setLoading(true);
     try {
-      // Mock data - replace with actual API call using emailToUse
-      const mockRecords: AttendanceRecord[] = [
-        { id: "1", date: "2026-04-15", status: "PRESENT" },
-        { id: "2", date: "2026-04-14", status: "PRESENT" },
-        { id: "3", date: "2026-04-13", status: "LATE" },
-        { id: "4", date: "2026-04-12", status: "PRESENT" },
-        { id: "5", date: "2026-04-11", status: "ABSENT" },
-      ];
+      console.log("Fetching attendance for email:", emailToUse);
       
-      setRecords(mockRecords);
+      // Fetch real attendance data for the specific student
+      const response = await fetch(`/api/attendance?studentEmail=${encodeURIComponent(emailToUse)}`);
       
-      const present = mockRecords.filter(r => r.status === "PRESENT").length;
-      const absent = mockRecords.filter(r => r.status === "ABSENT").length;
-      const late = mockRecords.filter(r => r.status === "LATE").length;
-      const total = mockRecords.length;
+      if (!response.ok) {
+        throw new Error("Failed to fetch attendance");
+      }
+      
+      const data = await response.json();
+      console.log("Attendance data received:", data);
+      
+      const fetchedRecords = data.records || [];
+      
+      // Transform API data to match our interface
+      const transformedRecords: AttendanceRecord[] = fetchedRecords.map((r: any) => ({
+        id: r.id,
+        date: new Date(r.date).toISOString().split('T')[0],
+        status: r.status,
+      }));
+      
+      setRecords(transformedRecords);
+      
+      const present = transformedRecords.filter(r => r.status === "PRESENT").length;
+      const absent = transformedRecords.filter(r => r.status === "ABSENT").length;
+      const late = transformedRecords.filter(r => r.status === "LATE").length;
+      const total = transformedRecords.length;
       
       setStats({
         present,
@@ -64,10 +81,26 @@ export default function StudentAttendance({ studentEmail }: StudentAttendancePro
       });
     } catch (error) {
       console.error("Failed to load attendance:", error);
+      // Set empty data on error
+      setRecords([]);
+      setStats({ present: 0, absent: 0, late: 0, rate: 0 });
     } finally {
       setLoading(false);
     }
   }
+
+  // Filter records based on selected date
+  const filteredRecords = selectedDate
+    ? records.filter(r => {
+        const recordDate = new Date(r.date);
+        const selected = new Date(selectedDate);
+        return (
+          recordDate.getFullYear() === selected.getFullYear() &&
+          recordDate.getMonth() === selected.getMonth() &&
+          recordDate.getDate() === selected.getDate()
+        );
+      })
+    : records;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -167,18 +200,21 @@ export default function StudentAttendance({ studentEmail }: StudentAttendancePro
       </div>
 
       {/* Calendar & Records */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Calendar */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Calendar - Made larger */}
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle className="text-base">Calendar</CardTitle>
+            <p className="text-xs text-muted-foreground mt-1">
+              Click a date to filter attendance records
+            </p>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex justify-center">
             <Calendar
               mode="single"
               selected={selectedDate}
               onSelect={setSelectedDate}
-              className="rounded-lg border"
+              className="rounded-lg border scale-110"
               modifiers={{
                 present: records
                   .filter(r => r.status === "PRESENT")
@@ -199,20 +235,47 @@ export default function StudentAttendance({ studentEmail }: StudentAttendancePro
           </CardContent>
         </Card>
 
-        {/* Attendance Records */}
-        <Card className="lg:col-span-2 hover:shadow-lg transition-shadow">
+        {/* Attendance Records - Filtered by selected date */}
+        <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
-            <CardTitle className="text-base">Recent Attendance</CardTitle>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-base">
+                  {selectedDate 
+                    ? `Attendance for ${new Date(selectedDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`
+                    : "All Attendance Records"
+                  }
+                </CardTitle>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {filteredRecords.length} {filteredRecords.length === 1 ? 'record' : 'records'} found
+                </p>
+              </div>
+              {selectedDate && (
+                <button
+                  onClick={() => setSelectedDate(undefined)}
+                  className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  Show All
+                </button>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {records.length === 0 ? (
-                <p className="text-center py-10 text-muted-foreground">No attendance records found</p>
+            <div className="space-y-3 max-h-[500px] overflow-y-auto">
+              {filteredRecords.length === 0 ? (
+                <div className="text-center py-10">
+                  <p className="text-muted-foreground text-sm">
+                    {selectedDate 
+                      ? "No attendance record for this date"
+                      : "No attendance records found"
+                    }
+                  </p>
+                </div>
               ) : (
-                records.map((record) => (
+                filteredRecords.map((record) => (
                   <div
                     key={record.id}
-                    className="flex items-center justify-between p-4 rounded-lg border bg-muted/50"
+                    className="flex items-center justify-between p-4 rounded-lg border bg-muted/50 hover:bg-muted transition-colors"
                   >
                     <div className="flex items-center gap-3">
                       <div className={`p-2 rounded-full ${getStatusColor(record.status)}`}>

@@ -23,9 +23,10 @@ interface Child {
 interface ChildSelectorProps {
   onChildSelect: (childEmail: string, childData: Child) => void;
   selectedChildEmail?: string;
+  onChildrenLoaded?: (children: Child[]) => void;
 }
 
-export function ChildSelector({ onChildSelect, selectedChildEmail }: ChildSelectorProps) {
+export function ChildSelector({ onChildSelect, selectedChildEmail, onChildrenLoaded }: ChildSelectorProps) {
   const { data: session } = useSession();
   const [children, setChildren] = useState<Child[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,6 +57,11 @@ export function ChildSelector({ onChildSelect, selectedChildEmail }: ChildSelect
       const data = await res.json();
       const childrenArray = Array.isArray(data) ? data : (data.students || []);
       setChildren(childrenArray);
+
+      // Notify parent component about loaded children
+      if (onChildrenLoaded) {
+        onChildrenLoaded(childrenArray);
+      }
 
       // Auto-select first child if none selected
       if (childrenArray.length > 0 && !selectedChildEmail) {

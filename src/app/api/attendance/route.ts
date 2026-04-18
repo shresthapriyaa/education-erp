@@ -133,10 +133,15 @@ export async function GET(req: NextRequest) {
     const from = searchParams.get("from") ?? undefined;
     const to = searchParams.get("to") ?? undefined;
     const classId = searchParams.get("classId") ?? undefined;
+    const studentEmail = searchParams.get("studentEmail") ?? undefined;
     const search = searchParams.get("search") ?? undefined;
     const pageSize = searchParams.get("pageSize")
       ? parseInt(searchParams.get("pageSize")!)
       : undefined;
+
+    console.log("[GET /api/attendance] Query params:", { 
+      status, date, from, to, classId, studentEmail, search, pageSize 
+    });
 
     const where: Prisma.AttendanceWhereInput = {};
 
@@ -161,6 +166,15 @@ export async function GET(req: NextRequest) {
     if (classId) {
       where.student = { classId };
     }
+    
+    // Filter by student email for parent portal
+    if (studentEmail) {
+      where.student = {
+        ...((where.student as object) ?? {}),
+        email: studentEmail,
+      };
+    }
+    
     if (search) {
       where.student = {
         ...((where.student as object) ?? {}),
@@ -170,6 +184,8 @@ export async function GET(req: NextRequest) {
         ],
       };
     }
+
+    console.log("[GET /api/attendance] Where clause:", JSON.stringify(where, null, 2));
 
     const [records, total, present, absent, late, excused] = await Promise.all([
       prisma.attendance.findMany({

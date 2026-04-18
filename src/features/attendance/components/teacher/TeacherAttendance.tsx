@@ -108,63 +108,80 @@ export default function TeacherAttendance() {
     <div className="min-h-screen bg-gray-50" style={{ fontFamily: "'Geist','DM Sans','Segoe UI',sans-serif" }}>
       <div className="max-w-5xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
 
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <div className="w-1 h-5 bg-black rounded-full"></div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-                Teacher · Attendance
-              </p>
+        {/* Dark Professional Header */}
+        {!activeClass ? (
+          <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl p-6 text-white shadow-lg mb-8">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/10 rounded-lg">
+                <CalendarIcon className="h-6 w-6" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold">Attendance</h1>
+                <p className="text-gray-300 text-sm mt-0.5">
+                  Select a class to mark attendance
+                </p>
+              </div>
             </div>
-            <h1 className="text-3xl font-bold text-black">
-              {activeClass ? `${activeClass.name}` : "My Classes"}
-            </h1>
-            {activeClass && (
-              <p className="text-sm text-gray-600 mt-1">
-                {editMode && selectedDate 
-                  ? `Editing attendance for ${format(selectedDate, "MMMM d, yyyy")}`
-                  : editMode 
-                  ? "Select a date to edit attendance"
-                  : "Mark attendance for your students"}
-              </p>
-            )}
           </div>
-          <div className="flex gap-2">
-            {activeClass && (
-              <>
+        ) : (
+          <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl p-6 text-white shadow-lg mb-8">
+            <div className="flex justify-between items-start">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/10 rounded-lg">
+                  <CalendarIcon className="h-6 w-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-1 h-4 bg-white/60 rounded-full"></div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-300">
+                      Teacher · Attendance
+                    </p>
+                  </div>
+                  <h1 className="text-2xl font-bold">{activeClass.name}</h1>
+                  <p className="text-gray-300 text-sm mt-1">
+                    {editMode && selectedDate 
+                      ? `Editing attendance for ${format(selectedDate, "MMMM d, yyyy")}`
+                      : editMode 
+                      ? "Select a date to edit attendance"
+                      : "Mark attendance for your students"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
                 {selectedDate ? (
                   <Button 
                     onClick={handleBackFromEdit}
-                    variant="outline"
+                    variant="secondary"
                     size="sm"
+                    className="bg-white/10 hover:bg-white/20 text-white border-0"
                   >
                     ← Back to History
                   </Button>
                 ) : (
                   <Button
                     onClick={toggleEditMode}
-                    variant={editMode ? "default" : "outline"}
+                    variant="secondary"
                     size="sm"
-                    className={editMode ? "bg-blue-600 hover:bg-blue-700" : ""}
+                    className={editMode ? "bg-white text-gray-900 hover:bg-gray-100" : "bg-white/10 hover:bg-white/20 text-white border-0"}
                   >
                     <Edit className="mr-2 h-4 w-4" />
                     {editMode ? "Mark New" : "Edit Past"}
                   </Button>
                 )}
-              </>
-            )}
-            {activeClass && !selectedDate && (
-              <Button 
-                onClick={resetClass}
-                variant="outline"
-                size="sm"
-              >
-                ← Back to Classes
-              </Button>
-            )}
+                {!selectedDate && (
+                  <Button 
+                    onClick={resetClass}
+                    variant="secondary"
+                    size="sm"
+                    className="bg-white/10 hover:bg-white/20 text-white border-0"
+                  >
+                    ← Back to Classes
+                  </Button>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
+        )}
 
         {classesError && (
           <Alert variant="destructive" className="mb-6">
